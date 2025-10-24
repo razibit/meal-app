@@ -3,7 +3,6 @@ import { supabase } from '../services/supabase';
 import type { Meal, MealDetails, Member, MealCount } from '../types';
 import { MealPeriod, isCutoffPassed, CutoffError } from '../utils/cutoffChecker';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { getTodayDate } from '../utils/dateHelpers';
 import { validateMealAction } from '../services/cutoffEnforcer';
 
 interface MealState {
