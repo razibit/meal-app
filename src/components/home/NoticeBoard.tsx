@@ -53,11 +53,11 @@ function NoticeBoard({ notice, updatedBy, updatedAt, onSave }: NoticeBoardProps)
 
   return (
     <div className="mb-6">
-      <div className="bg-gray-800 rounded-lg p-6">
+      <div className="card">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-200">Notice Board</h3>
+          <h3 className="text-lg font-semibold text-text-primary">Notice Board</h3>
           {isSaving && (
-            <span className="text-sm text-blue-500 flex items-center gap-1">
+            <span className="text-sm text-primary flex items-center gap-1">
               <svg
                 className="animate-spin h-4 w-4"
                 xmlns="http://www.w3.org/2000/svg"
@@ -91,22 +91,22 @@ function NoticeBoard({ notice, updatedBy, updatedAt, onSave }: NoticeBoardProps)
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             placeholder="Click to add a notice..."
-            className="w-full bg-gray-700 text-gray-100 rounded-lg p-4 min-h-[100px] max-h-[150px] resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="input w-full min-h-[100px] max-h-[150px] resize-y"
             rows={3}
           />
         ) : (
           <div
             onClick={handleClick}
-            className="w-full bg-gray-700 text-gray-100 rounded-lg p-4 min-h-[100px] cursor-pointer hover:bg-gray-650 transition-colors"
+            className="w-full bg-bg-tertiary text-text-primary rounded-lg p-4 min-h-[100px] cursor-pointer hover:bg-bg-secondary transition-colors"
           >
             {value || (
-              <span className="text-gray-400 italic">Click to add a notice...</span>
+              <span className="text-text-tertiary italic">Click to add a notice...</span>
             )}
           </div>
         )}
 
         {updatedBy && updatedAt && (
-          <div className="mt-2 text-xs text-gray-400">
+          <div className="mt-2 text-xs text-text-tertiary">
             Last edited by {updatedBy} {formatRelativeTime(new Date(updatedAt))}
           </div>
         )}

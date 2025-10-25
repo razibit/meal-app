@@ -38,21 +38,21 @@ function ParticipantsModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-gray-800 rounded-lg max-w-md w-full max-h-[80vh] flex flex-col"
+        className="bg-bg-primary rounded-lg max-w-md w-full max-h-[80vh] flex flex-col shadow-xl animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-xl font-semibold text-text-primary">
             Participants ({participants.length})
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-text-secondary hover:text-text-primary transition-colors min-w-touch min-h-touch flex items-center justify-center"
             aria-label="Close modal"
           >
             <svg
@@ -81,16 +81,16 @@ function ParticipantsModal({
                   key={member.id}
                   className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
                     hasParticipated
-                      ? 'bg-green-900 bg-opacity-30 border border-green-700'
-                      : 'bg-gray-700'
+                      ? 'bg-success/10 border border-success'
+                      : 'bg-bg-tertiary'
                   }`}
                 >
                   {/* Avatar */}
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
                       hasParticipated
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-600 text-gray-300'
+                        ? 'bg-success text-white'
+                        : 'bg-bg-secondary text-text-secondary'
                     }`}
                   >
                     {member.name.charAt(0).toUpperCase()}
@@ -98,8 +98,8 @@ function ParticipantsModal({
 
                   {/* Name and preference */}
                   <div className="flex-1">
-                    <div className="font-medium text-gray-100">{member.name}</div>
-                    <div className="text-sm text-gray-400">
+                    <div className="font-medium text-text-primary">{member.name}</div>
+                    <div className="text-sm text-text-secondary">
                       {member.rice_preference === 'boiled' ? 'Boiled Rice' : 'Atop Rice'}
                     </div>
                   </div>
@@ -107,7 +107,7 @@ function ParticipantsModal({
                   {/* Status indicator */}
                   {hasParticipated && (
                     <svg
-                      className="w-5 h-5 text-green-500"
+                      className="w-5 h-5 text-success"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -127,10 +127,10 @@ function ParticipantsModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-700">
+        <div className="p-6 border-t border-border">
           <button
             onClick={onClose}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            className="btn-primary w-full"
           >
             Close
           </button>

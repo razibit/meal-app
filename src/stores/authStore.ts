@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import type { Member, Session } from '../types';
+import { 
+  AuthenticationError, 
+  DatabaseError, 
+  handleError, 
+  showErrorToast 
+} from '../utils/errorHandling';
+import { retryDatabaseOperation } from '../utils/retryLogic';
 
 interface AuthState {
   user: Member | null;
@@ -29,17 +36,20 @@ export const useAuthStore = create<AuthState>((set) => ({
         password,
       });
 
-      if (error) throw error;
+      if (error) throw new AuthenticationError(error.message);
 
       if (data.user) {
-        // Fetch member profile
-        const { data: member, error: memberError } = await supabase
-          .from('members')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+        // Fetch member profile with retry
+        const member = await retryDatabaseOperation(async () => {
+          const { data: member, error: memberError } = await supabase
+            .from('members')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
 
-        if (memberError) throw memberError;
+          if (memberError) throw new DatabaseError(memberError.message);
+          return member;
+        });
 
         set({
           user: member,
@@ -49,8 +59,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
+      const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
       throw error;
     }
   },
@@ -65,24 +76,28 @@ export const useAuthStore = create<AuthState>((set) => ({
         password,
       });
 
-      if (error) throw error;
+      if (error) throw new AuthenticationError(error.message);
 
       if (data.user) {
-        // Create member profile
-        const { data: member, error: memberError } = await supabase
-          .from('members')
-          .insert({
-            id: data.user.id,
-            name,
-            email,
-            phone,
-            rice_preference: 'boiled',
-            role: 'member',
-          })
-          .select()
-          .single();
+        const userId = data.user.id;
+        // Create member profile with retry
+        const member = await retryDatabaseOperation(async () => {
+          const { data: member, error: memberError } = await supabase
+            .from('members')
+            .insert({
+              id: userId,
+              name,
+              email,
+              phone,
+              rice_preference: 'boiled',
+              role: 'member',
+            })
+            .select()
+            .single();
 
-        if (memberError) throw memberError;
+          if (memberError) throw new DatabaseError(memberError.message);
+          return member;
+        });
 
         set({
           user: member,
@@ -92,8 +107,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign up';
+      const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
       throw error;
     }
   },
@@ -104,7 +120,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const { error } = await supabase.auth.signOut();
 
-      if (error) throw error;
+      if (error) throw new AuthenticationError(error.message);
 
       set({
         user: null,
@@ -113,8 +129,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign out';
+      const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
       throw error;
     }
   },
@@ -126,29 +143,38 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      if (sessionError) throw sessionError;
+      if (sessionError) throw new AuthenticationError(sessionError.message);
 
       if (session?.user) {
-        // Fetch member profile
-        const { data: member, error: memberError } = await supabase
-          .from('members')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        // Fetch member profile with retry
+        const member = await retryDatabaseOperation(async () => {
+          const { data: member, error: memberError } = await supabase
+            .from('members')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-        if (memberError) {
-          // If member doesn't exist, sign out
+          if (memberError) {
+            // If member doesn't exist, this is a critical error
+            throw new DatabaseError(memberError.message);
+          }
+          return member;
+        }).catch(async () => {
+          // If member doesn't exist after retries, sign out
           await supabase.auth.signOut();
-          set({ user: null, session: null, loading: false });
-          return;
-        }
-
-        set({
-          user: member,
-          session,
-          loading: false,
-          error: null,
+          return null;
         });
+
+        if (member) {
+          set({
+            user: member,
+            session,
+            loading: false,
+            error: null,
+          });
+        } else {
+          set({ user: null, session: null, loading: false });
+        }
       } else {
         set({ user: null, session: null, loading: false });
       }
@@ -170,8 +196,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to initialize auth';
+      const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      // Don't show toast on initialization errors to avoid annoying users on page load
     }
   },
 

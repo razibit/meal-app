@@ -48,15 +48,15 @@ function MealToggle({ activePeriod, onPeriodChange }: MealToggleProps) {
 
   return (
     <div className="mb-6">
-      <div className="flex gap-2 bg-gray-800 p-1 rounded-lg">
+      <div className="flex gap-2 bg-bg-tertiary p-1 rounded-lg">
         <button
           onClick={() => onPeriodChange('morning')}
           disabled={cutoffStatus.morning}
           className={`
-            flex-1 py-3 px-4 rounded-md font-medium transition-all
+            flex-1 py-3 px-4 rounded-md font-medium transition-all min-h-touch
             ${activePeriod === 'morning'
-              ? 'bg-blue-600 text-white shadow-lg'
-              : 'text-gray-400 hover:text-gray-200'
+              ? 'bg-primary text-white shadow-lg'
+              : 'text-text-secondary hover:text-text-primary'
             }
             ${cutoffStatus.morning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           `}
@@ -80,10 +80,10 @@ function MealToggle({ activePeriod, onPeriodChange }: MealToggleProps) {
           onClick={() => onPeriodChange('night')}
           disabled={cutoffStatus.night}
           className={`
-            flex-1 py-3 px-4 rounded-md font-medium transition-all
+            flex-1 py-3 px-4 rounded-md font-medium transition-all min-h-touch
             ${activePeriod === 'night'
-              ? 'bg-blue-600 text-white shadow-lg'
-              : 'text-gray-400 hover:text-gray-200'
+              ? 'bg-primary text-white shadow-lg'
+              : 'text-text-secondary hover:text-text-primary'
             }
             ${cutoffStatus.night ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           `}

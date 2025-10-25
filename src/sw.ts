@@ -40,6 +40,36 @@ registerRoute(
   })
 );
 
+// Cache fonts with cache-first strategy
+registerRoute(
+  ({ request }) => request.destination === 'font',
+  new CacheFirst({
+    cacheName: 'font-cache',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 30,
+        maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+      }),
+    ],
+  })
+);
+
+// Cache CSS and JS with cache-first strategy (for static assets)
+registerRoute(
+  ({ request }) => 
+    request.destination === 'style' || 
+    request.destination === 'script',
+  new CacheFirst({
+    cacheName: 'static-resources',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+      }),
+    ],
+  })
+);
+
 // Handle push notifications
 self.addEventListener('push', (event: PushEvent) => {
   console.log('Push notification received:', event);

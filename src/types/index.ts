@@ -46,4 +46,12 @@ export interface MealCount {
   participants: Array<{ id: string; name: string; rice_preference: string }>;
 }
 
+export interface MonthlyReportRow {
+  member_id: string;
+  member_name: string;
+  morning_count: number;
+  night_count: number;
+  monthly_total: number;
+}
+
 export type { Session, User };

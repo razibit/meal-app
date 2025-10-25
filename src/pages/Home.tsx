@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useMealStore } from '../stores/mealStore';
 import { getTodayDate } from '../utils/dateHelpers';
@@ -30,7 +30,9 @@ function Home() {
 
   const [activePeriod, setActivePeriod] = useState<MealPeriod>(getActivePeriod());
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
-  const todayDate = getTodayDate();
+  
+  // Memoize today's date to avoid recalculation on every render
+  const todayDate = useMemo(() => getTodayDate(), []);
 
   // Fetch initial data
   useEffect(() => {
@@ -41,13 +43,14 @@ function Home() {
   // Fetch meals when period changes
   useEffect(() => {
     fetchMeals(todayDate, activePeriod);
-  }, [activePeriod, todayDate]);
+  }, [activePeriod, todayDate, fetchMeals]);
 
-  const handlePeriodChange = (period: MealPeriod) => {
+  // Memoize event handlers to prevent unnecessary re-renders
+  const handlePeriodChange = useCallback((period: MealPeriod) => {
     setActivePeriod(period);
-  };
+  }, []);
 
-  const handleRegisterMeal = async () => {
+  const handleRegisterMeal = useCallback(async () => {
     if (!user) return;
     try {
       await addMeal(user.id, todayDate, activePeriod);
@@ -55,9 +58,9 @@ function Home() {
       // Error is handled by store
       console.error('Failed to register meal:', error);
     }
-  };
+  }, [user, todayDate, activePeriod, addMeal]);
 
-  const handleRemoveMeal = async () => {
+  const handleRemoveMeal = useCallback(async () => {
     if (!user) return;
     try {
       await removeMeal(user.id, todayDate, activePeriod);
@@ -65,31 +68,46 @@ function Home() {
       // Error is handled by store
       console.error('Failed to remove meal:', error);
     }
-  };
+  }, [user, todayDate, activePeriod, removeMeal]);
 
-  const handleSaveMealDetails = async (details: string) => {
+  const handleSaveMealDetails = useCallback(async (details: string) => {
     if (!user) return;
     const field = activePeriod === 'morning' ? 'morning_details' : 'night_details';
     await updateMealDetails(todayDate, field, details, user.name);
-  };
+  }, [user, todayDate, activePeriod, updateMealDetails]);
 
-  const handleSaveNotice = async (notice: string) => {
+  const handleSaveNotice = useCallback(async (notice: string) => {
     if (!user) return;
     await updateMealDetails(todayDate, 'notice', notice, user.name);
-  };
+  }, [user, todayDate, updateMealDetails]);
 
-  const mealCounts = getMealCounts();
-  const hasRegistered = user ? hasUserRegistered(user.id) : false;
+  const handleShowParticipants = useCallback(() => {
+    setShowParticipantsModal(true);
+  }, []);
 
-  const currentDetails = activePeriod === 'morning'
-    ? mealDetails?.morning_details || ''
-    : mealDetails?.night_details || '';
+  const handleCloseParticipants = useCallback(() => {
+    setShowParticipantsModal(false);
+  }, []);
+
+  // Memoize expensive calculations
+  const mealCounts = useMemo(() => getMealCounts(), [getMealCounts]);
+  const hasRegistered = useMemo(() => 
+    user ? hasUserRegistered(user.id) : false, 
+    [user, hasUserRegistered]
+  );
+
+  const currentDetails = useMemo(() => 
+    activePeriod === 'morning'
+      ? mealDetails?.morning_details || ''
+      : mealDetails?.night_details || '',
+    [activePeriod, mealDetails]
+  );
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="p-4 max-w-4xl mx-auto animate-fade-in">
       {/* Error Toast */}
       {error && (
-        <div className="mb-4 bg-red-900 bg-opacity-30 border border-red-700 text-red-200 px-4 py-3 rounded-lg flex items-center justify-between">
+        <div className="mb-4 bg-error/10 border border-error text-error px-4 py-3 rounded-lg flex items-center justify-between animate-slide-down">
           <span>{error}</span>
           <button
             onClick={clearError}
@@ -121,7 +139,7 @@ function Home() {
       {/* Meal Counts */}
       <MealCounts
         counts={mealCounts}
-        onShowParticipants={() => setShowParticipantsModal(true)}
+        onShowParticipants={handleShowParticipants}
       />
 
       {/* Meal Registration */}
@@ -153,7 +171,7 @@ function Home() {
       {/* Participants Modal */}
       <ParticipantsModal
         isOpen={showParticipantsModal}
-        onClose={() => setShowParticipantsModal(false)}
+        onClose={handleCloseParticipants}
         participants={mealCounts.participants}
         allMembers={members}
       />

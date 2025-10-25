@@ -8,12 +8,12 @@ interface MealCountsProps {
 function MealCounts({ counts, onShowParticipants }: MealCountsProps) {
   return (
     <div className="mb-6">
-      <div className="bg-gray-800 rounded-lg p-6">
+      <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-200">Meal Counts</h3>
+          <h3 className="text-lg font-semibold text-text-primary">Meal Counts</h3>
           <button
             onClick={onShowParticipants}
-            className="text-blue-500 hover:text-blue-400 transition-colors"
+            className="text-primary hover:text-primary-light transition-colors min-w-touch min-h-touch flex items-center justify-center"
             aria-label="View participants"
           >
             <svg
@@ -36,34 +36,34 @@ function MealCounts({ counts, onShowParticipants }: MealCountsProps) {
           {/* Boiled Rice Count */}
           <div
             onClick={onShowParticipants}
-            className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-650 transition-colors"
+            className="bg-bg-tertiary rounded-lg p-4 cursor-pointer hover:bg-bg-secondary transition-colors min-h-touch"
           >
-            <div className="text-2xl font-bold text-white mb-1">
+            <div className="text-2xl font-bold text-text-primary mb-1">
               {counts.boiledRice}
             </div>
-            <div className="text-sm text-gray-400">Boiled Rice</div>
+            <div className="text-sm text-text-secondary">Boiled Rice</div>
           </div>
 
           {/* Atop Rice Count */}
           <div
             onClick={onShowParticipants}
-            className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-650 transition-colors"
+            className="bg-bg-tertiary rounded-lg p-4 cursor-pointer hover:bg-bg-secondary transition-colors min-h-touch"
           >
-            <div className="text-2xl font-bold text-white mb-1">
+            <div className="text-2xl font-bold text-text-primary mb-1">
               {counts.atopRice}
             </div>
-            <div className="text-sm text-gray-400">Atop Rice</div>
+            <div className="text-sm text-text-secondary">Atop Rice</div>
           </div>
 
           {/* Total Count */}
           <div
             onClick={onShowParticipants}
-            className="bg-blue-600 rounded-lg p-4 cursor-pointer hover:bg-blue-700 transition-colors"
+            className="bg-primary rounded-lg p-4 cursor-pointer hover:bg-primary-dark transition-colors min-h-touch"
           >
             <div className="text-2xl font-bold text-white mb-1">
               {counts.total}
             </div>
-            <div className="text-sm text-blue-100">Total</div>
+            <div className="text-sm text-white opacity-90">Total</div>
           </div>
         </div>
       </div>

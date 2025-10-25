@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Navigation from './Navigation';
+import { OfflineIndicator } from './OfflineIndicator';
 
 interface LayoutProps {
   children?: ReactNode;
@@ -37,21 +38,24 @@ function Layout({ children }: LayoutProps) {
         {/* Navigation component handles its own positioning */}
       </div>
 
+      {/* Offline Indicator */}
+      <OfflineIndicator />
+
       {/* Members Modal - Placeholder for now */}
       {showMembersModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in"
           onClick={handleCloseMembersModal}
         >
           <div
-            className="bg-bg-primary rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto"
+            className="bg-bg-primary rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-xl animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-text-primary">All Members</h2>
               <button
                 onClick={handleCloseMembersModal}
-                className="text-text-secondary hover:text-text-primary transition-colors"
+                className="text-text-secondary hover:text-text-primary transition-colors min-w-touch min-h-touch flex items-center justify-center"
                 aria-label="Close modal"
               >
                 <svg

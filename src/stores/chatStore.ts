@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import type { ChatMessage } from '../types';
+import { offlineQueue } from '../services/offlineQueue';
+import { 
+  AuthenticationError, 
+  DatabaseError, 
+  handleError, 
+  showErrorToast 
+} from '../utils/errorHandling';
+import { retryDatabaseOperation } from '../utils/retryLogic';
 
 interface ChatState {
   messages: ChatMessage[];
@@ -23,20 +31,38 @@ export const useChatStore = create<ChatState>((set) => ({
       set({ error: null });
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        const error = new AuthenticationError();
+        showErrorToast(handleError(error));
+        throw error;
+      }
 
-      const { data, error } = await supabase
-        .from('chats')
-        .insert({
-          sender_id: user.id,
-          message,
-          mentions,
-          is_violation: false,
-        })
-        .select('*, members!chats_sender_id_fkey(name)')
-        .single();
+      // Check if offline
+      if (!navigator.onLine) {
+        // Queue the action for later
+        offlineQueue.add({
+          type: 'send_message',
+          payload: { senderId: user.id, message, mentions },
+        });
+        
+        return;
+      }
 
-      if (error) throw error;
+      const data = await retryDatabaseOperation(async () => {
+        const { data, error } = await supabase
+          .from('chats')
+          .insert({
+            sender_id: user.id,
+            message,
+            mentions,
+            is_violation: false,
+          })
+          .select('*, members!chats_sender_id_fkey(name)')
+          .single();
+
+        if (error) throw new DatabaseError(error.message);
+        return data;
+      });
 
       // Transform the data to match ChatMessage interface
       const chatMessage: ChatMessage = {
@@ -53,8 +79,9 @@ export const useChatStore = create<ChatState>((set) => ({
         messages: [...state.messages, chatMessage],
       }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      const errorMessage = handleError(error);
       set({ error: errorMessage });
+      showErrorToast(errorMessage);
       throw error;
     }
   },
@@ -63,21 +90,25 @@ export const useChatStore = create<ChatState>((set) => ({
     try {
       set({ loading: true, error: null });
 
-      const { data, error } = await supabase
-        .from('chats')
-        .select('*')
-        .order('created_at', { ascending: true })
-        .limit(limit);
+      const data = await retryDatabaseOperation(async () => {
+        const { data, error } = await supabase
+          .from('chats')
+          .select('*')
+          .order('created_at', { ascending: true })
+          .limit(limit);
 
-      if (error) throw error;
+        if (error) throw new DatabaseError(error.message);
+        return data;
+      });
 
       set({
         messages: data || [],
         loading: false,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch messages';
+      const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
     }
   },
 

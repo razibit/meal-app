@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useChatStore } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
 import { useMembers } from '../hooks/useMembers';
@@ -24,29 +24,32 @@ function Chat() {
     fetchMessages();
   }, [fetchMessages]);
 
+  // Memoize notification handler
+  const handleNewMessage = useCallback((newMessage: any) => {
+    // Check if current user is mentioned
+    if (user && newMessage.mentions.includes(user.id)) {
+      // Trigger notification if supported and permitted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const senderName = memberNames[newMessage.sender_id] || 'Someone';
+        new Notification(`${senderName} mentioned you`, {
+          body: newMessage.message,
+          icon: '/icon-192.png',
+          tag: 'chat-mention',
+        });
+      }
+    }
+  }, [user, memberNames]);
+
   // Set up real-time subscription
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribe = subscribeToMessages((newMessage) => {
-      // Check if current user is mentioned
-      if (newMessage.mentions.includes(user.id)) {
-        // Trigger notification if supported and permitted
-        if ('Notification' in window && Notification.permission === 'granted') {
-          const senderName = memberNames[newMessage.sender_id] || 'Someone';
-          new Notification(`${senderName} mentioned you`, {
-            body: newMessage.message,
-            icon: '/icon-192.png',
-            tag: 'chat-mention',
-          });
-        }
-      }
-    });
+    const unsubscribe = subscribeToMessages(handleNewMessage);
 
     return () => {
       unsubscribe();
     };
-  }, [user, subscribeToMessages, memberNames]);
+  }, [user, subscribeToMessages, handleNewMessage]);
 
   if (!user) {
     return (
@@ -57,7 +60,7 @@ function Chat() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full animate-fade-in">
       {/* Header */}
       <div className="border-b border-border px-4 py-3">
         <h2 className="text-xl font-bold text-text-primary">Chat</h2>
@@ -68,7 +71,7 @@ function Chat() {
 
       {/* Error message */}
       {error && (
-        <div className="mx-4 mt-4 p-3 bg-error/10 border border-error rounded-lg text-error text-sm">
+        <div className="mx-4 mt-4 p-3 bg-error/10 border border-error rounded-lg text-error text-sm animate-slide-down">
           {error}
         </div>
       )}

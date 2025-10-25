@@ -42,8 +42,8 @@ function MealRegistration({
 
   return (
     <div className="mb-6">
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-200 mb-4">
+      <div className="card">
+        <h3 className="text-lg font-semibold text-text-primary mb-4">
           {period === 'morning' ? 'Morning' : 'Night'} Meal Registration
         </h3>
 
@@ -51,7 +51,7 @@ function MealRegistration({
           <button
             onClick={handleRegister}
             disabled={isLoading}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="btn-primary w-full flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
@@ -98,7 +98,7 @@ function MealRegistration({
           </button>
         ) : (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-green-500">
+            <div className="flex items-center gap-2 text-success">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -117,7 +117,7 @@ function MealRegistration({
             <button
               onClick={handleRemove}
               disabled={isLoading}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-error hover:bg-error/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 min-h-touch"
             >
               {isLoading ? (
                 <>

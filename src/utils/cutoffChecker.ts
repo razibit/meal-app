@@ -65,13 +65,5 @@ export function getActivePeriod(): MealPeriod {
   return currentHour < 12 ? 'morning' : 'night';
 }
 
-/**
- * Custom error for cutoff violations
- */
-export class CutoffError extends Error {
-  constructor(period: MealPeriod) {
-    const cutoffTime = period === 'morning' ? '7:00 AM' : '6:00 PM';
-    super(`Cannot modify ${period} meal after ${cutoffTime}`);
-    this.name = 'CutoffError';
-  }
-}
+// Re-export CutoffError from errorHandling module for backward compatibility
+export { CutoffError } from './errorHandling';

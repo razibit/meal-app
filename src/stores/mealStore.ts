@@ -1,9 +1,17 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import type { Meal, MealDetails, Member, MealCount } from '../types';
-import { MealPeriod, isCutoffPassed, CutoffError } from '../utils/cutoffChecker';
+import { MealPeriod, isCutoffPassed } from '../utils/cutoffChecker';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { validateMealAction } from '../services/cutoffEnforcer';
+import { offlineQueue } from '../services/offlineQueue';
+import { 
+  CutoffError, 
+  DatabaseError, 
+  handleError, 
+  showErrorToast 
+} from '../utils/errorHandling';
+import { retryDatabaseOperation } from '../utils/retryLogic';
 
 interface MealState {
   meals: Meal[];
@@ -52,21 +60,25 @@ export const useMealStore = create<MealState>((set, get) => ({
       
       const today = new Date().toISOString().split('T')[0];
       
-      // Fetch both morning and night meals for today
-      const { data, error } = await supabase
-        .from('meals')
-        .select('*')
-        .eq('meal_date', today);
+      // Fetch both morning and night meals for today with retry logic
+      const data = await retryDatabaseOperation(async () => {
+        const { data, error } = await supabase
+          .from('meals')
+          .select('*')
+          .eq('meal_date', today);
 
-      if (error) throw error;
+        if (error) throw new DatabaseError(error.message);
+        return data;
+      });
 
       set({ meals: data || [], loading: false });
       
       // Update counts after fetching meals
       get().updateCounts();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch today\'s meals';
+      const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
     }
   },
 
@@ -74,93 +86,125 @@ export const useMealStore = create<MealState>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { data, error } = await supabase
-        .from('meals')
-        .select('*')
-        .eq('meal_date', date)
-        .eq('period', period);
+      const data = await retryDatabaseOperation(async () => {
+        const { data, error } = await supabase
+          .from('meals')
+          .select('*')
+          .eq('meal_date', date)
+          .eq('period', period);
 
-      if (error) throw error;
+        if (error) throw new DatabaseError(error.message);
+        return data;
+      });
 
       set({ meals: data || [], loading: false });
       
       // Update counts after fetching meals
       get().updateCounts();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch meals';
+      const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
     }
   },
 
   fetchMealDetails: async (date: string) => {
     try {
-      const { data, error } = await supabase
-        .from('meal_details')
-        .select('*')
-        .eq('meal_date', date)
-        .single();
+      const data = await retryDatabaseOperation(async () => {
+        const { data, error } = await supabase
+          .from('meal_details')
+          .select('*')
+          .eq('meal_date', date)
+          .single();
 
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 is "not found" error, which is okay
-        throw error;
-      }
+        if (error && error.code !== 'PGRST116') {
+          // PGRST116 is "not found" error, which is okay
+          throw new DatabaseError(error.message);
+        }
+
+        return data;
+      });
 
       set({ mealDetails: data || null });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch meal details';
+      const errorMessage = handleError(error);
       set({ error: errorMessage });
+      showErrorToast(errorMessage);
     }
   },
 
   fetchMembers: async () => {
     try {
-      const { data, error } = await supabase
-        .from('members')
-        .select('*')
-        .order('name');
+      const data = await retryDatabaseOperation(async () => {
+        const { data, error } = await supabase
+          .from('members')
+          .select('*')
+          .order('name');
 
-      if (error) throw error;
+        if (error) throw new DatabaseError(error.message);
+        return data;
+      });
 
       set({ members: data || [] });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch members';
+      const errorMessage = handleError(error);
       set({ error: errorMessage });
+      showErrorToast(errorMessage);
     }
   },
 
   addMeal: async (memberId: string, date: string, period: MealPeriod) => {
     // Client-side cutoff check
     if (isCutoffPassed(period)) {
-      throw new CutoffError(period);
+      const error = new CutoffError(period);
+      showErrorToast(handleError(error));
+      throw error;
     }
 
     try {
       set({ loading: true, error: null });
 
-      // Server-side cutoff validation
-      const validation = await validateMealAction('add', memberId, date, period);
-      
-      if (!validation.success) {
-        throw new Error(validation.error || 'Cutoff time has passed');
+      // Check if offline
+      if (!navigator.onLine) {
+        // Queue the action for later
+        offlineQueue.add({
+          type: 'add_meal',
+          payload: { memberId, date, period },
+        });
+        
+        set({ loading: false });
+        return;
       }
 
-      const { error } = await supabase
-        .from('meals')
-        .insert({
-          member_id: memberId,
-          meal_date: date,
-          period,
-        });
+      // Server-side cutoff validation with retry
+      const validation = await retryDatabaseOperation(async () => {
+        return await validateMealAction('add', memberId, date, period);
+      });
+      
+      if (!validation.success) {
+        throw new CutoffError(period);
+      }
 
-      if (error) throw error;
+      await retryDatabaseOperation(async () => {
+        const { error } = await supabase
+          .from('meals')
+          .insert({
+            member_id: memberId,
+            meal_date: date,
+            period,
+          });
+
+        if (error) throw new DatabaseError(error.message);
+      });
 
       // Refresh today's meals to get both periods
       await get().fetchTodayMeals();
       
       set({ loading: false });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add meal';
+      const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
       throw error;
     }
   },
@@ -168,35 +212,54 @@ export const useMealStore = create<MealState>((set, get) => ({
   removeMeal: async (memberId: string, date: string, period: MealPeriod) => {
     // Client-side cutoff check
     if (isCutoffPassed(period)) {
-      throw new CutoffError(period);
+      const error = new CutoffError(period);
+      showErrorToast(handleError(error));
+      throw error;
     }
 
     try {
       set({ loading: true, error: null });
 
-      // Server-side cutoff validation
-      const validation = await validateMealAction('remove', memberId, date, period);
-      
-      if (!validation.success) {
-        throw new Error(validation.error || 'Cutoff time has passed');
+      // Check if offline
+      if (!navigator.onLine) {
+        // Queue the action for later
+        offlineQueue.add({
+          type: 'remove_meal',
+          payload: { memberId, date, period },
+        });
+        
+        set({ loading: false });
+        return;
       }
 
-      const { error } = await supabase
-        .from('meals')
-        .delete()
-        .eq('member_id', memberId)
-        .eq('meal_date', date)
-        .eq('period', period);
+      // Server-side cutoff validation with retry
+      const validation = await retryDatabaseOperation(async () => {
+        return await validateMealAction('remove', memberId, date, period);
+      });
+      
+      if (!validation.success) {
+        throw new CutoffError(period);
+      }
 
-      if (error) throw error;
+      await retryDatabaseOperation(async () => {
+        const { error } = await supabase
+          .from('meals')
+          .delete()
+          .eq('member_id', memberId)
+          .eq('meal_date', date)
+          .eq('period', period);
+
+        if (error) throw new DatabaseError(error.message);
+      });
 
       // Refresh today's meals to get both periods
       await get().fetchTodayMeals();
       
       set({ loading: false });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to remove meal';
+      const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
       throw error;
     }
   },
@@ -208,44 +271,58 @@ export const useMealStore = create<MealState>((set, get) => ({
     updatedBy: string
   ) => {
     try {
-      // Check if meal_details exists for this date
-      const { data: existing } = await supabase
-        .from('meal_details')
-        .select('id')
-        .eq('meal_date', date)
-        .single();
-
-      if (existing) {
-        // Update existing
-        const { error } = await supabase
-          .from('meal_details')
-          .update({
-            [field]: value,
-            updated_by: updatedBy,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('meal_date', date);
-
-        if (error) throw error;
-      } else {
-        // Insert new
-        const { error } = await supabase
-          .from('meal_details')
-          .insert({
-            meal_date: date,
-            [field]: value,
-            updated_by: updatedBy,
-            updated_at: new Date().toISOString(),
-          });
-
-        if (error) throw error;
+      // Check if offline
+      if (!navigator.onLine) {
+        // Queue the action for later
+        offlineQueue.add({
+          type: 'update_meal_details',
+          payload: { date, field, value, updatedBy },
+        });
+        
+        return;
       }
+
+      await retryDatabaseOperation(async () => {
+        // Check if meal_details exists for this date
+        const { data: existing } = await supabase
+          .from('meal_details')
+          .select('id')
+          .eq('meal_date', date)
+          .single();
+
+        if (existing) {
+          // Update existing
+          const { error } = await supabase
+            .from('meal_details')
+            .update({
+              [field]: value,
+              updated_by: updatedBy,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('meal_date', date);
+
+          if (error) throw new DatabaseError(error.message);
+        } else {
+          // Insert new
+          const { error } = await supabase
+            .from('meal_details')
+            .insert({
+              meal_date: date,
+              [field]: value,
+              updated_by: updatedBy,
+              updated_at: new Date().toISOString(),
+            });
+
+          if (error) throw new DatabaseError(error.message);
+        }
+      });
 
       // Refresh meal details
       await get().fetchMealDetails(date);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update meal details';
+      const errorMessage = handleError(error);
       set({ error: errorMessage });
+      showErrorToast(errorMessage);
       throw error;
     }
   },
