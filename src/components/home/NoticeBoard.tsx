@@ -4,11 +4,12 @@ import { formatRelativeTime } from '../../utils/dateHelpers';
 interface NoticeBoardProps {
   notice: string;
   updatedBy?: string;
+  updatedByName?: string;
   updatedAt?: string;
   onSave: (notice: string) => Promise<void>;
 }
 
-function NoticeBoard({ notice, updatedBy, updatedAt, onSave }: NoticeBoardProps) {
+function NoticeBoard({ notice, updatedBy, updatedByName, updatedAt, onSave }: NoticeBoardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(notice);
   const [isSaving, setIsSaving] = useState(false);
@@ -105,9 +106,9 @@ function NoticeBoard({ notice, updatedBy, updatedAt, onSave }: NoticeBoardProps)
           </div>
         )}
 
-        {updatedBy && updatedAt && (
+        {updatedAt && (
           <div className="mt-2 text-xs text-text-tertiary">
-            Last edited by {updatedBy} {formatRelativeTime(new Date(updatedAt))}
+            Last edited by {updatedByName || updatedBy || 'Unknown'} {formatRelativeTime(new Date(updatedAt))}
           </div>
         )}
       </div>

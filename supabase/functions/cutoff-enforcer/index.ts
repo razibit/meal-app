@@ -1,9 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// Cutoff times in UTC+6
-const MORNING_CUTOFF_HOUR = 7; // 7:00 AM
-const NIGHT_CUTOFF_HOUR = 18; // 6:00 PM
+// Cutoff times in UTC+6 (configurable via environment variables)
+const MORNING_CUTOFF_HOUR = parseInt(Deno.env.get('MORNING_CUTOFF_HOUR') || '7', 10);
+const NIGHT_CUTOFF_HOUR = parseInt(Deno.env.get('NIGHT_CUTOFF_HOUR') || '18', 10);
 const TIMEZONE_OFFSET = 6 * 60; // UTC+6 in minutes
 
 type MealPeriod = 'morning' | 'night';

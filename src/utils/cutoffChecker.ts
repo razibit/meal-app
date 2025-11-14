@@ -1,8 +1,8 @@
 import { getCurrentTimeInTimezone } from './dateHelpers';
 
-// Cutoff times in UTC+6
-const MORNING_CUTOFF_HOUR = 7; // 7:00 AM
-const NIGHT_CUTOFF_HOUR = 18; // 6:00 PM
+// Cutoff times in UTC+6 (configurable via environment variables)
+const MORNING_CUTOFF_HOUR = parseInt(import.meta.env.VITE_MORNING_CUTOFF_HOUR || '7', 10);
+const NIGHT_CUTOFF_HOUR = parseInt(import.meta.env.VITE_NIGHT_CUTOFF_HOUR || '18', 10);
 
 export type MealPeriod = 'morning' | 'night';
 

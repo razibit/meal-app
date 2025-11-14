@@ -27,6 +27,7 @@ export interface MealDetails {
   night_details?: string;
   notice?: string;
   updated_by?: string;
+  updated_by_name?: string;
   updated_at?: string;
 }
 

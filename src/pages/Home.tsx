@@ -73,12 +73,12 @@ function Home() {
   const handleSaveMealDetails = useCallback(async (details: string) => {
     if (!user) return;
     const field = activePeriod === 'morning' ? 'morning_details' : 'night_details';
-    await updateMealDetails(todayDate, field, details, user.name);
+    await updateMealDetails(todayDate, field, details, user.id);
   }, [user, todayDate, activePeriod, updateMealDetails]);
 
   const handleSaveNotice = useCallback(async (notice: string) => {
     if (!user) return;
-    await updateMealDetails(todayDate, 'notice', notice, user.name);
+    await updateMealDetails(todayDate, 'notice', notice, user.id);
   }, [user, todayDate, updateMealDetails]);
 
   const handleShowParticipants = useCallback(() => {
@@ -156,6 +156,7 @@ function Home() {
         period={activePeriod}
         details={currentDetails}
         updatedBy={mealDetails?.updated_by}
+        updatedByName={mealDetails?.updated_by_name}
         updatedAt={mealDetails?.updated_at}
         onSave={handleSaveMealDetails}
       />
@@ -164,6 +165,7 @@ function Home() {
       <NoticeBoard
         notice={mealDetails?.notice || ''}
         updatedBy={mealDetails?.updated_by}
+        updatedByName={mealDetails?.updated_by_name}
         updatedAt={mealDetails?.updated_at}
         onSave={handleSaveNotice}
       />

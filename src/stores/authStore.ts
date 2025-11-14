@@ -70,29 +70,29 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       set({ loading: true, error: null });
 
-      // Sign up the user
+      // Sign up the user with metadata (trigger will create member profile)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name,
+            phone,
+            rice_preference: 'boiled',
+            role: 'member',
+          },
+        },
       });
 
       if (error) throw new AuthenticationError(error.message);
 
-      if (data.user) {
-        const userId = data.user.id;
-        // Create member profile with retry
+      if (data.user && data.session) {
+        // Fetch the member profile created by the trigger
         const member = await retryDatabaseOperation(async () => {
           const { data: member, error: memberError } = await supabase
             .from('members')
-            .insert({
-              id: userId,
-              name,
-              email,
-              phone,
-              rice_preference: 'boiled',
-              role: 'member',
-            })
-            .select()
+            .select('*')
+            .eq('id', data.user.id)
             .single();
 
           if (memberError) throw new DatabaseError(memberError.message);

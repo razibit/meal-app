@@ -6,6 +6,7 @@ interface MealDetailsEditorProps {
   period: MealPeriod;
   details: string;
   updatedBy?: string;
+  updatedByName?: string;
   updatedAt?: string;
   onSave: (details: string) => Promise<void>;
 }
@@ -14,6 +15,7 @@ function MealDetailsEditor({
   period,
   details,
   updatedBy,
+  updatedByName,
   updatedAt,
   onSave,
 }: MealDetailsEditorProps) {
@@ -119,9 +121,9 @@ function MealDetailsEditor({
           className="input w-full min-h-[120px] resize-y"
         />
 
-        {updatedBy && updatedAt && (
+        {updatedAt && (
           <div className="mt-2 text-xs text-text-tertiary">
-            Edited by {updatedBy} {formatRelativeTime(new Date(updatedAt))}
+            Edited by {updatedByName || updatedBy || 'Unknown'} {formatRelativeTime(new Date(updatedAt))}
           </div>
         )}
       </div>

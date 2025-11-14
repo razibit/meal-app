@@ -3,9 +3,9 @@
  * Run with: node scripts/generate-vapid-keys.js
  */
 
-import { generateVAPIDKeys } from 'web-push';
+import webpush from 'web-push';
 
-const vapidKeys = generateVAPIDKeys();
+const vapidKeys = webpush.generateVAPIDKeys();
 
 console.log('\n=== VAPID Keys Generated ===\n');
 console.log('Add these to your .env file:\n');

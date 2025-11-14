@@ -113,13 +113,26 @@ export const useMealStore = create<MealState>((set, get) => ({
       const data = await retryDatabaseOperation(async () => {
         const { data, error } = await supabase
           .from('meal_details')
-          .select('*')
+          .select(`
+            *,
+            members:updated_by (
+              name
+            )
+          `)
           .eq('meal_date', date)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
-          // PGRST116 is "not found" error, which is okay
+        if (error) {
           throw new DatabaseError(error.message);
+        }
+
+        // Transform the data to include updated_by_name
+        if (data && data.members) {
+          return {
+            ...data,
+            updated_by_name: data.members.name,
+            members: undefined, // Remove the nested object
+          };
         }
 
         return data;
@@ -284,11 +297,16 @@ export const useMealStore = create<MealState>((set, get) => ({
 
       await retryDatabaseOperation(async () => {
         // Check if meal_details exists for this date
-        const { data: existing } = await supabase
+        const { data: existing, error: selectError } = await supabase
           .from('meal_details')
           .select('id')
           .eq('meal_date', date)
-          .single();
+          .maybeSingle();
+
+        // Handle unexpected errors (not "not found")
+        if (selectError) {
+          throw new DatabaseError(selectError.message);
+        }
 
         if (existing) {
           // Update existing
@@ -297,11 +315,13 @@ export const useMealStore = create<MealState>((set, get) => ({
             .update({
               [field]: value,
               updated_by: updatedBy,
-              updated_at: new Date().toISOString(),
             })
             .eq('meal_date', date);
 
-          if (error) throw new DatabaseError(error.message);
+          if (error) {
+            console.error('Update meal_details error:', error);
+            throw new DatabaseError(error.message);
+          }
         } else {
           // Insert new
           const { error } = await supabase
@@ -310,10 +330,14 @@ export const useMealStore = create<MealState>((set, get) => ({
               meal_date: date,
               [field]: value,
               updated_by: updatedBy,
-              updated_at: new Date().toISOString(),
-            });
+            })
+            .select();
 
-          if (error) throw new DatabaseError(error.message);
+          if (error) {
+            console.error('Insert meal_details error:', error);
+            console.error('Insert payload:', { meal_date: date, [field]: value, updated_by: updatedBy });
+            throw new DatabaseError(error.message);
+          }
         }
       });
 
@@ -420,12 +444,12 @@ export const useMealStore = create<MealState>((set, get) => ({
           table: 'meal_details',
           filter: `meal_date=eq.${date}`,
         },
-        (payload) => {
+        async (payload) => {
           console.log('Meal details change detected:', payload);
           
-          // Update meal details in state
+          // Refetch meal details to get the member name
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            set({ mealDetails: payload.new as MealDetails });
+            await get().fetchMealDetails(date);
           } else if (payload.eventType === 'DELETE') {
             set({ mealDetails: null });
           }

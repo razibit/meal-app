@@ -12,7 +12,7 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon.svg', 'icon-192.png', 'icon-192.svg', 'icon-512.png', 'icon-512.svg', 'badge-72.png', 'badge-72.svg'],
+      includeAssets: ['favicon.svg', 'icon-192.svg', 'icon-512.svg', 'badge-72.svg'],
       manifest: {
         name: 'Mess Meal Management',
         short_name: 'Mess Meals',
@@ -24,15 +24,15 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'icon-192.png',
+            src: 'icon-192.svg',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           },
           {
-            src: 'icon-512.png',
+            src: 'icon-512.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           }
         ]
@@ -116,6 +116,9 @@ export default defineConfig({
     exclude: ['workbox-window'],
   },
   server: {
-    port: 3000
+    port: 3000,
+    hmr: {
+      overlay: false
+    }
   }
 });

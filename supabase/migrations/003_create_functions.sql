@@ -42,10 +42,10 @@ CREATE INDEX IF NOT EXISTS idx_meals_date_member_period
 CREATE INDEX IF NOT EXISTS idx_meal_details_date_range 
   ON meal_details(meal_date DESC);
 
--- Partial index for recent chats (last 30 days)
+-- Index for recent chats (ordered by created_at for efficient queries)
+-- Note: Removed time-based WHERE clause as now() is not IMMUTABLE
 CREATE INDEX IF NOT EXISTS idx_chats_recent 
-  ON chats(created_at DESC) 
-  WHERE created_at > (now() - interval '30 days');
+  ON chats(created_at DESC);
 
 -- Index for violation messages
 CREATE INDEX IF NOT EXISTS idx_chats_violations 

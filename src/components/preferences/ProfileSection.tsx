@@ -7,6 +7,7 @@ export function ProfileSection() {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
+  const [ricePreference, setRicePreference] = useState(user?.rice_preference || 'boiled');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -24,6 +25,7 @@ export function ProfileSection() {
         .update({
           name: name.trim(),
           phone: phone.trim() || null,
+          rice_preference: ricePreference,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -58,6 +60,7 @@ export function ProfileSection() {
   const handleCancel = () => {
     setName(user?.name || '');
     setPhone(user?.phone || '');
+    setRicePreference(user?.rice_preference || 'boiled');
     setIsEditing(false);
     setError(null);
   };
@@ -114,6 +117,26 @@ export function ProfileSection() {
             />
           ) : (
             <p className="text-text-primary py-2">{user.phone || 'Not provided'}</p>
+          )}
+        </div>
+
+        {/* Rice Preference Field */}
+        <div>
+          <label htmlFor="rice-preference" className="block text-sm font-medium text-text-secondary mb-1">
+            Rice Preference
+          </label>
+          {isEditing ? (
+            <select
+              id="rice-preference"
+              value={ricePreference}
+              onChange={(e) => setRicePreference(e.target.value as 'boiled' | 'atop')}
+              className="input w-full"
+            >
+              <option value="boiled">Boiled Rice</option>
+              <option value="atop">Atop Rice</option>
+            </select>
+          ) : (
+            <p className="text-text-primary py-2 capitalize">{user.rice_preference || 'boiled'}</p>
           )}
         </div>
 

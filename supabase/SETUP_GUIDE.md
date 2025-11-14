@@ -122,9 +122,13 @@ WHERE routine_schema = 'public'
 
 1. In Supabase Dashboard, go to **Authentication > Providers**
 2. Enable **Email** provider (should be enabled by default)
-3. Configure email settings:
-   - Go to **Authentication > Email Templates**
-   - Customize confirmation and reset password emails (optional)
+
+3. **Disable Email Verification** (for simple registration):
+   - Go to **Authentication > Settings**
+   - Scroll to **Email Auth**
+   - **Disable** "Enable email confirmations"
+   - **Disable** "Confirm email changes with a confirmation email"
+   - This allows users to register and login immediately without email verification
 
 4. Set up redirect URLs:
    - Go to **Authentication > URL Configuration**
@@ -134,7 +138,6 @@ WHERE routine_schema = 'public'
 5. Configure Auth settings:
    - Go to **Authentication > Settings**
    - Set JWT expiry: 2592000 seconds (30 days)
-   - Enable "Enable email confirmations" if desired
 
 ## Step 6: Create Test Users
 

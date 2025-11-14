@@ -221,7 +221,7 @@ class OfflineQueue {
       .from('meal_details')
       .select('id')
       .eq('meal_date', date)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       // Update existing
