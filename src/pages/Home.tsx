@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useMealStore } from '../stores/mealStore';
 import { getTodayDate } from '../utils/dateHelpers';
 import { MealPeriod, getActivePeriod } from '../utils/cutoffChecker';
+import DateSelector from '../components/home/DateSelector';
 import MealToggle from '../components/home/MealToggle';
 import MealCounts from '../components/home/MealCounts';
 import MealRegistration from '../components/home/MealRegistration';
@@ -30,56 +31,61 @@ function Home() {
 
   const [activePeriod, setActivePeriod] = useState<MealPeriod>(getActivePeriod());
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
   
-  // Memoize today's date to avoid recalculation on every render
+  // Memoize today's date for comparison
   const todayDate = useMemo(() => getTodayDate(), []);
 
   // Fetch initial data
   useEffect(() => {
     fetchMembers();
-    fetchMealDetails(todayDate);
   }, []);
 
-  // Fetch meals when period changes
+  // Fetch meals and meal details when date or period changes
   useEffect(() => {
-    fetchMeals(todayDate, activePeriod);
-  }, [activePeriod, todayDate, fetchMeals]);
+    fetchMeals(selectedDate, activePeriod);
+    fetchMealDetails(selectedDate);
+  }, [activePeriod, selectedDate, fetchMeals, fetchMealDetails]);
 
   // Memoize event handlers to prevent unnecessary re-renders
   const handlePeriodChange = useCallback((period: MealPeriod) => {
     setActivePeriod(period);
   }, []);
 
+  const handleDateChange = useCallback((date: string) => {
+    setSelectedDate(date);
+  }, []);
+
   const handleRegisterMeal = useCallback(async () => {
     if (!user) return;
     try {
-      await addMeal(user.id, todayDate, activePeriod);
+      await addMeal(user.id, selectedDate, activePeriod);
     } catch (error) {
       // Error is handled by store
       console.error('Failed to register meal:', error);
     }
-  }, [user, todayDate, activePeriod, addMeal]);
+  }, [user, selectedDate, activePeriod, addMeal]);
 
   const handleRemoveMeal = useCallback(async () => {
     if (!user) return;
     try {
-      await removeMeal(user.id, todayDate, activePeriod);
+      await removeMeal(user.id, selectedDate, activePeriod);
     } catch (error) {
       // Error is handled by store
       console.error('Failed to remove meal:', error);
     }
-  }, [user, todayDate, activePeriod, removeMeal]);
+  }, [user, selectedDate, activePeriod, removeMeal]);
 
   const handleSaveMealDetails = useCallback(async (details: string) => {
     if (!user) return;
     const field = activePeriod === 'morning' ? 'morning_details' : 'night_details';
-    await updateMealDetails(todayDate, field, details, user.id);
-  }, [user, todayDate, activePeriod, updateMealDetails]);
+    await updateMealDetails(selectedDate, field, details, user.id);
+  }, [user, selectedDate, activePeriod, updateMealDetails]);
 
   const handleSaveNotice = useCallback(async (notice: string) => {
     if (!user) return;
-    await updateMealDetails(todayDate, 'notice', notice, user.id);
-  }, [user, todayDate, updateMealDetails]);
+    await updateMealDetails(selectedDate, 'notice', notice, user.id);
+  }, [user, selectedDate, updateMealDetails]);
 
   const handleShowParticipants = useCallback(() => {
     setShowParticipantsModal(true);
@@ -130,10 +136,17 @@ function Home() {
         </div>
       )}
 
+      {/* Date Selector - Navigate next 7 days */}
+      <DateSelector
+        selectedDate={selectedDate}
+        onDateChange={handleDateChange}
+      />
+
       {/* Meal Toggle */}
       <MealToggle
         activePeriod={activePeriod}
         onPeriodChange={handlePeriodChange}
+        selectedDate={selectedDate}
       />
 
       {/* Meal Counts */}

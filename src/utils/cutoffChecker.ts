@@ -1,4 +1,4 @@
-import { getCurrentTimeInTimezone } from './dateHelpers';
+import { getCurrentTimeInTimezone, formatDate } from './dateHelpers';
 
 // Cutoff times in UTC+6 (configurable via environment variables)
 const MORNING_CUTOFF_HOUR = parseInt(import.meta.env.VITE_MORNING_CUTOFF_HOUR || '7', 10);
@@ -7,10 +7,25 @@ const NIGHT_CUTOFF_HOUR = parseInt(import.meta.env.VITE_NIGHT_CUTOFF_HOUR || '18
 export type MealPeriod = 'morning' | 'night';
 
 /**
- * Check if cutoff time has passed for a given period
+ * Check if cutoff time has passed for a given period and date
+ * For future dates, cutoff never passes (users can always set future meals)
  */
-export function isCutoffPassed(period: MealPeriod): boolean {
+export function isCutoffPassed(period: MealPeriod, date?: string): boolean {
   const now = getCurrentTimeInTimezone();
+  const todayStr = formatDate(now);
+  const targetDate = date || todayStr;
+  
+  // For future dates, cutoff has not passed
+  if (targetDate > todayStr) {
+    return false;
+  }
+  
+  // For past dates, cutoff has always passed
+  if (targetDate < todayStr) {
+    return true;
+  }
+  
+  // For today, check the time
   const currentHour = now.getHours();
 
   if (period === 'morning') {

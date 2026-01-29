@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
 import { MealPeriod, isCutoffPassed, formatTimeUntilCutoff, getActivePeriod } from '../../utils/cutoffChecker';
+import { getTodayDate } from '../../utils/dateHelpers';
 
 interface MealToggleProps {
   activePeriod: MealPeriod;
   onPeriodChange: (period: MealPeriod) => void;
+  selectedDate: string;
 }
 
-function MealToggle({ activePeriod, onPeriodChange }: MealToggleProps) {
+function MealToggle({ activePeriod, onPeriodChange, selectedDate }: MealToggleProps) {
+  const todayDate = getTodayDate();
+  const isFutureDate = selectedDate > todayDate;
+  
   const [cutoffStatus, setCutoffStatus] = useState({
-    morning: isCutoffPassed('morning'),
-    night: isCutoffPassed('night'),
+    morning: isCutoffPassed('morning', selectedDate),
+    night: isCutoffPassed('night', selectedDate),
   });
   const [countdown, setCountdown] = useState({
     morning: formatTimeUntilCutoff('morning'),
@@ -20,8 +25,8 @@ function MealToggle({ activePeriod, onPeriodChange }: MealToggleProps) {
   useEffect(() => {
     const updateStatus = () => {
       setCutoffStatus({
-        morning: isCutoffPassed('morning'),
-        night: isCutoffPassed('night'),
+        morning: isCutoffPassed('morning', selectedDate),
+        night: isCutoffPassed('night', selectedDate),
       });
       setCountdown({
         morning: formatTimeUntilCutoff('morning'),
@@ -36,15 +41,17 @@ function MealToggle({ activePeriod, onPeriodChange }: MealToggleProps) {
     const interval = setInterval(updateStatus, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedDate]);
 
-  // Auto-switch to active period on mount
+  // Auto-switch to active period on mount (only for today)
   useEffect(() => {
-    const currentPeriod = getActivePeriod();
-    if (activePeriod !== currentPeriod) {
-      onPeriodChange(currentPeriod);
+    if (!isFutureDate) {
+      const currentPeriod = getActivePeriod();
+      if (activePeriod !== currentPeriod) {
+        onPeriodChange(currentPeriod);
+      }
     }
-  }, []);
+  }, [selectedDate]);
 
   return (
     <div className="mb-6">
@@ -63,15 +70,23 @@ function MealToggle({ activePeriod, onPeriodChange }: MealToggleProps) {
         >
           <div className="flex flex-col items-center">
             <span className="text-lg">Morning</span>
-            {!cutoffStatus.morning && (
+            {isFutureDate ? (
               <span className="text-xs mt-1 opacity-75">
-                {countdown.morning}
+                Available
               </span>
-            )}
-            {cutoffStatus.morning && (
-              <span className="text-xs mt-1 opacity-75">
-                Cutoff passed
-              </span>
+            ) : (
+              <>
+                {!cutoffStatus.morning && (
+                  <span className="text-xs mt-1 opacity-75">
+                    {countdown.morning}
+                  </span>
+                )}
+                {cutoffStatus.morning && (
+                  <span className="text-xs mt-1 opacity-75">
+                    Cutoff passed
+                  </span>
+                )}
+              </>
             )}
           </div>
         </button>
@@ -90,15 +105,23 @@ function MealToggle({ activePeriod, onPeriodChange }: MealToggleProps) {
         >
           <div className="flex flex-col items-center">
             <span className="text-lg">Night</span>
-            {!cutoffStatus.night && (
+            {isFutureDate ? (
               <span className="text-xs mt-1 opacity-75">
-                {countdown.night}
+                Available
               </span>
-            )}
-            {cutoffStatus.night && (
-              <span className="text-xs mt-1 opacity-75">
-                Cutoff passed
-              </span>
+            ) : (
+              <>
+                {!cutoffStatus.night && (
+                  <span className="text-xs mt-1 opacity-75">
+                    {countdown.night}
+                  </span>
+                )}
+                {cutoffStatus.night && (
+                  <span className="text-xs mt-1 opacity-75">
+                    Cutoff passed
+                  </span>
+                )}
+              </>
             )}
           </div>
         </button>

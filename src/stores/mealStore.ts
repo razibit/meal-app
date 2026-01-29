@@ -167,8 +167,8 @@ export const useMealStore = create<MealState>((set, get) => ({
   },
 
   addMeal: async (memberId: string, date: string, period: MealPeriod) => {
-    // Client-side cutoff check
-    if (isCutoffPassed(period)) {
+    // Client-side cutoff check (pass date to check for future dates)
+    if (isCutoffPassed(period, date)) {
       const error = new CutoffError(period);
       showErrorToast(handleError(error));
       throw error;
@@ -210,8 +210,8 @@ export const useMealStore = create<MealState>((set, get) => ({
         if (error) throw new DatabaseError(error.message);
       });
 
-      // Refresh today's meals to get both periods
-      await get().fetchTodayMeals();
+      // Refresh meals for the selected date and period
+      await get().fetchMeals(date, period);
       
       set({ loading: false });
     } catch (error) {
@@ -223,8 +223,8 @@ export const useMealStore = create<MealState>((set, get) => ({
   },
 
   removeMeal: async (memberId: string, date: string, period: MealPeriod) => {
-    // Client-side cutoff check
-    if (isCutoffPassed(period)) {
+    // Client-side cutoff check (pass date to check for future dates)
+    if (isCutoffPassed(period, date)) {
       const error = new CutoffError(period);
       showErrorToast(handleError(error));
       throw error;
@@ -265,8 +265,8 @@ export const useMealStore = create<MealState>((set, get) => ({
         if (error) throw new DatabaseError(error.message);
       });
 
-      // Refresh today's meals to get both periods
-      await get().fetchTodayMeals();
+      // Refresh meals for the selected date and period
+      await get().fetchMeals(date, period);
       
       set({ loading: false });
     } catch (error) {
