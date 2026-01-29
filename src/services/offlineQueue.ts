@@ -10,7 +10,7 @@ import type { MealPeriod } from '../utils/cutoffChecker';
 
 export interface QueuedAction {
   id: string;
-  type: 'add_meal' | 'remove_meal' | 'send_message' | 'update_meal_details';
+  type: 'add_meal' | 'remove_meal' | 'send_message' | 'update_meal_details' | 'update_meal_quantity';
   payload: any;
   timestamp: number;
   retries: number;
@@ -147,6 +147,10 @@ class OfflineQueue {
         await this.executeUpdateMealDetails(action.payload);
         break;
 
+      case 'update_meal_quantity':
+        await this.executeUpdateMealQuantity(action.payload);
+        break;
+
       default:
         throw new Error(`Unknown action type: ${(action as any).type}`);
     }
@@ -248,6 +252,43 @@ class OfflineQueue {
 
       if (error) throw error;
     }
+  }
+
+  /**
+   * Execute update meal quantity action
+   */
+  private async executeUpdateMealQuantity(payload: {
+    memberId: string;
+    date: string;
+    period: MealPeriod;
+    quantity: number;
+  }) {
+    const { memberId, date, period, quantity } = payload;
+
+    if (quantity === 0) {
+      const { error } = await supabase
+        .from('meals')
+        .delete()
+        .eq('member_id', memberId)
+        .eq('meal_date', date)
+        .eq('period', period);
+
+      if (error) throw error;
+      return;
+    }
+
+    const { error } = await supabase
+      .from('meals')
+      .upsert({
+        member_id: memberId,
+        meal_date: date,
+        period,
+        quantity,
+      }, {
+        onConflict: 'member_id,meal_date,period',
+      });
+
+    if (error) throw error;
   }
 
   /**
