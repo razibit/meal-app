@@ -38,13 +38,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (error) throw new AuthenticationError(error.message);
 
-      if (data.user) {
+      const user = data.user;
+
+      if (user) {
         // Fetch member profile with retry
         const member = await retryDatabaseOperation(async () => {
           const { data: member, error: memberError } = await supabase
             .from('members')
             .select('*')
-            .eq('id', data.user.id)
+            .eq('id', user.id)
             .single();
 
           if (memberError) throw new DatabaseError(memberError.message);
@@ -57,6 +59,8 @@ export const useAuthStore = create<AuthState>((set) => ({
           loading: false,
           error: null,
         });
+      } else {
+        set({ loading: false });
       }
     } catch (error) {
       const errorMessage = handleError(error);
@@ -86,13 +90,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (error) throw new AuthenticationError(error.message);
 
-      if (data.user && data.session) {
+      const user = data.user;
+
+      if (user && data.session) {
         // Fetch the member profile created by the trigger
         const member = await retryDatabaseOperation(async () => {
           const { data: member, error: memberError } = await supabase
             .from('members')
             .select('*')
-            .eq('id', data.user.id)
+            .eq('id', user.id)
             .single();
 
           if (memberError) throw new DatabaseError(memberError.message);
@@ -105,6 +111,8 @@ export const useAuthStore = create<AuthState>((set) => ({
           loading: false,
           error: null,
         });
+      } else {
+        set({ loading: false });
       }
     } catch (error) {
       const errorMessage = handleError(error);

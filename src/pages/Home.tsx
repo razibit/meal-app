@@ -34,9 +34,6 @@ function Home() {
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
   
-  // Memoize today's date for comparison
-  const todayDate = useMemo(() => getTodayDate(), []);
-
   // Fetch initial data
   useEffect(() => {
     fetchMembers();
