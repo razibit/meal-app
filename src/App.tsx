@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import AuthPage from './components/auth/AuthPage';
 import Layout from './components/layout/Layout';
+import { isSupabaseConfigured } from './services/supabase';
 
 // Lazy load route components for code splitting
 const Home = lazy(() => import('./pages/Home'));
@@ -23,14 +24,35 @@ const LoadingSpinner = () => (
 function App() {
   const { user, loading, initialize } = useAuthStore();
 
+  const showConfigError = !isSupabaseConfigured;
+
   useEffect(() => {
     // Set default theme
     const theme = localStorage.getItem('theme') || 'eggplant';
     document.documentElement.setAttribute('data-theme', theme);
 
     // Initialize authentication
-    initialize();
-  }, [initialize]);
+    if (!showConfigError) {
+      initialize();
+    }
+  }, [initialize, showConfigError]);
+
+  if (showConfigError) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center px-6 py-10">
+        <div className="max-w-lg text-center">
+          <h1 className="text-2xl font-semibold text-primary mb-3">Setup Required</h1>
+          <p className="text-text-secondary">
+            Missing Supabase environment variables. Configure
+            <span className="font-semibold"> VITE_SUPABASE_URL </span>
+            and
+            <span className="font-semibold"> VITE_SUPABASE_ANON_KEY </span>
+            in your deployment settings and redeploy.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading spinner while initializing
   if (loading) {
