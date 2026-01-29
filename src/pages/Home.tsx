@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useMealStore } from '../stores/mealStore';
 import { getTodayDate } from '../utils/dateHelpers';
-import { MealPeriod, getActivePeriod } from '../utils/cutoffChecker';
+import { MealPeriod, getActivePeriod, isCutoffPassed } from '../utils/cutoffChecker';
 import DateSelector from '../components/home/DateSelector';
 import MealToggle from '../components/home/MealToggle';
 import MealCounts from '../components/home/MealCounts';
@@ -21,11 +21,12 @@ function Home() {
     fetchMeals,
     fetchMealDetails,
     fetchMembers,
-    addMeal,
-    removeMeal,
+    updateMealQuantity,
+    updateAutoMeal,
     updateMealDetails,
     getMealCounts,
-    hasUserRegistered,
+    getUserMealQuantity,
+    getUserAutoMeal,
     clearError,
   } = useMealStore();
 
@@ -56,25 +57,27 @@ function Home() {
     setSelectedDate(date);
   }, []);
 
-  const handleRegisterMeal = useCallback(async () => {
+  const handleSaveQuantity = useCallback(async (quantity: number) => {
     if (!user) return;
     try {
-      await addMeal(user.id, selectedDate, activePeriod);
+      await updateMealQuantity(user.id, selectedDate, activePeriod, quantity);
     } catch (error) {
       // Error is handled by store
-      console.error('Failed to register meal:', error);
+      console.error('Failed to update meal quantity:', error);
+      throw error;
     }
-  }, [user, selectedDate, activePeriod, addMeal]);
+  }, [user, selectedDate, activePeriod, updateMealQuantity]);
 
-  const handleRemoveMeal = useCallback(async () => {
+  const handleToggleAutoMeal = useCallback(async (enabled: boolean) => {
     if (!user) return;
     try {
-      await removeMeal(user.id, selectedDate, activePeriod);
+      await updateAutoMeal(user.id, activePeriod, enabled);
     } catch (error) {
       // Error is handled by store
-      console.error('Failed to remove meal:', error);
+      console.error('Failed to toggle auto meal:', error);
+      throw error;
     }
-  }, [user, selectedDate, activePeriod, removeMeal]);
+  }, [user, activePeriod, updateAutoMeal]);
 
   const handleSaveMealDetails = useCallback(async (details: string) => {
     if (!user) return;
@@ -97,9 +100,17 @@ function Home() {
 
   // Memoize expensive calculations
   const mealCounts = useMemo(() => getMealCounts(), [getMealCounts]);
-  const hasRegistered = useMemo(() => 
-    user ? hasUserRegistered(user.id) : false, 
-    [user, hasUserRegistered]
+  const currentQuantity = useMemo(() => 
+    user ? getUserMealQuantity(user.id) : 0, 
+    [user, getUserMealQuantity]
+  );
+  const autoMealEnabled = useMemo(() => 
+    user ? getUserAutoMeal(user.id, activePeriod) : true, 
+    [user, activePeriod, getUserAutoMeal]
+  );
+  const cutoffPassed = useMemo(() => 
+    isCutoffPassed(activePeriod, selectedDate), 
+    [activePeriod, selectedDate]
   );
 
   const currentDetails = useMemo(() => 
@@ -158,10 +169,12 @@ function Home() {
       {/* Meal Registration */}
       <MealRegistration
         period={activePeriod}
-        hasRegistered={hasRegistered}
+        currentQuantity={currentQuantity}
+        autoMealEnabled={autoMealEnabled}
         isLoading={loading}
-        onRegister={handleRegisterMeal}
-        onRemove={handleRemoveMeal}
+        isCutoffPassed={cutoffPassed}
+        onSaveQuantity={handleSaveQuantity}
+        onToggleAutoMeal={handleToggleAutoMeal}
       />
 
       {/* Meal Details Editor */}

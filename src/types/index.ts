@@ -7,6 +7,8 @@ export interface Member {
   phone?: string;
   rice_preference: 'boiled' | 'atop';
   role: 'member' | 'admin';
+  auto_meal_morning: boolean;
+  auto_meal_night: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -16,6 +18,7 @@ export interface Meal {
   member_id: string;
   meal_date: string;
   period: 'morning' | 'night';
+  quantity: number;
   created_at: string;
   updated_at?: string;
 }

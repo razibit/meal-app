@@ -30,8 +30,12 @@ interface MealState {
   fetchMembers: () => Promise<void>;
   addMeal: (memberId: string, date: string, period: MealPeriod) => Promise<void>;
   removeMeal: (memberId: string, date: string, period: MealPeriod) => Promise<void>;
+  updateMealQuantity: (memberId: string, date: string, period: MealPeriod, quantity: number) => Promise<void>;
+  updateAutoMeal: (memberId: string, period: MealPeriod, enabled: boolean) => Promise<void>;
   updateMealDetails: (date: string, field: 'morning_details' | 'night_details' | 'notice', value: string, updatedBy: string) => Promise<void>;
   getMealCounts: (period?: MealPeriod) => MealCount;
+  getUserMealQuantity: (userId: string) => number;
+  getUserAutoMeal: (userId: string, period: MealPeriod) => boolean;
   updateCounts: () => void;
   hasUserRegistered: (userId: string) => boolean;
   clearError: () => void;
@@ -277,6 +281,105 @@ export const useMealStore = create<MealState>((set, get) => ({
     }
   },
 
+  updateMealQuantity: async (memberId: string, date: string, period: MealPeriod, quantity: number) => {
+    // Client-side cutoff check
+    if (isCutoffPassed(period, date)) {
+      const error = new CutoffError(period);
+      showErrorToast(handleError(error));
+      throw error;
+    }
+
+    try {
+      set({ loading: true, error: null });
+
+      // Check if offline
+      if (!navigator.onLine) {
+        offlineQueue.add({
+          type: 'update_meal_quantity',
+          payload: { memberId, date, period, quantity },
+        });
+        set({ loading: false });
+        return;
+      }
+
+      // Server-side cutoff validation
+      const validation = await retryDatabaseOperation(async () => {
+        return await validateMealAction('add', memberId, date, period);
+      });
+      
+      if (!validation.success) {
+        throw new CutoffError(period);
+      }
+
+      if (quantity === 0) {
+        // Delete the meal if quantity is 0
+        await retryDatabaseOperation(async () => {
+          const { error } = await supabase
+            .from('meals')
+            .delete()
+            .eq('member_id', memberId)
+            .eq('meal_date', date)
+            .eq('period', period);
+
+          if (error) throw new DatabaseError(error.message);
+        });
+      } else {
+        // Upsert the meal with the new quantity
+        await retryDatabaseOperation(async () => {
+          const { error } = await supabase
+            .from('meals')
+            .upsert({
+              member_id: memberId,
+              meal_date: date,
+              period,
+              quantity,
+            }, {
+              onConflict: 'member_id,meal_date,period'
+            });
+
+          if (error) throw new DatabaseError(error.message);
+        });
+      }
+
+      // Refresh meals for the selected date and period
+      await get().fetchMeals(date, period);
+      
+      set({ loading: false });
+    } catch (error) {
+      const errorMessage = handleError(error);
+      set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
+      throw error;
+    }
+  },
+
+  updateAutoMeal: async (memberId: string, period: MealPeriod, enabled: boolean) => {
+    try {
+      set({ loading: true, error: null });
+
+      const field = period === 'morning' ? 'auto_meal_morning' : 'auto_meal_night';
+
+      await retryDatabaseOperation(async () => {
+        const { error } = await supabase
+          .from('members')
+          .update({ [field]: enabled })
+          .eq('id', memberId);
+
+        if (error) throw new DatabaseError(error.message);
+      });
+
+      // Refresh members to get updated auto meal settings
+      await get().fetchMembers();
+      
+      set({ loading: false });
+    } catch (error) {
+      const errorMessage = handleError(error);
+      set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
+      throw error;
+    }
+  },
+
   updateMealDetails: async (
     date: string,
     field: 'morning_details' | 'night_details' | 'notice',
@@ -398,6 +501,19 @@ export const useMealStore = create<MealState>((set, get) => ({
   hasUserRegistered: (userId: string) => {
     const { meals } = get();
     return meals.some((meal) => meal.member_id === userId);
+  },
+
+  getUserMealQuantity: (userId: string) => {
+    const { meals } = get();
+    const userMeal = meals.find((meal) => meal.member_id === userId);
+    return userMeal?.quantity ?? 0;
+  },
+
+  getUserAutoMeal: (userId: string, period: MealPeriod) => {
+    const { members } = get();
+    const member = members.find((m) => m.id === userId);
+    if (!member) return true; // Default to true if member not found
+    return period === 'morning' ? member.auto_meal_morning : member.auto_meal_night;
   },
 
   clearError: () => set({ error: null }),
