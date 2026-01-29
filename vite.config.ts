@@ -66,39 +66,21 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Split vendor libraries for better caching
+        manualChunks(id) {
+          // Only split out React and React-related packages
           if (id.includes('node_modules')) {
-            // React and related libraries
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            if (id.includes('react') || id.includes('react-dom')) {
               return 'react-vendor';
             }
-            // Supabase
             if (id.includes('@supabase')) {
               return 'supabase-vendor';
             }
-            // Zustand
-            if (id.includes('zustand')) {
-              return 'state-vendor';
-            }
-            // Workbox for PWA
-            if (id.includes('workbox')) {
-              return 'workbox-vendor';
-            }
-            // All other vendor code
-            return 'vendor';
           }
         },
         // Optimize chunk names
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
-      },
-      // Tree-shaking optimization
-      treeshake: {
-        moduleSideEffects: false,
-        propertyReadSideEffects: false,
-        tryCatchDeoptimization: false,
       },
     },
     // Optimize chunk size
