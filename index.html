@@ -8,6 +8,12 @@
     <meta name="theme-color" content="#5B4B8A" />
     <link rel="apple-touch-icon" href="/icon-192.svg" />
     <title>Mess Meal Management</title>
+    <script>
+      // Fallback for theme to prevent FOUC/invisible content
+      if (!document.documentElement.getAttribute('data-theme')) {
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'eggplant');
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
