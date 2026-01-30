@@ -138,7 +138,10 @@ export const useChatStore = create<ChatState>((set) => ({
           callback(newMessage);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Helpful for diagnosing cases where the channel subscribes but no changes arrive.
+        console.log('Chat subscription status:', status);
+      });
 
     // Return cleanup function
     return () => {

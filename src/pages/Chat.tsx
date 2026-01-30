@@ -27,7 +27,8 @@ function Chat() {
   // Memoize notification handler
   const handleNewMessage = useCallback((newMessage: any) => {
     // Check if current user is mentioned
-    if (user && newMessage.mentions.includes(user.id)) {
+    const mentions: string[] = Array.isArray(newMessage?.mentions) ? newMessage.mentions : [];
+    if (user && mentions.includes(user.id)) {
       // Trigger notification if supported and permitted
       if ('Notification' in window && Notification.permission === 'granted') {
         const senderName = memberNames[newMessage.sender_id] || 'Someone';
