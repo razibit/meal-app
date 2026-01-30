@@ -75,7 +75,9 @@ export function handleError(error: unknown): string {
   }
   
   if (error instanceof AuthenticationError) {
-    return 'You need to be logged in to perform this action.';
+    // Authentication errors are often actionable (e.g. invalid credentials,
+    // user already registered, email not confirmed). Preserve the message.
+    return error.message;
   }
   
   if (error instanceof DatabaseError) {
