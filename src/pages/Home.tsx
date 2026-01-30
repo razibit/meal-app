@@ -95,16 +95,11 @@ function Home() {
     setShowParticipantsModal(false);
   }, []);
 
-  // Memoize expensive calculations
-  const mealCounts = useMemo(() => getMealCounts(), [getMealCounts]);
-  const currentQuantity = useMemo(() => 
-    user ? getUserMealQuantity(user.id) : 0, 
-    [user, getUserMealQuantity]
-  );
-  const autoMealEnabled = useMemo(() => 
-    user ? getUserAutoMeal(user.id, activePeriod) : true, 
-    [user, activePeriod, getUserAutoMeal]
-  );
+  // Derived values from the store; compute on render so updates reflect immediately
+  // (These functions read current Zustand state internally.)
+  const mealCounts = getMealCounts();
+  const currentQuantity = user ? getUserMealQuantity(user.id) : 0;
+  const autoMealEnabled = user ? getUserAutoMeal(user.id, activePeriod) : true;
   const cutoffPassed = useMemo(() => 
     isCutoffPassed(activePeriod, selectedDate), 
     [activePeriod, selectedDate]
