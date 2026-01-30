@@ -75,7 +75,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
                 setValidationErrors({ ...validationErrors, email: undefined });
               }
             }}
-            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-text-primary bg-white ${
               validationErrors.email
                 ? 'border-error'
                 : 'border-border'
@@ -103,7 +103,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
                 setValidationErrors({ ...validationErrors, password: undefined });
               }
             }}
-            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-text-primary bg-white ${
               validationErrors.password
                 ? 'border-error'
                 : 'border-border'
