@@ -47,7 +47,7 @@ export interface MealCount {
   boiledRice: number;
   atopRice: number;
   total: number;
-  participants: Array<{ id: string; name: string; rice_preference: string }>;
+  participants: Array<{ id: string; name: string; rice_preference: string; quantity: number }>;
 }
 
 export interface MonthlyReportRow {

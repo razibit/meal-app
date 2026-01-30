@@ -482,26 +482,34 @@ export const useMealStore = create<MealState>((set, get) => ({
       ? meals.filter((meal) => meal.period === period)
       : meals;
     
-    const participants: Array<{ id: string; name: string; rice_preference: string }> = [];
+    // Only include participants with meals > 0
+    const participants: Array<{ id: string; name: string; rice_preference: string; quantity: number }> = [];
+    let boiledRiceTotal = 0;
+    let atopRiceTotal = 0;
     
     filteredMeals.forEach((meal) => {
       const member = members.find((m) => m.id === meal.member_id);
-      if (member) {
+      if (member && meal.quantity > 0) {
         participants.push({
           id: member.id,
           name: member.name,
           rice_preference: member.rice_preference,
+          quantity: meal.quantity,
         });
+        
+        // Add to totals based on rice preference
+        if (member.rice_preference === 'boiled') {
+          boiledRiceTotal += meal.quantity;
+        } else {
+          atopRiceTotal += meal.quantity;
+        }
       }
     });
 
-    const boiledRice = participants.filter((p) => p.rice_preference === 'boiled').length;
-    const atopRice = participants.filter((p) => p.rice_preference === 'atop').length;
-
     return {
-      boiledRice,
-      atopRice,
-      total: boiledRice + atopRice,
+      boiledRice: boiledRiceTotal,
+      atopRice: atopRiceTotal,
+      total: boiledRiceTotal + atopRiceTotal,
       participants,
     };
   },

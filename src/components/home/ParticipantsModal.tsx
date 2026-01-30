@@ -4,7 +4,7 @@ import { Member } from '../../types';
 interface ParticipantsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  participants: Array<{ id: string; name: string; rice_preference: string }>;
+  participants: Array<{ id: string; name: string; rice_preference: string; quantity: number }>;
   allMembers: Member[];
 }
 
@@ -34,7 +34,8 @@ function ParticipantsModal({
 
   if (!isOpen) return null;
 
-  const participantIds = new Set(participants.map((p) => p.id));
+  // Create a map of participant id to quantity
+  const participantMap = new Map(participants.map((p) => [p.id, p]));
 
   return (
     <div
@@ -74,55 +75,36 @@ function ParticipantsModal({
         {/* Content */}
         <div className="overflow-y-auto flex-1 p-6">
           <div className="space-y-3">
-            {allMembers.map((member) => {
-              const hasParticipated = participantIds.has(member.id);
-              return (
+            {participants.length === 0 ? (
+              <div className="text-center text-text-secondary py-8">
+                No participants with meals for this period
+              </div>
+            ) : (
+              participants.map((participant) => (
                 <div
-                  key={member.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                    hasParticipated
-                      ? 'bg-success/10 border border-success'
-                      : 'bg-bg-tertiary'
-                  }`}
+                  key={participant.id}
+                  className="flex items-center gap-3 p-3 rounded-lg transition-colors bg-bg-tertiary"
                 >
                   {/* Avatar */}
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                      hasParticipated
-                        ? 'bg-success text-white'
-                        : 'bg-bg-secondary text-text-secondary'
-                    }`}
-                  >
-                    {member.name.charAt(0).toUpperCase()}
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold bg-bg-secondary text-text-secondary">
+                    {participant.name.charAt(0).toUpperCase()}
                   </div>
 
                   {/* Name and preference */}
                   <div className="flex-1">
-                    <div className="font-medium text-text-primary">{member.name}</div>
+                    <div className="font-medium text-text-primary">{participant.name}</div>
                     <div className="text-sm text-text-secondary">
-                      {member.rice_preference === 'boiled' ? 'Boiled Rice' : 'Atop Rice'}
+                      {participant.rice_preference === 'boiled' ? 'Boiled Rice' : 'Atop Rice'}
                     </div>
                   </div>
 
-                  {/* Status indicator */}
-                  {hasParticipated && (
-                    <svg
-                      className="w-5 h-5 text-success"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  )}
+                  {/* Meal quantity */}
+                  <div className="text-2xl font-bold text-text-primary">
+                    {participant.quantity}
+                  </div>
                 </div>
-              );
-            })}
+              ))
+            )}
           </div>
         </div>
 
