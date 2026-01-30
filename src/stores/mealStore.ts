@@ -32,6 +32,7 @@ interface MealState {
   removeMeal: (memberId: string, date: string, period: MealPeriod) => Promise<void>;
   updateMealQuantity: (memberId: string, date: string, period: MealPeriod, quantity: number) => Promise<void>;
   updateAutoMeal: (memberId: string, period: MealPeriod, enabled: boolean) => Promise<void>;
+  resetFutureMeals: (memberId: string, period: MealPeriod) => Promise<void>;
   updateMealDetails: (date: string, field: 'morning_details' | 'night_details' | 'notice', value: string, updatedBy: string) => Promise<void>;
   getMealCounts: (period?: MealPeriod) => MealCount;
   getUserMealQuantity: (userId: string) => number;
@@ -368,6 +369,11 @@ export const useMealStore = create<MealState>((set, get) => ({
         if (error) throw new DatabaseError(error.message);
       });
 
+      // If enabling auto meal, reset all future meals for this period
+      if (enabled) {
+        await get().resetFutureMeals(memberId, period);
+      }
+
       // Refresh members to get updated auto meal settings
       await get().fetchMembers();
       
@@ -375,6 +381,28 @@ export const useMealStore = create<MealState>((set, get) => ({
     } catch (error) {
       const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
+      throw error;
+    }
+  },
+
+  resetFutureMeals: async (memberId: string, period: MealPeriod) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Delete all future meals for this member and period
+      await retryDatabaseOperation(async () => {
+        const { error } = await supabase
+          .from('meals')
+          .delete()
+          .eq('member_id', memberId)
+          .eq('period', period)
+          .gt('meal_date', today);
+
+        if (error) throw new DatabaseError(error.message);
+      });
+    } catch (error) {
+      const errorMessage = handleError(error);
       showErrorToast(errorMessage);
       throw error;
     }

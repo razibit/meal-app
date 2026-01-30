@@ -110,6 +110,11 @@ function Home() {
     [activePeriod, selectedDate]
   );
 
+  const isFutureDate = useMemo(() => {
+    const today = getTodayDate();
+    return selectedDate > today;
+  }, [selectedDate]);
+
   const currentDetails = useMemo(() => 
     activePeriod === 'morning'
       ? mealDetails?.morning_details || ''
@@ -148,6 +153,7 @@ function Home() {
       <DateSelector
         selectedDate={selectedDate}
         onDateChange={handleDateChange}
+        autoMealEnabled={autoMealEnabled}
       />
 
       {/* Meal Toggle */}
@@ -170,6 +176,7 @@ function Home() {
         autoMealEnabled={autoMealEnabled}
         isLoading={loading}
         isCutoffPassed={cutoffPassed}
+        isFutureDate={isFutureDate}
         onSaveQuantity={handleSaveQuantity}
         onToggleAutoMeal={handleToggleAutoMeal}
       />

@@ -7,6 +7,7 @@ interface MealRegistrationProps {
   autoMealEnabled: boolean;
   isLoading: boolean;
   isCutoffPassed: boolean;
+  isFutureDate?: boolean;
   onSaveQuantity: (quantity: number) => Promise<void>;
   onToggleAutoMeal: (enabled: boolean) => Promise<void>;
 }
@@ -17,6 +18,7 @@ function MealRegistration({
   autoMealEnabled,
   isLoading,
   isCutoffPassed,
+  isFutureDate = false,
   onSaveQuantity,
   onToggleAutoMeal,
 }: MealRegistrationProps) {
@@ -30,6 +32,9 @@ function MealRegistration({
   }, [currentQuantity]);
 
   const hasChanges = quantity !== currentQuantity;
+  
+  // Disable quantity controls for future dates when auto meal is enabled
+  const isQuantityDisabled = isCutoffPassed || (autoMealEnabled && isFutureDate);
 
   const handleIncrement = () => {
     if (quantity < 10) {
@@ -44,7 +49,7 @@ function MealRegistration({
   };
 
   const handleSave = async () => {
-    if (!hasChanges || isCutoffPassed) return;
+    if (!hasChanges || isQuantityDisabled) return;
     
     setIsSaving(true);
     try {
@@ -79,11 +84,11 @@ function MealRegistration({
             {/* Decrement Button */}
             <button
               onClick={handleDecrement}
-              disabled={quantity <= 0 || isLoading || isSaving || isCutoffPassed}
+              disabled={quantity <= 0 || isLoading || isSaving || isQuantityDisabled}
               className={`
                 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl
                 transition-all min-h-touch
-                ${quantity <= 0 || isCutoffPassed
+                ${quantity <= 0 || isQuantityDisabled
                   ? 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   : 'bg-bg-tertiary text-text-primary hover:bg-primary hover:text-white active:scale-95'
                 }
@@ -109,11 +114,11 @@ function MealRegistration({
             {/* Increment Button */}
             <button
               onClick={handleIncrement}
-              disabled={quantity >= 10 || isLoading || isSaving || isCutoffPassed}
+              disabled={quantity >= 10 || isLoading || isSaving || isQuantityDisabled}
               className={`
                 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl
                 transition-all min-h-touch
-                ${quantity >= 10 || isCutoffPassed
+                ${quantity >= 10 || isQuantityDisabled
                   ? 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   : 'bg-bg-tertiary text-text-primary hover:bg-primary hover:text-white active:scale-95'
                 }
@@ -127,11 +132,11 @@ function MealRegistration({
           {/* Save Button */}
           <button
             onClick={handleSave}
-            disabled={!hasChanges || isLoading || isSaving || isCutoffPassed}
+            disabled={!hasChanges || isLoading || isSaving || isQuantityDisabled}
             className={`
               px-6 py-2 rounded-lg font-semibold transition-all min-h-touch
               flex items-center gap-2
-              ${!hasChanges || isCutoffPassed
+              ${!hasChanges || isQuantityDisabled
                 ? 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                 : 'bg-primary text-white hover:bg-primary-dark active:scale-95'
               }
@@ -241,6 +246,25 @@ function MealRegistration({
               />
             </svg>
             <span>Cutoff passed - cannot modify</span>
+          </div>
+        )}
+
+        {autoMealEnabled && isFutureDate && (
+          <div className="flex items-center gap-2 text-text-tertiary text-sm mb-4">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>Auto Meal is managing future meals - quantity control disabled</span>
           </div>
         )}
 

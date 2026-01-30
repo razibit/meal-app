@@ -4,6 +4,7 @@ import { getCurrentTimeInTimezone, formatDate, formatDateForDisplay } from '../.
 interface DateSelectorProps {
   selectedDate: string;
   onDateChange: (date: string) => void;
+  autoMealEnabled?: boolean;
 }
 
 /**
@@ -29,7 +30,7 @@ function getTodayDateStr(): string {
   return formatDate(getCurrentTimeInTimezone());
 }
 
-function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
+function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: DateSelectorProps) {
   const [showCalendar, setShowCalendar] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
   const availableDays = getNext7Days();
@@ -40,9 +41,16 @@ function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
     (day) => formatDate(day) === selectedDate
   );
   
+  // Check if next day would be in the future
+  const nextDayIsFuture = currentIndex >= 0 && 
+    currentIndex < availableDays.length - 1 && 
+    formatDate(availableDays[currentIndex + 1]) > todayStr;
+  
   // Determine if navigation arrows should be active
   const canGoBack = currentIndex > 0;
-  const canGoForward = currentIndex < availableDays.length - 1 && currentIndex !== -1;
+  const canGoForward = currentIndex < availableDays.length - 1 && 
+                       currentIndex !== -1 && 
+                       !(autoMealEnabled && nextDayIsFuture);
   
   // Parse selected date for display
   const selectedDateObj = new Date(selectedDate + 'T00:00:00');
@@ -65,7 +73,12 @@ function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
   
   // Handle calendar day click
   const handleDayClick = (date: Date) => {
-    onDateChange(formatDate(date));
+    const dateStr = formatDate(date);
+    // Prevent selecting future dates when auto meal is enabled
+    if (autoMealEnabled && dateStr > todayStr) {
+      return;
+    }
+    onDateChange(dateStr);
     setShowCalendar(false);
   };
   
@@ -207,6 +220,8 @@ function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
                   const dateStr = formatDate(day);
                   const isSelected = dateStr === selectedDate;
                   const isToday = dateStr === todayStr;
+                  const isFuture = dateStr > todayStr;
+                  const isDisabled = autoMealEnabled && isFuture;
                   const dayName = day.toLocaleDateString('en-US', { weekday: 'short' });
                   const dayNum = day.getDate();
                   const monthName = day.toLocaleDateString('en-US', { month: 'short' });
@@ -215,27 +230,32 @@ function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
                     <button
                       key={dateStr}
                       onClick={() => handleDayClick(day)}
+                      disabled={isDisabled}
                       className={`
                         w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all
-                        ${isSelected 
-                          ? 'bg-primary text-white' 
-                          : 'hover:bg-bg-tertiary text-text-primary'
+                        ${isDisabled 
+                          ? 'opacity-50 cursor-not-allowed bg-bg-tertiary/50 text-text-tertiary' 
+                          : isSelected 
+                            ? 'bg-primary text-white' 
+                            : 'hover:bg-bg-tertiary text-text-primary cursor-pointer'
                         }
                       `}
                     >
                       <div className={`
                         w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
-                        ${isSelected 
-                          ? 'bg-white/20' 
-                          : isToday 
-                            ? 'bg-primary/10 text-primary' 
-                            : 'bg-bg-tertiary'
+                        ${isDisabled
+                          ? 'bg-bg-tertiary/30 text-text-tertiary'
+                          : isSelected 
+                            ? 'bg-white/20' 
+                            : isToday 
+                              ? 'bg-primary/10 text-primary' 
+                              : 'bg-bg-tertiary'
                         }
                       `}>
                         {dayNum}
                       </div>
                       <div className="flex-1 text-left">
-                        <div className={`font-medium ${isSelected ? 'text-white' : ''}`}>
+                        <div className={`font-medium ${isDisabled ? 'text-text-tertiary' : isSelected ? 'text-white' : ''}`}>
                           {dayName}, {monthName} {dayNum}
                         </div>
                         {isToday && (
@@ -244,8 +264,9 @@ function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
                           </div>
                         )}
                         {index > 0 && !isToday && (
-                          <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-text-secondary'}`}>
+                          <div className={`text-xs ${isDisabled ? 'text-text-tertiary' : isSelected ? 'text-white/80' : 'text-text-secondary'}`}>
                             {index === 1 ? 'Tomorrow' : `In ${index} days`}
+                            {isDisabled && ' (Auto Meal)'}
                           </div>
                         )}
                       </div>
