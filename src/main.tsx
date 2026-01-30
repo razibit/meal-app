@@ -1,9 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 import App from './App.tsx';
 import './index.css';
 
 console.log('Main starting...');
+
+// Inject Vercel Speed Insights
+injectSpeedInsights();
 
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
   constructor(props: {children: React.ReactNode}) {
