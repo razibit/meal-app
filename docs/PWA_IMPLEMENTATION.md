@@ -59,43 +59,9 @@ The service worker handles push notifications:
 - Handles notification clicks to open the app
 - Navigates to the relevant page (e.g., /chat for mentions)
 
-### 3. Offline Queue System ✅
+### 3. Offline Behavior
 
-**Location**: `src/services/offlineQueue.ts`
-
-The offline queue ensures no data is lost when the user is offline:
-
-#### Features
-
-- **Automatic Queueing**: Actions are queued when offline
-- **Auto-Sync**: Queue processes automatically when connection is restored
-- **Retry Logic**: Failed actions retry up to 3 times with exponential backoff
-- **Persistent Storage**: Queue is saved to localStorage
-- **Status Notifications**: UI shows queue status and pending actions
-
-#### Supported Actions
-
-1. **Add Meal**: Queue meal registrations
-2. **Remove Meal**: Queue meal removals
-3. **Send Message**: Queue chat messages
-4. **Update Meal Details**: Queue menu/notice updates
-
-#### Integration
-
-The offline queue is integrated into:
-- `src/stores/mealStore.ts` - Meal operations
-- `src/stores/chatStore.ts` - Chat operations
-
-#### UI Indicator
-
-**Location**: `src/components/layout/OfflineIndicator.tsx`
-
-A visual indicator shows:
-- Offline status (yellow)
-- Syncing status (blue, animated)
-- Error status (red, with retry button)
-- Success status (green, auto-hides)
-- Number of pending actions
+This app requires an internet connection to save changes. When offline, actions fail with a network error and the UI shows an offline indicator.
 
 ## Usage
 
@@ -158,25 +124,9 @@ convert public/badge-72.svg public/badge-72.png
    - See cached assets
    - Clear cache to test fresh loads
 
-#### Monitor Queue
+#### Offline Behavior
 
-```typescript
-import { offlineQueue } from './services/offlineQueue';
-
-// Subscribe to queue changes
-const unsubscribe = offlineQueue.subscribe((status, length) => {
-  console.log(`Queue status: ${status}, pending: ${length}`);
-});
-
-// Get current queue length
-const length = offlineQueue.getQueueLength();
-
-// Manually process queue
-offlineQueue.processQueue();
-
-// Clear queue (use with caution)
-offlineQueue.clearQueue();
-```
+When offline, write operations (meal changes, chat sending, updates) will fail with a network error. The UI displays an offline indicator while disconnected.
 
 ## Configuration
 
@@ -255,12 +205,11 @@ npm run preview
 3. Unregister SW in Application tab
 4. Close all tabs and reopen
 
-### Offline Queue Not Processing
+### Offline Actions Failing
 
-1. Check browser console for errors
-2. Verify localStorage is not full
-3. Check network connectivity
-4. Manually trigger: `offlineQueue.processQueue()`
+1. Check internet connection
+2. Reload the page after reconnecting
+3. Check browser console for errors
 
 ### Icons Not Showing
 
@@ -288,7 +237,7 @@ npm run preview
 1. **HTTPS Required**: PWA features only work over HTTPS
 2. **VAPID Keys**: Keep private key secure (server-side only)
 3. **Cache Expiration**: API cache expires after 5 minutes
-4. **Queue Validation**: Server validates all queued actions
+4. **Validation**: Server validates all write actions
 
 ## Future Enhancements
 

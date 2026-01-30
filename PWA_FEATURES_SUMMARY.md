@@ -68,52 +68,11 @@ All subtasks have been successfully completed. The Mess Meal Management applicat
 
 ---
 
-## Subtask 11.3: Build Offline Queue System ✅
 
-### What Was Done
+## Offline Behavior
 
-1. **Created Offline Queue Service** (`src/services/offlineQueue.ts`):
-   - Queues actions when offline
-   - Auto-processes when connection restored
-   - Retry logic with exponential backoff (max 3 retries)
-   - Persistent storage in localStorage
-   - Status notifications via subscription pattern
-
-2. **Supported Actions**:
-   - Add meal registration
-   - Remove meal registration
-   - Send chat message
-   - Update meal details (menu/notice)
-
-3. **Integrated into Stores**:
-   - **Meal Store** (`src/stores/mealStore.ts`):
-     - `addMeal()` - Queues when offline
-     - `removeMeal()` - Queues when offline
-     - `updateMealDetails()` - Queues when offline
-   
-   - **Chat Store** (`src/stores/chatStore.ts`):
-     - `sendMessage()` - Queues when offline
-
-4. **Created UI Indicator** (`src/components/layout/OfflineIndicator.tsx`):
-   - Shows offline status (yellow)
-   - Shows syncing status (blue, animated spinner)
-   - Shows error status (red, with retry button)
-   - Shows success status (green, auto-hides)
-   - Displays number of pending actions
-   - Positioned at bottom of screen (above navigation on mobile)
-
-5. **Integrated into Layout** (`src/components/layout/Layout.tsx`):
-   - Added OfflineIndicator component
-   - Visible throughout the app
-
-### Files Created
-- `src/services/offlineQueue.ts` - Offline queue service
-- `src/components/layout/OfflineIndicator.tsx` - UI indicator
-
-### Files Modified
-- `src/stores/mealStore.ts` - Integrated offline queue
-- `src/stores/chatStore.ts` - Integrated offline queue
-- `src/components/layout/Layout.tsx` - Added indicator
+- The app shows an offline indicator when disconnected.
+- Write operations require an internet connection.
 
 ---
 
@@ -172,16 +131,7 @@ All subtasks have been successfully completed. The Mess Meal Management applicat
    - Open Chrome DevTools
    - Network tab > Check "Offline"
    - Try adding meals, sending messages
-   - Uncheck "Offline" to see sync
-
-4. **Monitor Queue**:
-   ```typescript
-   import { offlineQueue } from './services/offlineQueue';
-   
-   offlineQueue.subscribe((status, length) => {
-     console.log(`Status: ${status}, Pending: ${length}`);
-   });
-   ```
+   - Uncheck "Offline" to restore normal behavior
 
 ---
 
@@ -195,8 +145,6 @@ All subtasks have been successfully completed. The Mess Meal Management applicat
 - [ ] App installs on Android (requires testing on device)
 - [ ] App installs on iOS (requires testing on device)
 - [ ] App installs on Desktop (requires testing in Chrome/Edge)
-- [ ] Offline queue works (requires manual testing)
-- [ ] Sync indicator shows correct status (requires manual testing)
 - [ ] Push notifications work (requires VAPID keys configured)
 
 ---
@@ -215,12 +163,9 @@ All subtasks have been successfully completed. The Mess Meal Management applicat
 - Network-first strategy for API calls
 - Cache-first strategy for static assets
 
-### Requirement 8.5 (Offline Queue) ✅
-- offlineQueue service created
-- Meal changes queued when offline
-- processQueue on reconnection
-- Queue stored in localStorage
-- Pending status shown in UI
+### Offline Behavior
+- Write operations require an internet connection
+- UI shows an offline indicator when disconnected
 
 ---
 
@@ -243,6 +188,8 @@ Build output:
 3. **Configure VAPID Keys**: Set up push notifications (already implemented in task 10)
 4. **Run Lighthouse Audit**: Verify PWA score is 90+
 5. **Test Offline Functionality**: Manually test queue and sync
+
+5. **Test Offline UX**: Verify offline indicator and error messaging
 
 ---
 

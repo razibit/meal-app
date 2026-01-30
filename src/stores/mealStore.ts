@@ -4,9 +4,9 @@ import type { Meal, MealDetails, Member, MealCount } from '../types';
 import { MealPeriod, isCutoffPassed } from '../utils/cutoffChecker';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { validateMealAction } from '../services/cutoffEnforcer';
-import { offlineQueue } from '../services/offlineQueue';
 import { 
   CutoffError, 
+  NetworkError,
   DatabaseError, 
   handleError, 
   showErrorToast 
@@ -182,16 +182,13 @@ export const useMealStore = create<MealState>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      // Check if offline
+      // Offline queueing removed: fail fast when offline
       if (!navigator.onLine) {
-        // Queue the action for later
-        offlineQueue.add({
-          type: 'add_meal',
-          payload: { memberId, date, period },
-        });
-        
-        set({ loading: false });
-        return;
+        const error = new NetworkError();
+        const errorMessage = handleError(error);
+        set({ error: errorMessage, loading: false });
+        showErrorToast(errorMessage);
+        throw error;
       }
 
       // Server-side cutoff validation with retry
@@ -238,16 +235,13 @@ export const useMealStore = create<MealState>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      // Check if offline
+      // Offline queueing removed: fail fast when offline
       if (!navigator.onLine) {
-        // Queue the action for later
-        offlineQueue.add({
-          type: 'remove_meal',
-          payload: { memberId, date, period },
-        });
-        
-        set({ loading: false });
-        return;
+        const error = new NetworkError();
+        const errorMessage = handleError(error);
+        set({ error: errorMessage, loading: false });
+        showErrorToast(errorMessage);
+        throw error;
       }
 
       // Server-side cutoff validation with retry
@@ -293,14 +287,13 @@ export const useMealStore = create<MealState>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      // Check if offline
+      // Offline queueing removed: fail fast when offline
       if (!navigator.onLine) {
-        offlineQueue.add({
-          type: 'update_meal_quantity',
-          payload: { memberId, date, period, quantity },
-        });
-        set({ loading: false });
-        return;
+        const error = new NetworkError();
+        const errorMessage = handleError(error);
+        set({ error: errorMessage, loading: false });
+        showErrorToast(errorMessage);
+        throw error;
       }
 
       // Server-side cutoff validation
@@ -415,15 +408,13 @@ export const useMealStore = create<MealState>((set, get) => ({
     updatedBy: string
   ) => {
     try {
-      // Check if offline
+      // Offline queueing removed: fail fast when offline
       if (!navigator.onLine) {
-        // Queue the action for later
-        offlineQueue.add({
-          type: 'update_meal_details',
-          payload: { date, field, value, updatedBy },
-        });
-        
-        return;
+        const error = new NetworkError();
+        const errorMessage = handleError(error);
+        set({ error: errorMessage });
+        showErrorToast(errorMessage);
+        throw error;
       }
 
       await retryDatabaseOperation(async () => {

@@ -85,7 +85,7 @@ src/
 ├── services/
 │   ├── supabase.ts               # Supabase client
 │   ├── notifications.ts          # Web Push setup
-│   └── offlineQueue.ts           # Offline sync queue
+│   
 └── utils/
     ├── cutoffChecker.ts          # Client-side cutoff logic
     ├── dateHelpers.ts            # Timezone handling
@@ -935,78 +935,9 @@ self.addEventListener('push', (event) => {
 });
 ```
 
-### Offline Queue
+### Offline Behavior
 
-```typescript
-// offlineQueue.ts
-interface QueuedAction {
-  id: string;
-  type: 'add_meal' | 'remove_meal' | 'send_message';
-  payload: any;
-  timestamp: number;
-}
-
-class OfflineQueue {
-  private queue: QueuedAction[] = [];
-  private storageKey = 'offline-queue';
-
-  constructor() {
-    this.loadQueue();
-    window.addEventListener('online', () => this.processQueue());
-  }
-
-  add(action: Omit<QueuedAction, 'id' | 'timestamp'>) {
-    const queuedAction: QueuedAction = {
-      ...action,
-      id: crypto.randomUUID(),
-      timestamp: Date.now()
-    };
-    this.queue.push(queuedAction);
-    this.saveQueue();
-  }
-
-  async processQueue() {
-    while (this.queue.length > 0) {
-      const action = this.queue[0];
-      try {
-        await this.executeAction(action);
-        this.queue.shift();
-        this.saveQueue();
-      } catch (error) {
-        console.error('Failed to process queued action:', error);
-        break;
-      }
-    }
-  }
-
-  private async executeAction(action: QueuedAction) {
-    switch (action.type) {
-      case 'add_meal':
-        await supabase.from('meals').insert(action.payload);
-        break;
-      case 'remove_meal':
-        await supabase.from('meals').delete().match(action.payload);
-        break;
-      case 'send_message':
-        await supabase.from('chats').insert(action.payload);
-        break;
-    }
-  }
-
-  private loadQueue() {
-    const stored = localStorage.getItem(this.storageKey);
-    if (stored) {
-      this.queue = JSON.parse(stored);
-    }
-  }
-
-  private saveQueue() {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.queue));
-  }
-}
-
-export const offlineQueue = new OfflineQueue();
-```
+Write operations require an internet connection. When offline, the UI shows an offline indicator and actions fail with a network error.
 
 
 ### Web App Manifest

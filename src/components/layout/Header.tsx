@@ -1,11 +1,23 @@
+import { useEffect, useState } from 'react';
+import { getCurrentTimeInTimezone } from '../../utils/dateHelpers';
+
 interface HeaderProps {
   onPeopleClick: () => void;
 }
 
 function Header({ onPeopleClick }: HeaderProps) {
+  const [now, setNow] = useState<Date>(() => getCurrentTimeInTimezone());
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setNow(getCurrentTimeInTimezone());
+    }, 30_000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
   // Format current date
   const formatDate = () => {
-    const now = new Date();
     const options: Intl.DateTimeFormatOptions = {
       weekday: 'long',
       year: 'numeric',
@@ -15,6 +27,14 @@ function Header({ onPeopleClick }: HeaderProps) {
     return now.toLocaleDateString('en-US', options);
   };
 
+  const formatTime12h = () => {
+    return now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   return (
     <header className="bg-bg-primary border-b border-border sticky top-0 z-10">
       <div className="flex items-center justify-between px-4 py-3 md:px-6">
@@ -22,6 +42,9 @@ function Header({ onPeopleClick }: HeaderProps) {
         <div className="flex-1">
           <h1 className="text-lg md:text-xl font-semibold text-text-primary">
             {formatDate()}
+            <span className="ml-3 inline-flex items-center rounded-full bg-bg-tertiary/70 px-3 py-1 text-base md:text-lg font-semibold text-text-primary tabular-nums">
+              {formatTime12h()}
+            </span>
           </h1>
         </div>
 

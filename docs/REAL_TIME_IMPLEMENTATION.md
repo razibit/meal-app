@@ -185,7 +185,7 @@ supabase functions serve cutoff-enforcer
 ## Future Enhancements
 
 1. **Retry Logic**: Add exponential backoff for failed operations
-2. **Offline Queue**: Queue meal changes when offline, sync when reconnected
+2. **Offline UX**: Improve messaging and disable write actions when offline
 3. **Optimistic Updates**: Show changes immediately, rollback on error
 4. **Push Notifications**: Notify users of meal count changes
 5. **Analytics**: Track cutoff violations and meal patterns

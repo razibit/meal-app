@@ -59,15 +59,8 @@
    - Indicator shows "X actions pending"
 
 3. **When you come back online**:
-   - Indicator turns blue (syncing)
-   - Queue processes automatically
-   - Indicator turns green (synced)
-   - Then disappears
-
-4. **If sync fails**:
-   - Indicator turns red
-   - "Sync failed" message
-   - Tap "Retry" button to try again
+   - The offline indicator disappears
+   - You can save changes again
 
 ## Offline Indicator
 
@@ -76,21 +69,12 @@ Located at the bottom of the screen (above navigation on mobile):
 | Color | Status | Meaning |
 |-------|--------|---------|
 | 🟡 Yellow | Offline | No internet connection |
-| 🔵 Blue (spinning) | Syncing | Processing queued actions |
-| 🔴 Red | Error | Sync failed, tap Retry |
-| 🟢 Green | Success | All changes synced |
 
 ## Tips
 
-1. **Check the indicator**: Always look at the indicator to know your sync status
+1. **Check the indicator**: If you see the offline indicator, you won’t be able to save changes
 
-2. **Don't close the app**: Keep the app open while syncing to ensure all changes are saved
-
-3. **Retry on error**: If you see a red indicator, tap "Retry" to try syncing again
-
-4. **Stable connection**: Ensure you have a stable internet connection for syncing
-
-5. **Clear queue**: If you have persistent issues, you may need to clear the queue (contact support)
+2. **Stable connection**: Ensure you have a stable internet connection for saving changes
 
 ## Troubleshooting
 
@@ -106,46 +90,12 @@ Located at the bottom of the screen (above navigation on mobile):
 
 ### Changes not syncing
 - Check internet connection
-- Look for red indicator and tap "Retry"
-- Close and reopen the app
+- Reload the page
 - Check browser console for errors
 
-### Indicator stuck on "Syncing"
-- Wait a few moments (may take time with slow connection)
+### Indicator stuck on screen
 - Check internet connection
 - Refresh the page
-- Clear queue (contact support if needed)
-
-## Advanced
-
-### For Developers
-
-**Check queue status**:
-```javascript
-// Open browser console
-offlineQueue.getQueueLength() // Number of pending actions
-offlineQueue.getStatus() // 'idle', 'processing', or 'error'
-```
-
-**Manually process queue**:
-```javascript
-offlineQueue.processQueue()
-```
-
-**Clear queue** (use with caution):
-```javascript
-offlineQueue.clearQueue()
-```
-
-**Subscribe to changes**:
-```javascript
-const unsubscribe = offlineQueue.subscribe((status, length) => {
-  console.log(`Status: ${status}, Pending: ${length}`);
-});
-
-// Later, unsubscribe
-unsubscribe();
-```
 
 ## Support
 

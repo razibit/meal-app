@@ -53,41 +53,11 @@
 
 ---
 
-### ✅ Subtask 11.3: Build Offline Queue System
 
-- [x] Create offlineQueue service
-- [x] Implement queue data structure
-- [x] Add action queueing when offline
-- [x] Implement processQueue on reconnection
-- [x] Store queue in localStorage
-- [x] Add retry logic with exponential backoff
-- [x] Implement max retries (3)
-- [x] Add status subscription pattern
-- [x] Support add_meal action
-- [x] Support remove_meal action
-- [x] Support send_message action
-- [x] Support update_meal_details action
-- [x] Integrate into mealStore
-- [x] Integrate into chatStore
-- [x] Create OfflineIndicator component
-- [x] Show offline status (yellow)
-- [x] Show syncing status (blue, animated)
-- [x] Show error status (red, with retry)
-- [x] Show success status (green)
-- [x] Display pending action count
-- [x] Add retry button on error
-- [x] Integrate indicator into Layout
+### ✅ Offline Indicator
 
-**Files Created**:
-- ✅ `src/services/offlineQueue.ts` - Queue service
-- ✅ `src/components/layout/OfflineIndicator.tsx` - UI indicator
-
-**Files Modified**:
-- ✅ `src/stores/mealStore.ts` - Integrated queue
-- ✅ `src/stores/chatStore.ts` - Integrated queue
-- ✅ `src/components/layout/Layout.tsx` - Added indicator
-
-**Requirements Met**: 8.5
+- [x] Show an offline indicator when disconnected
+- [x] Require internet connection for write operations
 
 ---
 

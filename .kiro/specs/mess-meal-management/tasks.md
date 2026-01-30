@@ -364,16 +364,6 @@
     - Add cache-first strategy for static assets
     - _Requirements: 8.4_
   
-  - [x] 11.3 Build offline queue system
-
-
-    - Create offlineQueue service
-    - Queue meal changes when offline
-    - Implement processQueue on reconnection
-    - Store queue in localStorage
-    - Show pending status in UI
-    - _Requirements: 8.5_
-
 - [x] 12. Implement monthly reporting
 
 

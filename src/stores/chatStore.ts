@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import type { ChatMessage } from '../types';
-import { offlineQueue } from '../services/offlineQueue';
 import { 
   AuthenticationError, 
+  NetworkError,
   DatabaseError, 
   handleError, 
   showErrorToast 
@@ -37,15 +37,13 @@ export const useChatStore = create<ChatState>((set) => ({
         throw error;
       }
 
-      // Check if offline
+      // Offline queueing removed: fail fast when offline
       if (!navigator.onLine) {
-        // Queue the action for later
-        offlineQueue.add({
-          type: 'send_message',
-          payload: { senderId: user.id, message, mentions },
-        });
-        
-        return;
+        const error = new NetworkError();
+        const errorMessage = handleError(error);
+        set({ error: errorMessage });
+        showErrorToast(errorMessage);
+        throw error;
       }
 
       const data = await retryDatabaseOperation(async () => {
