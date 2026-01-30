@@ -6,6 +6,7 @@ A progressive web application for managing daily meal planning, tracking, and co
 
 - Real-time meal registration and tracking
 - Morning and night meal periods with cutoff times
+- **Reliable time synchronization** with server to prevent manipulation
 - Live chat with @mentions and notifications
 - Monthly meal consumption reports
 - PWA support with offline functionality
@@ -69,10 +70,17 @@ src/
 │   └── preferences/ # Preferences tab components
 ├── hooks/         # Custom React hooks
 ├── stores/        # Zustand state stores
-├── services/      # External services (Supabase, notifications)
+├── services/      # External services (Supabase, notifications, time sync)
 ├── utils/         # Utility functions
 └── types/         # TypeScript type definitions
 ```
+
+## Key Documentation
+
+- [Time Synchronization Implementation](./TIME_SYNC_IMPLEMENTATION.md) - Detailed time sync architecture
+- [Time Sync Deployment Guide](./TIME_SYNC_DEPLOYMENT.md) - Step-by-step deployment instructions
+- [PWA Implementation](./docs/PWA_IMPLEMENTATION.md) - Progressive Web App setup
+- [Push Notifications](./docs/PUSH_NOTIFICATIONS.md) - Push notification configuration
 
 ## Environment Variables
 

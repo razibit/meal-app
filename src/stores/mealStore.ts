@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import type { Meal, MealDetails, Member, MealCount } from '../types';
 import { MealPeriod, isCutoffPassed } from '../utils/cutoffChecker';
+import { getTodayDate } from '../utils/dateHelpers';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { validateMealAction } from '../services/cutoffEnforcer';
 import { 
@@ -63,7 +64,7 @@ export const useMealStore = create<MealState>((set, get) => ({
     try {
       set({ loading: true, error: null });
       
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayDate(); // Use synchronized server time
       
       // Fetch both morning and night meals for today with retry logic
       const data = await retryDatabaseOperation(async () => {
@@ -381,7 +382,7 @@ export const useMealStore = create<MealState>((set, get) => ({
 
   resetFutureMeals: async (memberId: string, period: MealPeriod) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayDate(); // Use synchronized server time
 
       // Delete all future meals for this member and period
       await retryDatabaseOperation(async () => {

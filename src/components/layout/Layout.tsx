@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Navigation from './Navigation';
 import { OfflineIndicator } from './OfflineIndicator';
+import { TimeSyncIndicator } from './TimeSyncIndicator';
 import { useMembers } from '../../hooks/useMembers';
 
 interface LayoutProps {
@@ -42,6 +43,9 @@ function Layout({ children }: LayoutProps) {
 
       {/* Offline Indicator */}
       <OfflineIndicator />
+
+      {/* Time Sync Indicator */}
+      <TimeSyncIndicator />
 
       {/* Members Modal - Placeholder for now */}
       {showMembersModal && (

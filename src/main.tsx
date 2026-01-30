@@ -3,8 +3,18 @@ import ReactDOM from 'react-dom/client';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 import App from './App.tsx';
 import './index.css';
+import { timeService } from './services/timeService';
 
 console.log('Main starting...');
+
+// Initialize time synchronization service
+console.log('[TimeSync] Initializing time service...');
+timeService.initialize().then(() => {
+  const status = timeService.getSyncStatus();
+  console.log('[TimeSync] Initialized - Offset:', status.offset, 'ms');
+}).catch((error) => {
+  console.error('[TimeSync] Initialization failed:', error);
+});
 
 // Inject Vercel Speed Insights
 injectSpeedInsights();

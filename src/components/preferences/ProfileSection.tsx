@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
+import { timeService } from '../../services/timeService';
 
 export function ProfileSection() {
   const user = useAuthStore((state) => state.user);
@@ -26,7 +27,7 @@ export function ProfileSection() {
           name: name.trim(),
           phone: phone.trim() || null,
           rice_preference: ricePreference,
-          updated_at: new Date().toISOString(),
+          updated_at: timeService.now().toISOString(), // Use synchronized server time
         })
         .eq('id', user.id);
 

@@ -1,11 +1,14 @@
+import { timeService } from '../services/timeService';
+
 // Timezone handling utilities for UTC+6
 const TIMEZONE_OFFSET = 6 * 60; // UTC+6 in minutes
 
 /**
  * Get current date/time in UTC+6 timezone
+ * Uses synchronized server time for accuracy
  */
 export function getCurrentTimeInTimezone(): Date {
-  const now = new Date();
+  const now = timeService.now(); // Use synchronized time instead of device time
   const utc = now.getTime() + now.getTimezoneOffset() * 60000;
   return new Date(utc + TIMEZONE_OFFSET * 60000);
 }

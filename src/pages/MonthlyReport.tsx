@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../services/supabase';
 import { MonthlyReportRow } from '../types';
+import { timeService } from '../services/timeService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 function MonthlyReport() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
+    const now = timeService.now(); // Use synchronized server time
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [reportData, setReportData] = useState<MonthlyReportRow[]>([]);
@@ -174,7 +175,7 @@ function MonthlyReport() {
               value={selectedMonth}
               onChange={handleMonthChange}
               className="input px-3 py-2 rounded-lg border-2 border-border bg-bg-primary text-text-primary"
-              max={new Date().toISOString().slice(0, 7)}
+              max={timeService.now().toISOString().slice(0, 7)}
             />
           </div>
           
