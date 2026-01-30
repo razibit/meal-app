@@ -15,7 +15,6 @@ function Home() {
   const { user } = useAuthStore();
   const {
     mealDetails,
-    members,
     loading,
     error,
     fetchMeals,
@@ -200,7 +199,6 @@ function Home() {
         isOpen={showParticipantsModal}
         onClose={handleCloseParticipants}
         participants={mealCounts.participants}
-        allMembers={members}
       />
     </div>
   );

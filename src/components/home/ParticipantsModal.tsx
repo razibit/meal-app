@@ -1,18 +1,15 @@
 import { useEffect } from 'react';
-import { Member } from '../../types';
 
 interface ParticipantsModalProps {
   isOpen: boolean;
   onClose: () => void;
   participants: Array<{ id: string; name: string; rice_preference: string; quantity: number }>;
-  allMembers: Member[];
 }
 
 function ParticipantsModal({
   isOpen,
   onClose,
   participants,
-  allMembers,
 }: ParticipantsModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -33,9 +30,6 @@ function ParticipantsModal({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
-
-  // Create a map of participant id to quantity
-  const participantMap = new Map(participants.map((p) => [p.id, p]));
 
   return (
     <div
