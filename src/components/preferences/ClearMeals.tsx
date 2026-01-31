@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { supabase } from '../../services/supabase';
 import { getTodayDate } from '../../utils/dateHelpers';
 import { showErrorToast, handleError } from '../../utils/errorHandling';
+import { useChatStore } from '../../stores/chatStore';
+import { useAuthStore } from '../../stores/authStore';
 
 type Period = 'morning' | 'night';
 
@@ -12,6 +14,9 @@ export function ClearMeals() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showFinalConfirm, setShowFinalConfirm] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  
+  const sendMessage = useChatStore((state) => state.sendMessage);
+  const user = useAuthStore((state) => state.user);
 
   const handleDeleteClick = () => {
     setConfirmText('');
@@ -38,6 +43,18 @@ export function ClearMeals() {
         .eq('period', selectedPeriod);
 
       if (error) throw error;
+
+      // Send notification to group chat
+      if (user?.name) {
+        try {
+          await sendMessage(
+            `${user.name} has cleared everyone's meals for ${selectedPeriod}.`,
+            []
+          );
+        } catch (chatError) {
+          console.error('Failed to send chat notification:', chatError);
+        }
+      }
 
       // Success feedback
       alert(`All ${selectedPeriod} meals for ${selectedDate} have been cleared.`);
