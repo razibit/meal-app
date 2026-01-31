@@ -1,6 +1,7 @@
 import { ProfileSection } from '../components/preferences/ProfileSection';
 import { ThemeToggle } from '../components/preferences/ThemeToggle';
 import { NotificationSettings } from '../components/preferences/NotificationSettings';
+import { ClearMeals } from '../components/preferences/ClearMeals';
 
 function Preferences() {
   return (
@@ -11,6 +12,7 @@ function Preferences() {
         <ProfileSection />
         <ThemeToggle />
         <NotificationSettings />
+        <ClearMeals />
       </div>
     </div>
   );
