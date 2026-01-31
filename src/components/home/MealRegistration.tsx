@@ -276,23 +276,27 @@ function MealRegistration({
           <div className="flex-1">
             <div className="font-medium text-text-primary">Auto Meal</div>
             <div className="text-sm text-text-secondary">
-              Automatically register {period} meal daily
+              {isFutureDate 
+                ? 'Can only be toggled for the current date'
+                : `Automatically register ${period} meal daily`
+              }
             </div>
           </div>
           
           <button
             onClick={handleToggleAutoMeal}
-            disabled={isTogglingAutoMeal}
+            disabled={isTogglingAutoMeal || isFutureDate}
             className={`
               relative inline-flex h-6 w-11 items-center rounded-full
               transition-colors duration-200 ease-in-out
               focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
               ${autoMealEnabled ? 'bg-primary' : 'bg-bg-tertiary'}
-              ${isTogglingAutoMeal ? 'opacity-50 cursor-wait' : 'cursor-pointer'}
+              ${isTogglingAutoMeal || isFutureDate ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
             `}
             role="switch"
             aria-checked={autoMealEnabled}
             aria-label={`Toggle auto meal for ${period}`}
+            aria-disabled={isFutureDate}
           >
             <span
               className={`
@@ -304,7 +308,7 @@ function MealRegistration({
           </button>
         </div>
 
-        {autoMealEnabled && (
+        {autoMealEnabled && !isFutureDate && (
           <div className="mt-2 text-xs text-text-tertiary">
             Your {period} meal will be auto-registered with 1 meal each day
           </div>

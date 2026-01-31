@@ -35,10 +35,10 @@ interface MealState {
   updateAutoMeal: (memberId: string, period: MealPeriod, enabled: boolean) => Promise<void>;
   resetFutureMeals: (memberId: string, period: MealPeriod) => Promise<void>;
   updateMealDetails: (date: string, field: 'morning_details' | 'night_details' | 'notice', value: string, updatedBy: string) => Promise<void>;
-  getMealCounts: (period?: MealPeriod) => MealCount;
-  getUserMealQuantity: (userId: string) => number;
+  getMealCounts: (period?: MealPeriod, date?: string) => MealCount;
+  getUserMealQuantity: (userId: string, period: MealPeriod, date: string) => number;
   getUserAutoMeal: (userId: string, period: MealPeriod) => boolean;
-  updateCounts: () => void;
+  updateCounts: (date?: string) => void;
   hasUserRegistered: (userId: string) => boolean;
   clearError: () => void;
   subscribeToMeals: (date: string) => void;
@@ -80,7 +80,7 @@ export const useMealStore = create<MealState>((set, get) => ({
       set({ meals: data || [], loading: false });
       
       // Update counts after fetching meals
-      get().updateCounts();
+      get().updateCounts(today);
     } catch (error) {
       const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
@@ -106,7 +106,7 @@ export const useMealStore = create<MealState>((set, get) => ({
       set({ meals: data || [], loading: false });
       
       // Update counts after fetching meals
-      get().updateCounts();
+      get().updateCounts(date);
     } catch (error) {
       const errorMessage = handleError(error);
       set({ error: errorMessage, loading: false });
@@ -364,6 +364,7 @@ export const useMealStore = create<MealState>((set, get) => ({
       });
 
       // If enabling auto meal, reset all future meals for this period
+      // This removes any explicit meal records so Auto Meal logic applies
       if (enabled) {
         await get().resetFutureMeals(memberId, period);
       }
@@ -383,15 +384,19 @@ export const useMealStore = create<MealState>((set, get) => ({
   resetFutureMeals: async (memberId: string, period: MealPeriod) => {
     try {
       const today = getTodayDate(); // Use synchronized server time
+      const cutoffPassed = isCutoffPassed(period, today);
 
-      // Delete all future meals for this member and period
+      // If cutoff hasn't passed, also delete today's meal so Auto Meal applies
+      // If cutoff has passed, keep today's meal as-is (only delete future)
+      const dateFilter = cutoffPassed ? 'gt' : 'gte';
+
       await retryDatabaseOperation(async () => {
         const { error } = await supabase
           .from('meals')
           .delete()
           .eq('member_id', memberId)
           .eq('period', period)
-          .gt('meal_date', today);
+          [dateFilter]('meal_date', today);
 
         if (error) throw new DatabaseError(error.message);
       });
@@ -474,8 +479,10 @@ export const useMealStore = create<MealState>((set, get) => ({
     }
   },
 
-  getMealCounts: (period?: MealPeriod) => {
+  getMealCounts: (period?: MealPeriod, date?: string) => {
     const { meals, members } = get();
+    const targetDate = date || getTodayDate();
+    const todayDate = getTodayDate();
     
     // Filter meals by period if specified
     const filteredMeals = period 
@@ -487,9 +494,13 @@ export const useMealStore = create<MealState>((set, get) => ({
     let boiledRiceTotal = 0;
     let atopRiceTotal = 0;
     
+    // Track which members have explicit meal records
+    const membersWithMeals = new Set<string>();
+    
     filteredMeals.forEach((meal) => {
       const member = members.find((m) => m.id === meal.member_id);
       if (member && meal.quantity > 0) {
+        membersWithMeals.add(member.id);
         participants.push({
           id: member.id,
           name: member.name,
@@ -505,6 +516,44 @@ export const useMealStore = create<MealState>((set, get) => ({
         }
       }
     });
+    
+    // Add members with Auto Meal enabled who don't have explicit meals
+    if (period) {
+      const autoMealField = period === 'morning' ? 'auto_meal_morning' : 'auto_meal_night';
+      
+      members.forEach((member) => {
+        // Skip if member already has an explicit meal
+        if (membersWithMeals.has(member.id)) return;
+        
+        // Check if Auto Meal is enabled for this period
+        if (!member[autoMealField]) return;
+        
+        // For current date, check if cutoff has passed
+        if (targetDate === todayDate) {
+          const cutoffPassed = isCutoffPassed(period, targetDate);
+          // If cutoff passed, Auto Meal doesn't apply to today
+          if (cutoffPassed) return;
+        }
+        
+        // For past dates, Auto Meal shouldn't apply (they should have explicit records)
+        if (targetDate < todayDate) return;
+        
+        // Add member with Auto Meal quantity (1 meal)
+        participants.push({
+          id: member.id,
+          name: member.name,
+          rice_preference: member.rice_preference,
+          quantity: 1,
+        });
+        
+        // Add to totals
+        if (member.rice_preference === 'boiled') {
+          boiledRiceTotal += 1;
+        } else {
+          atopRiceTotal += 1;
+        }
+      });
+    }
 
     return {
       boiledRice: boiledRiceTotal,
@@ -514,9 +563,10 @@ export const useMealStore = create<MealState>((set, get) => ({
     };
   },
 
-  updateCounts: () => {
-    const morningCount = get().getMealCounts('morning');
-    const nightCount = get().getMealCounts('night');
+  updateCounts: (date?: string) => {
+    const targetDate = date || getTodayDate();
+    const morningCount = get().getMealCounts('morning', targetDate);
+    const nightCount = get().getMealCounts('night', targetDate);
     
     set({
       counts: {
@@ -531,10 +581,37 @@ export const useMealStore = create<MealState>((set, get) => ({
     return meals.some((meal) => meal.member_id === userId);
   },
 
-  getUserMealQuantity: (userId: string) => {
-    const { meals } = get();
+  getUserMealQuantity: (userId: string, period: MealPeriod, date: string) => {
+    const { meals, members } = get();
+    const todayDate = getTodayDate();
+    
+    // Check if user has an explicit meal
     const userMeal = meals.find((meal) => meal.member_id === userId);
-    return userMeal?.quantity ?? 0;
+    if (userMeal) {
+      return userMeal.quantity;
+    }
+    
+    // No explicit meal - check Auto Meal
+    const member = members.find((m) => m.id === userId);
+    if (!member) return 0;
+    
+    const autoMealEnabled = period === 'morning' ? member.auto_meal_morning : member.auto_meal_night;
+    
+    // If Auto Meal is disabled, return 0
+    if (!autoMealEnabled) return 0;
+    
+    // For current date, check if cutoff has passed
+    if (date === todayDate) {
+      const cutoffPassed = isCutoffPassed(period, date);
+      // If cutoff passed, Auto Meal doesn't apply to today
+      if (cutoffPassed) return 0;
+    }
+    
+    // For past dates, Auto Meal shouldn't apply (should have explicit records)
+    if (date < todayDate) return 0;
+    
+    // Auto Meal applies - return quantity 1
+    return 1;
   },
 
   getUserAutoMeal: (userId: string, period: MealPeriod) => {

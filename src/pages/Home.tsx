@@ -96,8 +96,8 @@ function Home() {
 
   // Derived values from the store; compute on render so updates reflect immediately
   // (These functions read current Zustand state internally.)
-  const mealCounts = getMealCounts();
-  const currentQuantity = user ? getUserMealQuantity(user.id) : 0;
+  const mealCounts = getMealCounts(activePeriod, selectedDate);
+  const currentQuantity = user ? getUserMealQuantity(user.id, activePeriod, selectedDate) : 0;
   const autoMealEnabled = user ? getUserAutoMeal(user.id, activePeriod) : true;
   const cutoffPassed = useMemo(() => 
     isCutoffPassed(activePeriod, selectedDate), 
