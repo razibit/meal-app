@@ -35,8 +35,13 @@ function MealRegistration({
 
   const hasChanges = quantity !== currentQuantity;
   
-  // Disable quantity controls for future dates when auto meal is enabled
-  const isQuantityDisabled = isCutoffPassed || (autoMealEnabled && isFutureDate);
+  // Disable quantity controls ONLY for:
+  // 1. Manual changes after cutoff (but allow view/adjust before save attempt)
+  // 2. Future dates when Auto Meal is managing them
+  const isManualChangeDisabled = isCutoffPassed || (autoMealEnabled && isFutureDate);
+  
+  // Allow adjusting quantity even after cutoff, but disable Save
+  const isQuantityAdjustDisabled = autoMealEnabled && isFutureDate;
 
   const handleIncrement = () => {
     if (quantity < 10) {
@@ -51,7 +56,7 @@ function MealRegistration({
   };
 
   const handleSave = async () => {
-    if (!hasChanges || isQuantityDisabled) return;
+    if (!hasChanges || isManualChangeDisabled) return;
     
     setIsSaving(true);
     try {
@@ -86,11 +91,11 @@ function MealRegistration({
             {/* Decrement Button */}
             <button
               onClick={handleDecrement}
-              disabled={quantity <= 0 || isLoading || isSaving || isQuantityDisabled}
+              disabled={quantity <= 0 || isLoading || isSaving || isQuantityAdjustDisabled}
               className={`
                 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl
                 transition-all min-h-touch
-                ${quantity <= 0 || isQuantityDisabled
+                ${quantity <= 0 || isQuantityAdjustDisabled
                   ? 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   : 'bg-bg-tertiary text-text-primary hover:bg-primary hover:text-white active:scale-95'
                 }
@@ -116,11 +121,11 @@ function MealRegistration({
             {/* Increment Button */}
             <button
               onClick={handleIncrement}
-              disabled={quantity >= 10 || isLoading || isSaving || isQuantityDisabled}
+              disabled={quantity >= 10 || isLoading || isSaving || isQuantityAdjustDisabled}
               className={`
                 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl
                 transition-all min-h-touch
-                ${quantity >= 10 || isQuantityDisabled
+                ${quantity >= 10 || isQuantityAdjustDisabled
                   ? 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   : 'bg-bg-tertiary text-text-primary hover:bg-primary hover:text-white active:scale-95'
                 }
@@ -134,11 +139,11 @@ function MealRegistration({
           {/* Save Button */}
           <button
             onClick={handleSave}
-            disabled={!hasChanges || isLoading || isSaving || isQuantityDisabled}
+            disabled={!hasChanges || isLoading || isSaving || isManualChangeDisabled}
             className={`
               px-6 py-2 rounded-lg font-semibold transition-all min-h-touch
               flex items-center gap-2
-              ${!hasChanges || isQuantityDisabled
+              ${!hasChanges || isManualChangeDisabled
                 ? 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                 : 'bg-primary text-white hover:bg-primary-dark active:scale-95'
               }
@@ -233,7 +238,7 @@ function MealRegistration({
         )}
 
         {isCutoffPassed && (
-          <div className="flex items-center gap-2 text-text-tertiary text-sm mb-4">
+          <div className="flex items-center gap-2 text-warning text-sm mb-4">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -244,10 +249,10 @@ function MealRegistration({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
               />
             </svg>
-            <span>Cutoff passed - cannot modify</span>
+            <span>Cutoff passed - manual meal registration locked (Auto Meal still available)</span>
           </div>
         )}
 
@@ -299,6 +304,7 @@ function MealRegistration({
             aria-checked={autoMealEnabled}
             aria-label={`Toggle auto meal for ${period}`}
             aria-disabled={isFutureDate}
+            title={isCutoffPassed && !isFutureDate ? 'Auto Meal can be toggled even after cutoff' : ''}
           >
             <span
               className={`
