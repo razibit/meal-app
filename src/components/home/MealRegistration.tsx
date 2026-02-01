@@ -11,6 +11,7 @@ interface MealRegistrationProps {
   isFutureDate?: boolean;
   onSaveQuantity: (quantity: number) => Promise<void>;
   onToggleAutoMeal: (enabled: boolean) => Promise<void>;
+  onSaveAutoMealQuantity: (quantity: number) => Promise<void>;
 }
 
 function MealRegistration({
@@ -23,15 +24,23 @@ function MealRegistration({
   isFutureDate = false,
   onSaveQuantity,
   onToggleAutoMeal,
+  onSaveAutoMealQuantity,
 }: MealRegistrationProps) {
   const [quantity, setQuantity] = useState(currentQuantity);
   const [isSaving, setIsSaving] = useState(false);
   const [isTogglingAutoMeal, setIsTogglingAutoMeal] = useState(false);
   
-  // Sync local quantity when currentQuantity changes (e.g., from server)
+  // Sync local quantity from the right source:
+  // - If Auto Meal is enabled and manual registration is locked (cutoff) or we're viewing a future day,
+  //   show/edit the Auto Meal default quantity.
+  // - Otherwise, show/edit today's explicit quantity.
   useEffect(() => {
+    if (autoMealEnabled && (isCutoffPassed || isFutureDate)) {
+      setQuantity(autoMealQuantity);
+      return;
+    }
     setQuantity(currentQuantity);
-  }, [currentQuantity]);
+  }, [currentQuantity, autoMealEnabled, autoMealQuantity, isCutoffPassed, isFutureDate]);
 
   const hasChanges = quantity !== currentQuantity;
   
@@ -76,6 +85,15 @@ function MealRegistration({
     } finally {
       setIsTogglingAutoMeal(false);
     }
+  };
+
+  const isAutoMealQuantityDirty = autoMealEnabled && quantity !== autoMealQuantity;
+
+  const handleSaveAutoMealQuantity = async () => {
+    if (!autoMealEnabled) return;
+    if (!isAutoMealQuantityDirty) return;
+    // You can update Auto Meal even after cutoff; this does not touch today's meal record.
+    await onSaveAutoMealQuantity(quantity);
   };
 
   return (
@@ -316,9 +334,34 @@ function MealRegistration({
           </button>
         </div>
 
+        {/* Save Auto Meal quantity (allowed even after cutoff) */}
+        {autoMealEnabled && !isFutureDate && (
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <div className="text-xs text-text-tertiary">
+              {isAutoMealQuantityDirty
+                ? 'Auto Meal quantity changed. Update to apply for upcoming days.'
+                : 'Auto Meal quantity is up to date.'
+              }
+            </div>
+            <button
+              onClick={handleSaveAutoMealQuantity}
+              disabled={isLoading || isTogglingAutoMeal || !isAutoMealQuantityDirty}
+              className={`
+                px-4 py-2 rounded-lg font-semibold transition-all min-h-touch
+                ${isLoading || isTogglingAutoMeal || !isAutoMealQuantityDirty
+                  ? 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
+                  : 'bg-primary text-white hover:bg-primary-dark active:scale-95'
+                }
+              `}
+            >
+              Update Auto Meal
+            </button>
+          </div>
+        )}
+
         {autoMealEnabled && !isFutureDate && (
           <div className="mt-2 text-xs text-text-tertiary">
-            Your {period} meal will be auto-registered with {autoMealQuantity} {autoMealQuantity === 1 ? 'meal' : 'meals'} each day
+            Your {period} meal will be auto-registered with {quantity} {quantity === 1 ? 'meal' : 'meals'} each day
           </div>
         )}
       </div>

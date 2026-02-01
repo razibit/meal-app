@@ -27,6 +27,7 @@ function Home() {
     getUserMealQuantity,
     getUserAutoMeal,
     getUserAutoMealQuantity,
+    updateAutoMealQuantity,
     clearError,
   } = useMealStore();
 
@@ -75,6 +76,16 @@ function Home() {
       throw error;
     }
   }, [user, activePeriod, updateAutoMeal]);
+
+  const handleSaveAutoMealQuantity = useCallback(async (quantity: number) => {
+    if (!user) return;
+    try {
+      await updateAutoMealQuantity(user.id, activePeriod, quantity);
+    } catch (error) {
+      console.error('Failed to update auto meal quantity:', error);
+      throw error;
+    }
+  }, [user, activePeriod, updateAutoMealQuantity]);
 
   const handleSaveMealDetails = useCallback(async (details: string) => {
     if (!user) return;
@@ -176,6 +187,7 @@ function Home() {
         isFutureDate={isFutureDate}
         onSaveQuantity={handleSaveQuantity}
         onToggleAutoMeal={handleToggleAutoMeal}
+        onSaveAutoMealQuantity={handleSaveAutoMealQuantity}
       />
 
       {/* Meal Details Editor */}

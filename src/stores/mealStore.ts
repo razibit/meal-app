@@ -39,6 +39,7 @@ interface MealState {
   getUserMealQuantity: (userId: string, period: MealPeriod, date: string) => number;
   getUserAutoMeal: (userId: string, period: MealPeriod) => boolean;
   getUserAutoMealQuantity: (userId: string, period: MealPeriod) => number;
+  updateAutoMealQuantity: (memberId: string, period: MealPeriod, quantity: number) => Promise<void>;
   updateCounts: (date?: string) => void;
   hasUserRegistered: (userId: string) => boolean;
   clearError: () => void;
@@ -663,6 +664,31 @@ export const useMealStore = create<MealState>((set, get) => ({
     const member = members.find((m) => m.id === userId);
     if (!member) return 1; // Default to 1 if member not found
     return period === 'morning' ? member.auto_meal_morning_quantity : member.auto_meal_night_quantity;
+  },
+
+  updateAutoMealQuantity: async (memberId: string, period: MealPeriod, quantity: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      const quantityField = period === 'morning' ? 'auto_meal_morning_quantity' : 'auto_meal_night_quantity';
+
+      await retryDatabaseOperation(async () => {
+        const { error } = await supabase
+          .from('members')
+          .update({ [quantityField]: quantity })
+          .eq('id', memberId);
+
+        if (error) throw new DatabaseError(error.message);
+      });
+
+      await get().fetchMembers();
+      set({ loading: false });
+    } catch (error) {
+      const errorMessage = handleError(error);
+      set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
+      throw error;
+    }
   },
 
   clearError: () => set({ error: null }),
