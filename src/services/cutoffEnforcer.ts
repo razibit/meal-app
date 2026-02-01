@@ -33,9 +33,18 @@ export async function validateMealAction(
     return data as CutoffValidationResponse;
   } catch (error) {
     console.error('Error validating meal action:', error);
+
+    // Make CORS / Edge Function connectivity failures obvious.
+    // These should not be treated as a cutoff violation.
+    const err = error as { name?: string; message?: string };
+    const message = typeof err?.message === 'string' ? err.message : '';
+    const isFunctionsFetchError = err?.name === 'FunctionsFetchError' || message.includes('Failed to send a request');
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to validate action',
+      error: isFunctionsFetchError
+        ? 'Cutoff validation service unreachable (Edge Function/CORS). Deploy the function and allow browser preflight.'
+        : (error instanceof Error ? error.message : 'Failed to validate action'),
     };
   }
 }

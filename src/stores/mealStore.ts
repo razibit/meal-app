@@ -199,7 +199,10 @@ export const useMealStore = create<MealState>((set, get) => ({
       });
       
       if (!validation.success) {
-        throw new CutoffError(period);
+        if (validation.cutoffPassed) {
+          throw new CutoffError(period);
+        }
+        throw new Error(validation.error || 'Cutoff validation failed. Please try again.');
       }
 
       await retryDatabaseOperation(async () => {
@@ -252,7 +255,10 @@ export const useMealStore = create<MealState>((set, get) => ({
       });
       
       if (!validation.success) {
-        throw new CutoffError(period);
+        if (validation.cutoffPassed) {
+          throw new CutoffError(period);
+        }
+        throw new Error(validation.error || 'Cutoff validation failed. Please try again.');
       }
 
       await retryDatabaseOperation(async () => {
@@ -299,12 +305,16 @@ export const useMealStore = create<MealState>((set, get) => ({
       }
 
       // Server-side cutoff validation
+      const action = quantity === 0 ? 'remove' : 'add';
       const validation = await retryDatabaseOperation(async () => {
-        return await validateMealAction('add', memberId, date, period);
+        return await validateMealAction(action, memberId, date, period);
       });
       
       if (!validation.success) {
-        throw new CutoffError(period);
+        if (validation.cutoffPassed) {
+          throw new CutoffError(period);
+        }
+        throw new Error(validation.error || 'Cutoff validation failed. Please try again.');
       }
 
       // Update Auto Meal quantity if Auto Meal is enabled for this period
