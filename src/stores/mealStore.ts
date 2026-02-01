@@ -38,6 +38,7 @@ interface MealState {
   getMealCounts: (period?: MealPeriod, date?: string) => MealCount;
   getUserMealQuantity: (userId: string, period: MealPeriod, date: string) => number;
   getUserAutoMeal: (userId: string, period: MealPeriod) => boolean;
+  getUserAutoMealQuantity: (userId: string, period: MealPeriod) => number;
   updateCounts: (date?: string) => void;
   hasUserRegistered: (userId: string) => boolean;
   clearError: () => void;
@@ -306,6 +307,26 @@ export const useMealStore = create<MealState>((set, get) => ({
         throw new CutoffError(period);
       }
 
+      // Update Auto Meal quantity if Auto Meal is enabled for this period
+      const { members } = get();
+      const member = members.find(m => m.id === memberId);
+      if (member) {
+        const autoMealEnabled = period === 'morning' ? member.auto_meal_morning : member.auto_meal_night;
+        
+        if (autoMealEnabled) {
+          const quantityField = period === 'morning' ? 'auto_meal_morning_quantity' : 'auto_meal_night_quantity';
+          
+          await retryDatabaseOperation(async () => {
+            const { error } = await supabase
+              .from('members')
+              .update({ [quantityField]: quantity })
+              .eq('id', memberId);
+
+            if (error) throw new DatabaseError(error.message);
+          });
+        }
+      }
+
       if (quantity === 0) {
         // Delete the meal if quantity is 0
         await retryDatabaseOperation(async () => {
@@ -336,8 +357,9 @@ export const useMealStore = create<MealState>((set, get) => ({
         });
       }
 
-      // Refresh meals for the selected date and period
+      // Refresh meals and members to get updated auto meal quantity
       await get().fetchMeals(date, period);
+      await get().fetchMembers();
       
       set({ loading: false });
     } catch (error) {
@@ -520,6 +542,7 @@ export const useMealStore = create<MealState>((set, get) => ({
     // Add members with Auto Meal enabled who don't have explicit meals
     if (period) {
       const autoMealField = period === 'morning' ? 'auto_meal_morning' : 'auto_meal_night';
+      const autoMealQuantityField = period === 'morning' ? 'auto_meal_morning_quantity' : 'auto_meal_night_quantity';
       
       members.forEach((member) => {
         // Skip if member already has an explicit meal
@@ -538,19 +561,22 @@ export const useMealStore = create<MealState>((set, get) => ({
         // For past dates, Auto Meal shouldn't apply (they should have explicit records)
         if (targetDate < todayDate) return;
         
-        // Add member with Auto Meal quantity (1 meal)
+        // Get the stored Auto Meal quantity
+        const autoMealQuantity = member[autoMealQuantityField];
+        
+        // Add member with Auto Meal quantity
         participants.push({
           id: member.id,
           name: member.name,
           rice_preference: member.rice_preference,
-          quantity: 1,
+          quantity: autoMealQuantity,
         });
         
         // Add to totals
         if (member.rice_preference === 'boiled') {
-          boiledRiceTotal += 1;
+          boiledRiceTotal += autoMealQuantity;
         } else {
-          atopRiceTotal += 1;
+          atopRiceTotal += autoMealQuantity;
         }
       });
     }
@@ -596,6 +622,7 @@ export const useMealStore = create<MealState>((set, get) => ({
     if (!member) return 0;
     
     const autoMealEnabled = period === 'morning' ? member.auto_meal_morning : member.auto_meal_night;
+    const autoMealQuantity = period === 'morning' ? member.auto_meal_morning_quantity : member.auto_meal_night_quantity;
     
     // If Auto Meal is disabled, return 0
     if (!autoMealEnabled) return 0;
@@ -610,8 +637,8 @@ export const useMealStore = create<MealState>((set, get) => ({
     // For past dates, Auto Meal shouldn't apply (should have explicit records)
     if (date < todayDate) return 0;
     
-    // Auto Meal applies - return quantity 1
-    return 1;
+    // Auto Meal applies - return stored quantity
+    return autoMealQuantity;
   },
 
   getUserAutoMeal: (userId: string, period: MealPeriod) => {
@@ -619,6 +646,13 @@ export const useMealStore = create<MealState>((set, get) => ({
     const member = members.find((m) => m.id === userId);
     if (!member) return true; // Default to true if member not found
     return period === 'morning' ? member.auto_meal_morning : member.auto_meal_night;
+  },
+
+  getUserAutoMealQuantity: (userId: string, period: MealPeriod) => {
+    const { members } = get();
+    const member = members.find((m) => m.id === userId);
+    if (!member) return 1; // Default to 1 if member not found
+    return period === 'morning' ? member.auto_meal_morning_quantity : member.auto_meal_night_quantity;
   },
 
   clearError: () => set({ error: null }),

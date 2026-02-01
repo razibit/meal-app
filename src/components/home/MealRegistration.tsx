@@ -5,6 +5,7 @@ interface MealRegistrationProps {
   period: MealPeriod;
   currentQuantity: number;
   autoMealEnabled: boolean;
+  autoMealQuantity: number;
   isLoading: boolean;
   isCutoffPassed: boolean;
   isFutureDate?: boolean;
@@ -16,6 +17,7 @@ function MealRegistration({
   period,
   currentQuantity,
   autoMealEnabled,
+  autoMealQuantity,
   isLoading,
   isCutoffPassed,
   isFutureDate = false,
@@ -310,7 +312,7 @@ function MealRegistration({
 
         {autoMealEnabled && !isFutureDate && (
           <div className="mt-2 text-xs text-text-tertiary">
-            Your {period} meal will be auto-registered with 1 meal each day
+            Your {period} meal will be auto-registered with {autoMealQuantity} {autoMealQuantity === 1 ? 'meal' : 'meals'} each day
           </div>
         )}
       </div>

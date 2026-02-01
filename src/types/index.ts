@@ -9,6 +9,8 @@ export interface Member {
   role: 'member' | 'admin';
   auto_meal_morning: boolean;
   auto_meal_night: boolean;
+  auto_meal_morning_quantity: number;
+  auto_meal_night_quantity: number;
   created_at?: string;
   updated_at?: string;
 }

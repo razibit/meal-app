@@ -26,6 +26,7 @@ function Home() {
     getMealCounts,
     getUserMealQuantity,
     getUserAutoMeal,
+    getUserAutoMealQuantity,
     clearError,
   } = useMealStore();
 
@@ -99,6 +100,7 @@ function Home() {
   const mealCounts = getMealCounts(activePeriod, selectedDate);
   const currentQuantity = user ? getUserMealQuantity(user.id, activePeriod, selectedDate) : 0;
   const autoMealEnabled = user ? getUserAutoMeal(user.id, activePeriod) : true;
+  const autoMealQuantity = user ? getUserAutoMealQuantity(user.id, activePeriod) : 1;
   const cutoffPassed = useMemo(() => 
     isCutoffPassed(activePeriod, selectedDate), 
     [activePeriod, selectedDate]
@@ -168,6 +170,7 @@ function Home() {
         period={activePeriod}
         currentQuantity={currentQuantity}
         autoMealEnabled={autoMealEnabled}
+        autoMealQuantity={autoMealQuantity}
         isLoading={loading}
         isCutoffPassed={cutoffPassed}
         isFutureDate={isFutureDate}
