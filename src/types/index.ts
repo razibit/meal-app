@@ -36,6 +36,15 @@ export interface MealDetails {
   updated_at?: string;
 }
 
+export interface Egg {
+  id: string;
+  member_id: string;
+  egg_date: string;
+  quantity: number;
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface ChatMessage {
   id: string;
   sender_id: string;
@@ -58,6 +67,22 @@ export interface MonthlyReportRow {
   morning_count: number;
   night_count: number;
   monthly_total: number;
+}
+
+export interface DailyReportRow {
+  meal_date: string;
+  morning_count: number;
+  night_count: number;
+  egg_count: number;
+}
+
+export interface MemberMonthlyReport {
+  dates: DailyReportRow[];
+  totals: {
+    morning: number;
+    night: number;
+    eggs: number;
+  };
 }
 
 export type { Session, User };

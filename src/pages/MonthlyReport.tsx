@@ -1,26 +1,31 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../services/supabase';
-import { MonthlyReportRow } from '../types';
+import { DailyReportRow } from '../types';
 import { timeService } from '../services/timeService';
+import { useAuthStore } from '../stores/authStore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 function MonthlyReport() {
+  const { user } = useAuthStore();
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = timeService.now(); // Use synchronized server time
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
-  const [reportData, setReportData] = useState<MonthlyReportRow[]>([]);
+  const [reportData, setReportData] = useState<DailyReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMonthlyReport = useCallback(async () => {
+  const fetchMemberReport = useCallback(async () => {
+    if (!user) return;
+    
     setLoading(true);
     setError(null);
     
     try {
       const { data, error: rpcError } = await supabase
-        .rpc('get_monthly_report', {
+        .rpc('get_member_monthly_report', {
+          p_member_id: user.id,
           target_month: `${selectedMonth}-01`
         });
 
@@ -28,16 +33,16 @@ function MonthlyReport() {
       
       setReportData(data || []);
     } catch (err) {
-      console.error('Error fetching monthly report:', err);
+      console.error('Error fetching member report:', err);
       setError('Failed to load monthly report. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth]);
+  }, [selectedMonth, user]);
 
   useEffect(() => {
-    fetchMonthlyReport();
-  }, [fetchMonthlyReport]);
+    fetchMemberReport();
+  }, [fetchMemberReport]);
 
   const handleMonthChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedMonth(e.target.value);
@@ -49,9 +54,9 @@ function MonthlyReport() {
       (acc, row) => ({
         morning: acc.morning + row.morning_count,
         night: acc.night + row.night_count,
-        total: acc.total + row.monthly_total
+        eggs: acc.eggs + row.egg_count,
       }),
-      { morning: 0, night: 0, total: 0 }
+      { morning: 0, night: 0, eggs: 0 }
     );
   }, [reportData]);
 
@@ -59,13 +64,20 @@ function MonthlyReport() {
     if (reportData.length === 0) return;
 
     // Create CSV content
-    const headers = ['Name', 'Morning Meals', 'Night Meals', 'Monthly Total'];
-    const rows = reportData.map(row => [
-      row.member_name,
-      row.morning_count,
-      row.night_count,
-      row.monthly_total
-    ]);
+    const headers = ['Date', 'Morning', 'Night', 'Eggs'];
+    const rows = reportData.map(row => {
+      const date = new Date(row.meal_date + 'T00:00:00');
+      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return [
+        dateStr,
+        row.morning_count,
+        row.night_count,
+        row.egg_count
+      ];
+    });
+
+    // Add totals row
+    rows.push(['Total', totals.morning, totals.night, totals.eggs]);
 
     const csvContent = [
       headers.join(','),
@@ -78,13 +90,13 @@ function MonthlyReport() {
     const url = URL.createObjectURL(blob);
     
     link.setAttribute('href', url);
-    link.setAttribute('download', `meal-report-${selectedMonth}.csv`);
+    link.setAttribute('download', `my-meal-report-${selectedMonth}.csv`);
     link.style.visibility = 'hidden';
     
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [reportData, selectedMonth]);
+  }, [reportData, selectedMonth, totals]);
 
   const handleExportPDF = useCallback(() => {
     if (reportData.length === 0) return;
@@ -93,7 +105,7 @@ function MonthlyReport() {
     
     // Add title
     doc.setFontSize(18);
-    doc.text('Monthly Meal Report', 14, 20);
+    doc.text('My Monthly Meal Report', 14, 20);
     
     // Add month
     const monthYear = new Date(selectedMonth + '-01').toLocaleDateString('en-US', { 
@@ -104,24 +116,32 @@ function MonthlyReport() {
     doc.text(monthYear, 14, 28);
     
     // Prepare table data
-    const tableData = reportData.map(row => [
-      row.member_name,
-      row.morning_count.toString(),
-      row.night_count.toString(),
-      row.monthly_total.toString()
-    ]);
+    const tableData = reportData.map(row => {
+      const date = new Date(row.meal_date + 'T00:00:00');
+      const dateStr = date.toLocaleDateString('en-US', { 
+        weekday: 'short',
+        month: 'short', 
+        day: 'numeric' 
+      });
+      return [
+        dateStr,
+        row.morning_count.toString(),
+        row.night_count.toString(),
+        row.egg_count.toString()
+      ];
+    });
     
     // Add totals row
     tableData.push([
       'Total',
       totals.morning.toString(),
       totals.night.toString(),
-      totals.total.toString()
+      totals.eggs.toString()
     ]);
     
     // Generate table with alternating row colors
     autoTable(doc, {
-      head: [['Name', 'Morning Meals', 'Night Meals', 'Monthly Total']],
+      head: [['Date', 'Morning', 'Night', 'Eggs']],
       body: tableData,
       startY: 35,
       theme: 'striped',
@@ -135,7 +155,7 @@ function MonthlyReport() {
         halign: 'center'
       },
       columnStyles: {
-        0: { halign: 'left' } // Name column left-aligned
+        0: { halign: 'left' } // Date column left-aligned
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245] // Light grey for alternate rows
@@ -155,13 +175,13 @@ function MonthlyReport() {
     });
     
     // Save the PDF
-    doc.save(`meal-report-${selectedMonth}.pdf`);
+    doc.save(`my-meal-report-${selectedMonth}.pdf`);
   }, [reportData, selectedMonth, totals]);
 
   return (
-    <div className="p-4 max-w-6xl mx-auto animate-fade-in">
+    <div className="p-4 max-w-4xl mx-auto animate-fade-in">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4 text-text-primary">Monthly Meal Report</h2>
+        <h2 className="text-2xl font-bold mb-4 text-text-primary">My Monthly Report</h2>
         
         {/* Month Selector and Export Button */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -247,39 +267,51 @@ function MonthlyReport() {
               <thead>
                 <tr className="bg-bg-tertiary border-b border-border">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-text-primary">
-                    Name
+                    Date
                   </th>
                   <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
-                    Morning Meals
+                    Morning
                   </th>
                   <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
-                    Night Meals
+                    Night
                   </th>
                   <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
-                    Monthly Total
+                    Eggs
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {reportData.map((row) => (
-                  <tr
-                    key={row.member_id}
-                    className="border-b border-border hover:bg-bg-secondary transition-colors"
-                  >
-                    <td className="px-4 py-3 text-text-primary font-medium">
-                      {row.member_name}
-                    </td>
-                    <td className="px-4 py-3 text-center text-text-secondary">
-                      {row.morning_count}
-                    </td>
-                    <td className="px-4 py-3 text-center text-text-secondary">
-                      {row.night_count}
-                    </td>
-                    <td className="px-4 py-3 text-center text-text-primary font-semibold">
-                      {row.monthly_total}
-                    </td>
-                  </tr>
-                ))}
+                {reportData.map((row) => {
+                  const date = new Date(row.meal_date + 'T00:00:00');
+                  const dateStr = date.toLocaleDateString('en-US', { 
+                    weekday: 'short',
+                    month: 'short', 
+                    day: 'numeric' 
+                  });
+                  const hasData = row.morning_count > 0 || row.night_count > 0 || row.egg_count > 0;
+                  
+                  return (
+                    <tr
+                      key={row.meal_date}
+                      className={`border-b border-border transition-colors ${
+                        hasData ? 'hover:bg-bg-secondary' : 'opacity-50'
+                      }`}
+                    >
+                      <td className="px-4 py-3 text-text-primary font-medium">
+                        {dateStr}
+                      </td>
+                      <td className="px-4 py-3 text-center text-text-secondary">
+                        {row.morning_count > 0 ? row.morning_count : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center text-text-secondary">
+                        {row.night_count > 0 ? row.night_count : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center text-text-secondary">
+                        {row.egg_count > 0 ? row.egg_count : '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
                 
                 {/* Totals Row */}
                 <tr className="bg-bg-tertiary font-bold">
@@ -293,7 +325,7 @@ function MonthlyReport() {
                     {totals.night}
                   </td>
                   <td className="px-4 py-3 text-center text-text-primary">
-                    {totals.total}
+                    {totals.eggs}
                   </td>
                 </tr>
               </tbody>

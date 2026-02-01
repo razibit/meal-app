@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useMealStore } from '../stores/mealStore';
+import { useEggStore } from '../stores/eggStore';
 import { getTodayDate } from '../utils/dateHelpers';
 import { MealPeriod, getActivePeriod, isCutoffPassed } from '../utils/cutoffChecker';
 import DateSelector from '../components/home/DateSelector';
@@ -31,6 +32,8 @@ function Home() {
     clearError,
   } = useMealStore();
 
+  const { fetchEggs } = useEggStore();
+
   const [activePeriod, setActivePeriod] = useState<MealPeriod>(getActivePeriod());
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
@@ -44,7 +47,8 @@ function Home() {
   useEffect(() => {
     fetchMeals(selectedDate, activePeriod);
     fetchMealDetails(selectedDate);
-  }, [activePeriod, selectedDate, fetchMeals, fetchMealDetails]);
+    fetchEggs(selectedDate);
+  }, [activePeriod, selectedDate, fetchMeals, fetchMealDetails, fetchEggs]);
 
   // Memoize event handlers to prevent unnecessary re-renders
   const handlePeriodChange = useCallback((period: MealPeriod) => {

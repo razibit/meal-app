@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getCurrentTimeInTimezone } from '../../utils/dateHelpers';
+import { getCurrentTimeInTimezone, formatDate as formatDateStr } from '../../utils/dateHelpers';
+import EggCounter from '../home/EggCounter';
 
 interface HeaderProps {
   onPeopleClick: () => void;
@@ -7,6 +8,7 @@ interface HeaderProps {
 
 function Header({ onPeopleClick }: HeaderProps) {
   const [now, setNow] = useState<Date>(() => getCurrentTimeInTimezone());
+  const todayDate = formatDateStr(getCurrentTimeInTimezone());
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -44,6 +46,9 @@ function Header({ onPeopleClick }: HeaderProps) {
             {formatDate()}
             <span className="ml-3 inline-flex items-center rounded-full bg-bg-tertiary/70 px-3 py-1 text-base md:text-lg font-semibold text-text-primary tabular-nums">
               {formatTime12h()}
+            </span>
+            <span className="ml-2">
+              <EggCounter date={todayDate} />
             </span>
           </h1>
         </div>
