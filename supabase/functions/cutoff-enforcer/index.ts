@@ -30,18 +30,33 @@ function getCurrentTimeInTimezone(): Date {
   return new Date(utc + TIMEZONE_OFFSET * 60000);
 }
 
-/**
- * Check if cutoff time has passed for a given period
- */
-function isCutoffPassed(period: MealPeriod): boolean {
-  const now = getCurrentTimeInTimezone();
-  const currentHour = now.getHours();
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
-  if (period === 'morning') {
-    return currentHour >= MORNING_CUTOFF_HOUR;
-  } else {
-    return currentHour >= NIGHT_CUTOFF_HOUR;
-  }
+/**
+ * Check if cutoff time has passed for a given period and meal date.
+ *
+ * Rules:
+ * - For future dates, cutoff is never considered passed.
+ * - For past dates, cutoff is always considered passed.
+ * - For today, compare current hour against cutoff hour.
+ */
+function isCutoffPassed(period: MealPeriod, mealDate: string): boolean {
+  const now = getCurrentTimeInTimezone();
+  const todayStr = formatDate(now);
+
+  // mealDate is expected as YYYY-MM-DD
+  if (mealDate > todayStr) return false;
+  if (mealDate < todayStr) return true;
+
+  const currentHour = now.getHours();
+  return period === 'morning'
+    ? currentHour >= MORNING_CUTOFF_HOUR
+    : currentHour >= NIGHT_CUTOFF_HOUR;
 }
 
 serve(async (req) => {
@@ -64,39 +79,49 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ success: false, error: 'Missing required fields' }),
         {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
         }
       );
     }
 
     // Check if cutoff has passed
-    const cutoffPassed = isCutoffPassed(period);
+    const cutoffPassed = isCutoffPassed(period, mealDate);
     
     if (cutoffPassed) {
       const cutoffTime = period === 'morning' ? '7:00 AM' : '6:00 PM';
+
+      // Only post a violation when the user attempts to change *today's* meal.
+      // Future dates are allowed and should not generate violations.
+      const todayStr = formatDate(getCurrentTimeInTimezone());
+      const shouldPostViolation = mealDate === todayStr;
       
       // Post violation message to chat
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      );
+      if (shouldPostViolation) {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        );
 
-      // Get member name
-      const { data: member } = await supabase
-        .from('members')
-        .select('name')
-        .eq('id', memberId)
-        .single();
+        // Get member name
+        const { data: member } = await supabase
+          .from('members')
+          .select('name')
+          .eq('id', memberId)
+          .single();
 
-      if (member) {
-        const violationMessage = `${member.name} has ${action === 'add' ? 'added' : 'removed'} their ${period} meal after ${cutoffTime}`;
-        
-        await supabase.from('chats').insert({
-          sender_id: memberId,
-          message: violationMessage,
-          is_violation: true,
-        });
+        if (member) {
+          const violationMessage = `${member.name} has ${action === 'add' ? 'added' : 'removed'} their ${period} meal after ${cutoffTime}`;
+          
+          await supabase.from('chats').insert({
+            sender_id: memberId,
+            message: violationMessage,
+            is_violation: true,
+          });
+        }
       }
 
       return new Response(
@@ -106,7 +131,8 @@ serve(async (req) => {
           cutoffPassed: true,
         } as ResponseBody),
         {
-          status: 403,
+          // IMPORTANT: return 200 so supabase-js does not throw FunctionsHttpError.
+          status: 200,
           headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
