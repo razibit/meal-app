@@ -5,18 +5,25 @@ import { handleError, showErrorToast } from '../utils/errorHandling';
 
 interface EggState {
   eggs: Egg[];
+  availableEggs: number;
+  totalEggs: number;
   loading: boolean;
   error: string | null;
 
   // Actions
   fetchEggs: (date: string) => Promise<void>;
+  fetchAvailableEggs: (date: string) => Promise<void>;
+  fetchTotalEggs: () => Promise<void>;
   getUserEggQuantity: (userId: string, date: string) => number;
   updateEggQuantity: (memberId: string, date: string, quantity: number) => Promise<void>;
+  updateTotalEggs: (totalEggs: number, notes?: string) => Promise<void>;
   clearError: () => void;
 }
 
 export const useEggStore = create<EggState>((set, get) => ({
   eggs: [],
+  availableEggs: 0,
+  totalEggs: 0,
   loading: false,
   error: null,
 
@@ -33,11 +40,44 @@ export const useEggStore = create<EggState>((set, get) => ({
       if (error) throw error;
 
       set({ eggs: data || [], loading: false });
+      
+      // Also fetch available eggs
+      await get().fetchAvailableEggs(date);
     } catch (err) {
       console.error('Error fetching eggs:', err);
       const errorMessage = handleError(err);
       set({ error: errorMessage, loading: false });
       showErrorToast(errorMessage);
+    }
+  },
+
+  fetchAvailableEggs: async (date: string) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_available_eggs', { target_date: date });
+
+      if (error) throw error;
+
+      set({ availableEggs: data || 0 });
+    } catch (err) {
+      console.error('Error fetching available eggs:', err);
+    }
+  },
+
+  fetchTotalEggs: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('egg_inventory')
+        .select('total_eggs')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) throw error;
+
+      set({ totalEggs: data?.total_eggs || 0 });
+    } catch (err) {
+      console.error('Error fetching total eggs:', err);
     }
   },
 
@@ -85,6 +125,35 @@ export const useEggStore = create<EggState>((set, get) => ({
       set({ loading: false });
     } catch (err) {
       console.error('Error updating egg quantity:', err);
+      const errorMessage = handleError(err);
+      set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
+      throw err;
+    }
+  },
+
+  updateTotalEggs: async (totalEggs: number, notes?: string) => {
+    set({ loading: true, error: null });
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('egg_inventory')
+        .insert({
+          total_eggs: totalEggs,
+          added_by: userData.user.id,
+          notes: notes || null,
+        });
+
+      if (error) throw error;
+
+      // Refresh total eggs
+      await get().fetchTotalEggs();
+      set({ loading: false });
+    } catch (err) {
+      console.error('Error updating total eggs:', err);
       const errorMessage = handleError(err);
       set({ error: errorMessage, loading: false });
       showErrorToast(errorMessage);

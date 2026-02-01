@@ -56,7 +56,7 @@ function NoticeBoard({ notice, updatedBy, updatedByName, updatedAt, onSave }: No
     <div className="mb-6">
       <div className="card">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-text-primary">Notice Board</h3>
+          <h3 className="text-lg font-semibold text-text-primary">Community Notes</h3>
           {isSaving && (
             <span className="text-sm text-primary flex items-center gap-1">
               <svg

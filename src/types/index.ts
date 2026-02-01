@@ -45,6 +45,15 @@ export interface Egg {
   updated_at?: string;
 }
 
+export interface EggInventory {
+  id: string;
+  total_eggs: number;
+  added_by: string;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface ChatMessage {
   id: string;
   sender_id: string;

@@ -2,6 +2,7 @@ import { ProfileSection } from '../components/preferences/ProfileSection';
 import { ThemeToggle } from '../components/preferences/ThemeToggle';
 import { NotificationSettings } from '../components/preferences/NotificationSettings';
 import { ClearMeals } from '../components/preferences/ClearMeals';
+import { EggInventory } from '../components/preferences/EggInventory';
 
 function Preferences() {
   return (
@@ -13,6 +14,7 @@ function Preferences() {
         <ThemeToggle />
         <NotificationSettings />
         <ClearMeals />
+        <EggInventory />
       </div>
     </div>
   );

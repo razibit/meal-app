@@ -8,7 +8,7 @@ interface EggCounterProps {
 
 function EggCounter({ date }: EggCounterProps) {
   const { user } = useAuthStore();
-  const { getUserEggQuantity, updateEggQuantity, loading } = useEggStore();
+  const { getUserEggQuantity, updateEggQuantity, availableEggs, loading } = useEggStore();
   const [isEditing, setIsEditing] = useState(false);
   const [tempQuantity, setTempQuantity] = useState(0);
 
@@ -46,6 +46,7 @@ function EggCounter({ date }: EggCounterProps) {
   if (isEditing) {
     return (
       <div className="inline-flex items-center gap-2 rounded-full bg-bg-tertiary/70 px-3 py-1">
+        <span className="text-base font-bold text-green-600">{availableEggs}</span>
         <span className="text-sm font-medium text-text-secondary">🥚</span>
         <button
           onClick={decrement}
@@ -94,8 +95,9 @@ function EggCounter({ date }: EggCounterProps) {
     <button
       onClick={handleStartEdit}
       className="inline-flex items-center gap-2 rounded-full bg-bg-tertiary/70 px-3 py-1 hover:bg-bg-tertiary transition-colors cursor-pointer"
-      aria-label={`Eggs: ${currentQuantity}. Click to edit`}
+      aria-label={`Available: ${availableEggs} eggs. You have taken: ${currentQuantity}. Click to edit`}
     >
+      <span className="text-base font-bold text-green-600">{availableEggs}</span>
       <span className="text-sm">🥚</span>
       <span className="text-base md:text-lg font-semibold text-text-primary tabular-nums">
         {currentQuantity}
