@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../services/supabase';
 import { DailyReportRow } from '../types';
-import { timeService } from '../services/timeService';
 import { useAuthStore } from '../stores/authStore';
 import { getMealMonthDateRange, formatDateRangeForDisplay } from '../utils/mealMonthHelpers';
 import jsPDF from 'jspdf';
