@@ -11,6 +11,43 @@ interface ChatMessagesProps {
 const MESSAGE_HEIGHT = 80; // Approximate height per message
 const BUFFER_SIZE = 10; // Number of messages to render outside viewport
 
+// Date divider component
+function DateDivider({ date }: { date: string }) {
+  const formatDateDivider = (dateString: string) => {
+    const messageDate = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Check if it's today
+    if (messageDate.toDateString() === today.toDateString()) {
+      return 'Today';
+    }
+
+    // Check if it's yesterday
+    if (messageDate.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+
+    // Otherwise format as "Feb 2, 2026"
+    return messageDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  return (
+    <div className="flex items-center gap-3 my-4 px-2">
+      <div className="flex-1 h-px bg-border"></div>
+      <span className="text-xs text-text-tertiary font-medium">
+        {formatDateDivider(date)}
+      </span>
+      <div className="flex-1 h-px bg-border"></div>
+    </div>
+  );
+}
+
 function ChatMessages({ messages, currentUserId, memberNames }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -22,6 +59,24 @@ function ChatMessages({ messages, currentUserId, memberNames }: ChatMessagesProp
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+  }, [messages]);
+
+  // Group messages by date
+  const messagesByDate = useMemo(() => {
+    const grouped: Array<{ date: string; messages: ChatMessage[] }> = [];
+    
+    messages.forEach((message) => {
+      const messageDate = new Date(message.created_at).toDateString();
+      const lastGroup = grouped[grouped.length - 1];
+      
+      if (!lastGroup || new Date(lastGroup.date).toDateString() !== messageDate) {
+        grouped.push({ date: message.created_at, messages: [message] });
+      } else {
+        lastGroup.messages.push(message);
+      }
+    });
+    
+    return grouped;
   }, [messages]);
 
   // Track scroll position for virtualization
@@ -46,25 +101,6 @@ function ChatMessages({ messages, currentUserId, memberNames }: ChatMessagesProp
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Calculate visible message range for virtualization
-  const visibleMessages = useMemo(() => {
-    // Only virtualize if we have many messages (>50)
-    if (messages.length <= 50) {
-      return messages;
-    }
-
-    const startIndex = Math.max(
-      0,
-      Math.floor(scrollTop / MESSAGE_HEIGHT) - BUFFER_SIZE
-    );
-    const endIndex = Math.min(
-      messages.length,
-      Math.ceil((scrollTop + containerHeight) / MESSAGE_HEIGHT) + BUFFER_SIZE
-    );
-
-    return messages.slice(startIndex, endIndex);
-  }, [messages, scrollTop, containerHeight]);
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -137,114 +173,61 @@ function ChatMessages({ messages, currentUserId, memberNames }: ChatMessagesProp
     );
   }
 
-  // Calculate total height for virtualization spacer
-  const totalHeight = messages.length * MESSAGE_HEIGHT;
-  const offsetY = messages.length > 50 
-    ? Math.max(0, Math.floor(scrollTop / MESSAGE_HEIGHT) - BUFFER_SIZE) * MESSAGE_HEIGHT 
-    : 0;
+  const renderMessageBubble = (message: ChatMessage) => {
+    const senderName = memberNames[message.sender_id] || 'Unknown';
+    const isOwnMessage = message.sender_id === currentUserId;
+
+    return (
+      <div
+        key={message.id}
+        className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+      >
+        <div
+          className={`max-w-[75%] rounded-lg px-4 py-2 ${
+            message.is_violation
+              ? 'bg-error/10 border border-error text-error'
+              : isOwnMessage
+              ? 'bg-primary text-white'
+              : 'bg-bg-tertiary text-text-primary'
+          }`}
+        >
+          {!isOwnMessage && (
+            <div className="text-xs font-semibold mb-1 opacity-80">
+              {senderName}
+            </div>
+          )}
+          <div className="text-sm break-words">
+            {renderMessageWithMentions(message.message, message.mentions)}
+          </div>
+          <div
+            className={`text-xs mt-1 ${
+              message.is_violation
+                ? 'opacity-70'
+                : isOwnMessage
+                ? 'text-white/70'
+                : 'text-text-tertiary'
+            }`}
+          >
+            {formatTime(message.created_at)}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div
       ref={containerRef}
       className="flex-1 overflow-y-auto px-4 py-2"
-      style={{ position: 'relative' }}
     >
-      {/* Spacer for virtualization */}
-      {messages.length > 50 && (
-        <div style={{ height: `${totalHeight}px`, position: 'relative' }}>
-          <div style={{ transform: `translateY(${offsetY}px)` }} className="space-y-3">
-            {visibleMessages.map((message) => {
-              const senderName = memberNames[message.sender_id] || 'Unknown';
-              const isOwnMessage = message.sender_id === currentUserId;
-
-              return (
-                <div
-                  key={message.id}
-                  className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[75%] rounded-lg px-4 py-2 ${
-                      message.is_violation
-                        ? 'bg-error/10 border border-error text-error'
-                        : isOwnMessage
-                        ? 'bg-primary text-white'
-                        : 'bg-bg-tertiary text-text-primary'
-                    }`}
-                  >
-                    {!isOwnMessage && (
-                      <div className="text-xs font-semibold mb-1 opacity-80">
-                        {senderName}
-                      </div>
-                    )}
-                    <div className="text-sm break-words">
-                      {renderMessageWithMentions(message.message, message.mentions)}
-                    </div>
-                    <div
-                      className={`text-xs mt-1 ${
-                        message.is_violation
-                          ? 'opacity-70'
-                          : isOwnMessage
-                          ? 'text-white/70'
-                          : 'text-text-tertiary'
-                      }`}
-                    >
-                      {formatTime(message.created_at)}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+      <div className="space-y-3">
+        {messagesByDate.map((group, groupIndex) => (
+          <div key={`group-${groupIndex}`}>
+            <DateDivider date={group.date} />
+            {group.messages.map((message) => renderMessageBubble(message))}
           </div>
-        </div>
-      )}
-      
-      {/* Non-virtualized rendering for small lists */}
-      {messages.length <= 50 && (
-        <div className="space-y-3">
-          {messages.map((message) => {
-            const senderName = memberNames[message.sender_id] || 'Unknown';
-            const isOwnMessage = message.sender_id === currentUserId;
-
-            return (
-              <div
-                key={message.id}
-                className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[75%] rounded-lg px-4 py-2 ${
-                    message.is_violation
-                      ? 'bg-error/10 border border-error text-error'
-                      : isOwnMessage
-                      ? 'bg-primary text-white'
-                      : 'bg-bg-tertiary text-text-primary'
-                  }`}
-                >
-                  {!isOwnMessage && (
-                    <div className="text-xs font-semibold mb-1 opacity-80">
-                      {senderName}
-                    </div>
-                  )}
-                  <div className="text-sm break-words">
-                    {renderMessageWithMentions(message.message, message.mentions)}
-                  </div>
-                  <div
-                    className={`text-xs mt-1 ${
-                      message.is_violation
-                        ? 'opacity-70'
-                        : isOwnMessage
-                        ? 'text-white/70'
-                        : 'text-text-tertiary'
-                    }`}
-                  >
-                    {formatTime(message.created_at)}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      
+        ))}
+      </div>
       <div ref={messagesEndRef} />
     </div>
   );

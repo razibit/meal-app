@@ -1,5 +1,40 @@
 # Scripts
 
+## Deploy Chat Features
+
+Deploy chat enhancements including date dividers and automatic message cleanup.
+
+### Usage
+
+**Windows (PowerShell):**
+```powershell
+.\scripts\deploy-chat-features.ps1
+```
+
+**Linux/Mac:**
+```bash
+chmod +x scripts/deploy-chat-features.sh
+./scripts/deploy-chat-features.sh
+```
+
+### What it does
+
+1. Deploys database migration for message cleanup function
+2. Deploys Edge Function for scheduled cleanup
+3. Provides setup instructions for GitHub Actions
+4. Shows testing commands
+
+### Post-deployment
+
+After running the script:
+1. Add GitHub Actions secrets (see output instructions)
+2. Test the cleanup function manually
+3. Monitor scheduled runs in GitHub Actions
+
+See [CHAT_FEATURES.md](../docs/CHAT_FEATURES.md) for complete documentation.
+
+---
+
 ## Generate VAPID Keys
 
 VAPID (Voluntary Application Server Identification) keys are required for Web Push notifications.
