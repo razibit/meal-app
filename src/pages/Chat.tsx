@@ -62,14 +62,6 @@ function Chat() {
 
   return (
     <div className="flex flex-col h-full animate-fade-in">
-      {/* Header */}
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="text-xl font-bold text-text-primary">Chat</h2>
-        <p className="text-sm text-text-secondary">
-          {members.length} members online
-        </p>
-      </div>
-
       {/* Error message */}
       {error && (
         <div className="mx-4 mt-4 p-3 bg-error/10 border border-error rounded-lg text-error text-sm animate-slide-down">
