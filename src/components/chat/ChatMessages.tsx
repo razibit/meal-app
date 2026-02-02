@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import type { ChatMessage } from '../../types';
 
 interface ChatMessagesProps {
@@ -6,10 +6,6 @@ interface ChatMessagesProps {
   currentUserId: string;
   memberNames: Record<string, string>;
 }
-
-// Virtualization constants
-const MESSAGE_HEIGHT = 80; // Approximate height per message
-const BUFFER_SIZE = 10; // Number of messages to render outside viewport
 
 // Date divider component
 function DateDivider({ date }: { date: string }) {
@@ -51,8 +47,6 @@ function DateDivider({ date }: { date: string }) {
 function ChatMessages({ messages, currentUserId, memberNames }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [containerHeight, setContainerHeight] = useState(0);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -78,29 +72,6 @@ function ChatMessages({ messages, currentUserId, memberNames }: ChatMessagesProp
     
     return grouped;
   }, [messages]);
-
-  // Track scroll position for virtualization
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      setScrollTop(container.scrollTop);
-    };
-
-    const handleResize = () => {
-      setContainerHeight(container.clientHeight);
-    };
-
-    handleResize();
-    container.addEventListener('scroll', handleScroll);
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
