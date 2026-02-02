@@ -16,20 +16,16 @@ function Preferences() {
         <NotificationSettings />
 
         {/* Danger Zone - Grouped sensitive/destructive actions */}
-        <div className="relative border-2 border-red-400 border-dashed rounded-xl p-4 pt-8 space-y-6">
+        <div className="relative border-2 border-red-400 border-dashed rounded-xl p-4 pt-6 space-y-6">
           {/* Legend-style header that sits on the border */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-bg-primary px-3">
-            <span className="text-red-400">--------</span>
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex flex-col items-center bg-bg-primary px-3">
             <span className="text-sm font-semibold text-red-500 tracking-wide uppercase whitespace-nowrap">
               ⚠️ Danger Zone
             </span>
-            <span className="text-red-400">--------</span>
+            <span className="text-xs text-red-400/60 italic">
+              Do not touch
+            </span>
           </div>
-          
-          {/* Warning subtext below header */}
-          <p className="text-xs text-red-400/60 text-center italic -mt-4">
-            Do not touch
-          </p>
           
           <MealMonthConfig />
           <ClearMeals />
