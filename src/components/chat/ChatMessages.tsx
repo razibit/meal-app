@@ -151,23 +151,23 @@ function ChatMessages({ messages, currentUserId, memberNames }: ChatMessagesProp
     return (
       <div
         key={message.id}
-        className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+        className={`flex mb-3 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
       >
         <div
-          className={`max-w-[75%] rounded-lg px-4 py-2 ${
+          className={`max-w-[75%] rounded-xl px-3.5 py-2 shadow-sm transition-shadow hover:shadow-md ${
             message.is_violation
               ? 'bg-error/10 border border-error text-error'
               : isOwnMessage
-              ? 'bg-primary text-white'
+              ? 'bg-primary text-white shadow-primary/20'
               : 'bg-bg-tertiary text-text-primary'
           }`}
         >
           {!isOwnMessage && (
-            <div className="text-xs font-semibold mb-1 opacity-80">
+            <div className="text-xs font-semibold mb-0.5 opacity-80">
               {senderName}
             </div>
           )}
-          <div className="text-sm break-words">
+          <div className="text-sm break-words leading-snug">
             {renderMessageWithMentions(message.message, message.mentions)}
           </div>
           <div
@@ -191,11 +191,13 @@ function ChatMessages({ messages, currentUserId, memberNames }: ChatMessagesProp
       ref={containerRef}
       className="flex-1 overflow-y-auto px-4 py-2"
     >
-      <div className="space-y-3">
+      <div className="space-y-1">
         {messagesByDate.map((group, groupIndex) => (
           <div key={`group-${groupIndex}`}>
             <DateDivider date={group.date} />
-            {group.messages.map((message) => renderMessageBubble(message))}
+            <div className="space-y-1">
+              {group.messages.map((message) => renderMessageBubble(message))}
+            </div>
           </div>
         ))}
       </div>
