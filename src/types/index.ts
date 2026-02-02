@@ -11,6 +11,8 @@ export interface Member {
   auto_meal_night: boolean;
   auto_meal_morning_quantity: number;
   auto_meal_night_quantity: number;
+  meal_month_start_date?: string; // ISO date string (YYYY-MM-DD)
+  meal_month_end_date?: string; // ISO date string (YYYY-MM-DD)
   created_at?: string;
   updated_at?: string;
 }

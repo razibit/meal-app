@@ -3,6 +3,7 @@ import { ThemeToggle } from '../components/preferences/ThemeToggle';
 import { NotificationSettings } from '../components/preferences/NotificationSettings';
 import { ClearMeals } from '../components/preferences/ClearMeals';
 import { EggInventory } from '../components/preferences/EggInventory';
+import { MealMonthConfig } from '../components/preferences/MealMonthConfig';
 
 function Preferences() {
   return (
@@ -11,6 +12,7 @@ function Preferences() {
       
       <div className="space-y-6">
         <ProfileSection />
+        <MealMonthConfig />
         <ThemeToggle />
         <NotificationSettings />
         <ClearMeals />

@@ -3,18 +3,18 @@ import { supabase } from '../services/supabase';
 import { DailyReportRow } from '../types';
 import { timeService } from '../services/timeService';
 import { useAuthStore } from '../stores/authStore';
+import { getMealMonthDateRange, formatDateRangeForDisplay } from '../utils/mealMonthHelpers';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 function MonthlyReport() {
   const { user } = useAuthStore();
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = timeService.now(); // Use synchronized server time
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
   const [reportData, setReportData] = useState<DailyReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Get the current meal month date range for the user
+  const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
 
   const fetchMemberReport = useCallback(async () => {
     if (!user) return;
@@ -23,10 +23,12 @@ function MonthlyReport() {
     setError(null);
     
     try {
+      // Use the new function with custom date ranges
       const { data, error: rpcError } = await supabase
-        .rpc('get_member_monthly_report', {
+        .rpc('get_member_monthly_report_with_dates', {
           p_member_id: user.id,
-          target_month: `${selectedMonth}-01`
+          p_start_date: dateRange.startDate,
+          p_end_date: dateRange.endDate
         });
 
       if (rpcError) throw rpcError;
@@ -38,15 +40,11 @@ function MonthlyReport() {
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth, user]);
+  }, [user, dateRange]);
 
   useEffect(() => {
     fetchMemberReport();
   }, [fetchMemberReport]);
-
-  const handleMonthChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedMonth(e.target.value);
-  }, []);
 
   // Memoize totals calculation
   const totals = useMemo(() => {
@@ -90,13 +88,13 @@ function MonthlyReport() {
     const url = URL.createObjectURL(blob);
     
     link.setAttribute('href', url);
-    link.setAttribute('download', `my-meal-report-${selectedMonth}.csv`);
+    link.setAttribute('download', `my-meal-report-${dateRange.startDate}-to-${dateRange.endDate}.csv`);
     link.style.visibility = 'hidden';
     
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [reportData, selectedMonth, totals]);
+  }, [reportData, totals, dateRange]);
 
   const handleExportPDF = useCallback(() => {
     if (reportData.length === 0) return;
@@ -107,13 +105,10 @@ function MonthlyReport() {
     doc.setFontSize(18);
     doc.text('My Monthly Meal Report', 14, 20);
     
-    // Add month
-    const monthYear = new Date(selectedMonth + '-01').toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
-    });
+    // Add date range
+    const displayRange = formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate);
     doc.setFontSize(12);
-    doc.text(monthYear, 14, 28);
+    doc.text(displayRange, 14, 28);
     
     // Prepare table data
     const tableData = reportData.map(row => {
@@ -175,28 +170,27 @@ function MonthlyReport() {
     });
     
     // Save the PDF
-    doc.save(`my-meal-report-${selectedMonth}.pdf`);
-  }, [reportData, selectedMonth, totals]);
+    doc.save(`my-meal-report-${dateRange.startDate}-to-${dateRange.endDate}.pdf`);
+  }, [reportData, totals, dateRange]);
 
   return (
     <div className="p-4 max-w-4xl mx-auto animate-fade-in">
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-4 text-text-primary">My Monthly Report</h2>
         
-        {/* Month Selector and Export Button */}
+        {/* Date Range Display and Export Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex items-center gap-2">
-            <label htmlFor="month-select" className="text-text-secondary font-medium">
-              Select Month:
-            </label>
-            <input
-              id="month-select"
-              type="month"
-              value={selectedMonth}
-              onChange={handleMonthChange}
-              className="input px-3 py-2 rounded-lg border-2 border-border bg-bg-primary text-text-primary"
-              max={timeService.now().toISOString().slice(0, 7)}
-            />
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-text-secondary">Report Period:</p>
+            <p className="text-lg font-semibold text-text-primary">
+              {formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate)}
+            </p>
+            <p className="text-xs text-text-tertiary">
+              Configure your meal month dates in{' '}
+              <a href="/preferences" className="text-primary hover:underline">
+                Preferences
+              </a>
+            </p>
           </div>
           
           <div className="flex gap-2">
@@ -350,7 +344,7 @@ function MonthlyReport() {
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <p className="text-text-secondary">No meal data available for this month</p>
+          <p className="text-text-secondary">No meal data available for this period</p>
         </div>
       )}
     </div>

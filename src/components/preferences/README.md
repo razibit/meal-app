@@ -18,6 +18,28 @@ Displays and allows editing of user profile information.
 
 **Requirements:** 6.1
 
+### MealMonthConfig
+**File:** `MealMonthConfig.tsx`
+
+Allows users to configure custom meal management month date ranges.
+
+**Features:**
+- Display current meal month period (custom or default 6th-to-5th)
+- Date pickers for custom START and END dates
+- Validation (end date must be after start date)
+- Reset to default button when custom dates are set
+- Success and error message display
+- Info tooltip about default behavior
+- Direct integration with monthly report
+
+**Default Behavior:** 6th of one month to 5th of next month
+
+**Database Fields:** `meal_month_start_date`, `meal_month_end_date` in `members` table
+
+**Related Files:**
+- `src/utils/mealMonthHelpers.ts` - Date range calculation utilities
+- `src/pages/MonthlyReport.tsx` - Consumes configured date ranges
+
 ### ThemeToggle
 **File:** `ThemeToggle.tsx`
 
