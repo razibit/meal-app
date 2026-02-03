@@ -3,6 +3,7 @@ import { supabase } from '../services/supabase';
 import { DailyReportRow } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { getMealMonthDateRange, formatDateRangeForDisplay } from '../utils/mealMonthHelpers';
+import GlobalMonthlyReport from '../components/home/GlobalMonthlyReport';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -346,6 +347,11 @@ function MonthlyReport() {
           <p className="text-text-secondary">No meal data available for this period</p>
         </div>
       )}
+
+      {/* Global Monthly Report Section */}
+      <div className="mt-8">
+        <GlobalMonthlyReport user={user} />
+      </div>
     </div>
   );
 }

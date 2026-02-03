@@ -96,4 +96,21 @@ export interface MemberMonthlyReport {
   };
 }
 
+export interface GlobalReportRow {
+  meal_date: string;
+  member_id: string;
+  member_name: string;
+  morning_count: number;
+  night_count: number;
+  egg_count: number;
+}
+
+export interface MemberTotals {
+  member_id: string;
+  member_name: string;
+  morning: number;
+  night: number;
+  eggs: number;
+}
+
 export type { Session, User };
