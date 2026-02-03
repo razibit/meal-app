@@ -12,7 +12,7 @@ DECLARE
 BEGIN
   -- Delete messages older than 4 days
   DELETE FROM chats
-  WHERE created_at < NOW() - INTERVAL '4 days';
+  WHERE created_at < NOW() - INTERVAL '30 days';
   
   -- Get count of deleted rows
   GET DIAGNOSTICS deleted_count = ROW_COUNT;
@@ -29,7 +29,7 @@ GRANT EXECUTE ON FUNCTION delete_old_chat_messages() TO authenticated;
 
 -- Comment on the function
 COMMENT ON FUNCTION delete_old_chat_messages() IS 
-'Permanently deletes chat messages older than 4 days. Returns the count of deleted messages.';
+'Permanently deletes chat messages older than 30 days. Returns the count of deleted messages.';
 
 -- Note: To set up automatic execution via pg_cron, run this on the database:
 -- This requires the pg_cron extension and should be run by a superuser
