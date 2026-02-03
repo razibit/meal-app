@@ -44,7 +44,7 @@ serve(async (req: Request) => {
       JSON.stringify({
         success: true,
         deletedCount,
-        message: `Deleted ${deletedCount} messages older than 4 days`,
+        message: `Deleted ${deletedCount} messages older than 30 days`,
       }),
       {
         status: 200,
