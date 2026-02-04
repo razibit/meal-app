@@ -204,9 +204,18 @@ END $$;
 -- Schedule morning auto meal materialization at 7:00 AM UTC+6 (1:00 AM UTC)
 -- Cron expression: minute hour day month day-of-week
 DO $$
+DECLARE
+  v_job_id integer;
 BEGIN
-  -- Remove existing job if it exists
-  PERFORM cron.unschedule('materialize-morning-auto-meals');
+  -- Remove existing job if it exists (pg_cron compatibility: unschedule by job id)
+  SELECT jobid INTO v_job_id
+  FROM cron.job
+  WHERE jobname = 'materialize-morning-auto-meals'
+  LIMIT 1;
+
+  IF v_job_id IS NOT NULL THEN
+    PERFORM cron.unschedule(v_job_id);
+  END IF;
 EXCEPTION
   WHEN OTHERS THEN NULL;
 END $$;
@@ -216,7 +225,7 @@ BEGIN
   PERFORM cron.schedule(
     'materialize-morning-auto-meals',
     '0 1 * * *',  -- 1:00 AM UTC = 7:00 AM UTC+6
-    $$SELECT materialize_auto_meals_for_today('morning')$$
+    'SELECT materialize_auto_meals_for_today(''morning'')'
   );
   RAISE NOTICE 'Scheduled morning auto meal materialization at 7:00 AM UTC+6';
 EXCEPTION
@@ -226,9 +235,18 @@ END $$;
 
 -- Schedule night auto meal materialization at 3:00 PM UTC+6 (9:00 AM UTC)
 DO $$
+DECLARE
+  v_job_id integer;
 BEGIN
-  -- Remove existing job if it exists
-  PERFORM cron.unschedule('materialize-night-auto-meals');
+  -- Remove existing job if it exists (pg_cron compatibility: unschedule by job id)
+  SELECT jobid INTO v_job_id
+  FROM cron.job
+  WHERE jobname = 'materialize-night-auto-meals'
+  LIMIT 1;
+
+  IF v_job_id IS NOT NULL THEN
+    PERFORM cron.unschedule(v_job_id);
+  END IF;
 EXCEPTION
   WHEN OTHERS THEN NULL;
 END $$;
@@ -238,7 +256,7 @@ BEGIN
   PERFORM cron.schedule(
     'materialize-night-auto-meals',
     '0 9 * * *',  -- 9:00 AM UTC = 3:00 PM UTC+6
-    $$SELECT materialize_auto_meals_for_today('night')$$
+    'SELECT materialize_auto_meals_for_today(''night'')'
   );
   RAISE NOTICE 'Scheduled night auto meal materialization at 3:00 PM UTC+6';
 EXCEPTION
@@ -257,7 +275,7 @@ Can also be called manually for backfilling.';
 
 COMMENT ON FUNCTION materialize_auto_meals_for_today(text) IS 
 'Wrapper for pg_cron to materialize auto meals for today.
-Called at 7:00 AM UTC+6 for morning and 6:00 PM UTC+6 for night.';
+Called at 7:00 AM UTC+6 for morning and 3:00 PM UTC+6 for night (as scheduled).';
 
 COMMENT ON FUNCTION backfill_auto_meals(date, date) IS 
 'Backfill auto meals for a date range. Use for catch-up scenarios.

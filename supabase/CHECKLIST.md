@@ -139,7 +139,7 @@ Auto meals must be materialized into actual meal records when cutoff passes.
   ```
   Should show two jobs:
   - `materialize-morning-auto-meals` at 1:00 AM UTC (7:00 AM UTC+6)
-  - `materialize-night-auto-meals` at 12:00 PM UTC (6:00 PM UTC+6)
+  - `materialize-night-auto-meals` at 9:00 AM UTC (3:00 PM UTC+6)
 
 - [ ] **Backfill existing auto meals** (one-time after migration):
   ```sql
