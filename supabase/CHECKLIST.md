@@ -120,6 +120,39 @@ To verify: Go to Database > Replication and check these tables are listed.
 - [ ] Local Studio accessible at http://localhost:54323
 - [ ] Migrations applied to local database
 
+## ✅ Auto Meal Materialization (pg_cron)
+
+Auto meals must be materialized into actual meal records when cutoff passes.
+
+- [ ] **Enable pg_cron extension**:
+  - Go to Database > Extensions
+  - Search for "pg_cron" and enable it
+  - This allows scheduled database jobs
+
+- [ ] **Apply Migration 020**:
+  - Run `supabase/migrations/020_materialize_auto_meals.sql`
+  - This creates the materialization functions and schedules
+
+- [ ] **Verify cron jobs are scheduled**:
+  ```sql
+  SELECT * FROM cron.job;
+  ```
+  Should show two jobs:
+  - `materialize-morning-auto-meals` at 1:00 AM UTC (7:00 AM UTC+6)
+  - `materialize-night-auto-meals` at 12:00 PM UTC (6:00 PM UTC+6)
+
+- [ ] **Backfill existing auto meals** (one-time after migration):
+  ```sql
+  -- Backfill from start of current meal month to today
+  SELECT * FROM backfill_auto_meals('2026-01-01'::date, CURRENT_DATE);
+  ```
+
+- [ ] **Test materialization manually**:
+  ```sql
+  -- Test for a specific date/period
+  SELECT * FROM materialize_auto_meals('2026-02-04'::date, 'morning');
+  ```
+
 ## 🎯 Ready for Next Steps
 
 Once all items are checked:
