@@ -73,6 +73,36 @@ $$;
 GRANT EXECUTE ON FUNCTION materialize_auto_meals(date, meal_period) TO authenticated;
 GRANT EXECUTE ON FUNCTION materialize_auto_meals(date, meal_period) TO service_role;
 
+-- Backward-compatible wrapper (migration 020 created a text signature).
+-- This keeps existing pg_cron commands like:
+--   SELECT materialize_auto_meals_for_today('night')
+-- working without requiring an immediate reschedule.
+CREATE OR REPLACE FUNCTION materialize_auto_meals(
+  p_date date,
+  p_period text
+)
+RETURNS TABLE (
+  member_id uuid,
+  member_name text,
+  quantity integer
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_period meal_period;
+BEGIN
+  v_period := p_period::meal_period;
+  RETURN QUERY
+  SELECT *
+  FROM materialize_auto_meals(p_date, v_period);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION materialize_auto_meals(date, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION materialize_auto_meals(date, text) TO service_role;
+
 -- ============================================
 -- Function: materialize_auto_meals_for_today(p_period)
 -- ============================================
@@ -97,6 +127,20 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION materialize_auto_meals_for_today(meal_period) TO service_role;
+
+-- Backward-compatible wrapper (text signature from migration 020)
+CREATE OR REPLACE FUNCTION materialize_auto_meals_for_today(p_period text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  PERFORM materialize_auto_meals_for_today(p_period::meal_period);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION materialize_auto_meals_for_today(text) TO service_role;
 
 -- ============================================
 -- Function: backfill_auto_meals(p_start_date, p_end_date)
@@ -133,23 +177,23 @@ BEGIN
     IF current_date_val < today THEN
       RETURN QUERY
       SELECT current_date_val, 'morning'::text, COUNT(*)::bigint
-      FROM materialize_auto_meals(current_date_val, 'morning');
+      FROM materialize_auto_meals(current_date_val, 'morning'::meal_period);
 
       RETURN QUERY
       SELECT current_date_val, 'night'::text, COUNT(*)::bigint
-      FROM materialize_auto_meals(current_date_val, 'night');
+      FROM materialize_auto_meals(current_date_val, 'night'::meal_period);
 
     ELSIF current_date_val = today THEN
       IF current_hour >= 7 THEN
         RETURN QUERY
         SELECT current_date_val, 'morning'::text, COUNT(*)::bigint
-        FROM materialize_auto_meals(current_date_val, 'morning');
+        FROM materialize_auto_meals(current_date_val, 'morning'::meal_period);
       END IF;
 
       IF current_hour >= 18 THEN
         RETURN QUERY
         SELECT current_date_val, 'night'::text, COUNT(*)::bigint
-        FROM materialize_auto_meals(current_date_val, 'night');
+        FROM materialize_auto_meals(current_date_val, 'night'::meal_period);
       END IF;
     END IF;
   END LOOP;
