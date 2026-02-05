@@ -58,7 +58,7 @@ BEGIN
           AND me.meal_date = p_date
           AND me.period = p_period
       )
-    ON CONFLICT (member_id, meal_date, period) DO NOTHING
+    ON CONFLICT ON CONSTRAINT meals_member_id_meal_date_period_key DO NOTHING
     RETURNING meals.member_id, meals.quantity
   )
   SELECT
