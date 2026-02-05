@@ -55,14 +55,14 @@ function MealToggle({ activePeriod, onPeriodChange, selectedDate }: MealTogglePr
 
   return (
     <div className="mb-6">
-      <div className="flex gap-2 bg-bg-tertiary p-1 rounded-lg">
+      <div className="flex gap-2 bg-bg-tertiary p-1 rounded-full">
         <button
           onClick={() => onPeriodChange('morning')}
           className={`
-            flex-1 py-3 px-4 rounded-md font-medium transition-all min-h-touch cursor-pointer
+            flex-1 py-3 px-4 rounded-full font-medium transition-all min-h-touch cursor-pointer
             ${activePeriod === 'morning'
               ? 'bg-primary text-white shadow-lg'
-              : 'text-text-secondary hover:text-text-primary'
+              : 'text-text-secondary hover:text-text-primary animate-soft-glow'
             }
           `}
         >
@@ -92,10 +92,10 @@ function MealToggle({ activePeriod, onPeriodChange, selectedDate }: MealTogglePr
         <button
           onClick={() => onPeriodChange('night')}
           className={`
-            flex-1 py-3 px-4 rounded-md font-medium transition-all min-h-touch cursor-pointer
+            flex-1 py-3 px-4 rounded-full font-medium transition-all min-h-touch cursor-pointer
             ${activePeriod === 'night'
               ? 'bg-primary text-white shadow-lg'
-              : 'text-text-secondary hover:text-text-primary'
+              : 'text-text-secondary hover:text-text-primary animate-soft-glow'
             }
           `}
         >
