@@ -32,7 +32,9 @@ function getTodayDateStr(): string {
 
 function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: DateSelectorProps) {
   const [showCalendar, setShowCalendar] = useState(false);
-  const calendarRef = useRef<HTMLDivElement>(null);
+  // Ref should include BOTH the toggle button and the dropdown.
+  // Otherwise a click on the button counts as "outside" (mousedown closes, then click re-opens).
+  const calendarContainerRef = useRef<HTMLDivElement>(null);
   const availableDays = getNext7Days();
   const todayStr = getTodayDateStr();
   
@@ -85,7 +87,10 @@ function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: D
   // Close calendar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+      if (
+        calendarContainerRef.current &&
+        !calendarContainerRef.current.contains(event.target as Node)
+      ) {
         setShowCalendar(false);
       }
     };
@@ -118,7 +123,10 @@ function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: D
 
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-center gap-3 bg-bg-secondary p-3 rounded-lg relative">
+      <div
+        ref={calendarContainerRef}
+        className="flex items-center justify-center gap-3 bg-bg-secondary p-3 rounded-lg relative"
+      >
         {/* Left Arrow */}
         <button
           onClick={goToPrevDay}
@@ -208,7 +216,6 @@ function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: D
         {/* Calendar Dropdown */}
         {showCalendar && (
           <div
-            ref={calendarRef}
             className="absolute top-full left-0 right-0 mt-2 bg-bg-primary border border-border rounded-lg shadow-lg z-50 overflow-hidden animate-slide-down"
           >
             <div className="p-2">
