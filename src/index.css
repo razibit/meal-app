@@ -160,7 +160,7 @@ body {
 }
 
 .animate-soft-glow {
-  animation: soft-glow 2.8s ease-in-out infinite;
+  animation: soft-glow 1.86s ease-in-out infinite;
 }
 
 /* Touch target minimum size */
