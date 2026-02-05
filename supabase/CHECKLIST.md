@@ -16,7 +16,6 @@ Quick checklist to ensure your Supabase backend is properly configured.
   - [ ] `meals` table exists with `meal_period` enum
   - [ ] `meal_details` table exists
   - [ ] `chats` table exists
-  - [ ] `push_subscriptions` table exists
   - [ ] All indexes created
   - [ ] Triggers for `updated_at` working
 
@@ -26,7 +25,6 @@ Quick checklist to ensure your Supabase backend is properly configured.
   - [ ] Meals policies (insert/delete own, view all)
   - [ ] Meal details policies (all authenticated can edit)
   - [ ] Chats policies (view all, insert own)
-  - [ ] Push subscriptions policies (manage own)
 
 - [ ] Migration 003: Functions and indexes created
   - [ ] `get_monthly_report()` function exists

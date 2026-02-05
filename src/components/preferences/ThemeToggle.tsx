@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 type Theme = 'eggplant' | 'dark';
 
 export function ThemeToggle() {
+  const labelId = useId();
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme');
     return (saved === 'dark' ? 'dark' : 'eggplant') as Theme;
@@ -20,48 +21,44 @@ export function ThemeToggle() {
 
   return (
     <div className="card">
-      <h3 className="text-lg font-semibold mb-4">Theme</h3>
+      <div className="flex items-center justify-between gap-4">
+        <h3 id={labelId} className="text-lg font-semibold text-text-primary">
+          Theme
+        </h3>
 
-      <div className="space-y-3">
-        <p className="text-sm text-text-secondary mb-4">
-          Choose your preferred color theme
-        </p>
-
-        <div className="flex gap-3">
-          {/* Eggplant Theme Option */}
+        <div
+          role="group"
+          aria-labelledby={labelId}
+          className="inline-flex items-center rounded-lg border border-border bg-bg-secondary p-1"
+        >
           <button
+            type="button"
             onClick={() => handleThemeChange('eggplant')}
-            className={`flex-1 p-4 rounded-lg border-2 transition-all ${
-              theme === 'eggplant'
-                ? 'border-primary bg-primary/10'
-                : 'border-border hover:border-primary/50'
-            }`}
+            aria-pressed={theme === 'eggplant'}
+            className={
+              `min-h-touch min-w-touch rounded-md px-3 text-sm font-medium transition-colors ` +
+              `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary ` +
+              (theme === 'eggplant'
+                ? 'bg-bg-primary text-text-primary'
+                : 'text-text-secondary hover:text-text-primary')
+            }
           >
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#5B4B8A] to-[#E8B4F0]" />
-              <span className="font-medium text-sm">Eggplant</span>
-              {theme === 'eggplant' && (
-                <span className="text-xs text-primary">✓ Active</span>
-              )}
-            </div>
+            Light
           </button>
 
-          {/* Dark Theme Option */}
           <button
+            type="button"
             onClick={() => handleThemeChange('dark')}
-            className={`flex-1 p-4 rounded-lg border-2 transition-all ${
-              theme === 'dark'
-                ? 'border-primary bg-primary/10'
-                : 'border-border hover:border-primary/50'
-            }`}
+            aria-pressed={theme === 'dark'}
+            className={
+              `min-h-touch min-w-touch rounded-md px-3 text-sm font-medium transition-colors ` +
+              `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary ` +
+              (theme === 'dark'
+                ? 'bg-bg-primary text-text-primary'
+                : 'text-text-secondary hover:text-text-primary')
+            }
           >
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1A1A1A] to-[#3A3A3A]" />
-              <span className="font-medium text-sm">Dark</span>
-              {theme === 'dark' && (
-                <span className="text-xs text-primary">✓ Active</span>
-              )}
-            </div>
+            Dark
           </button>
         </div>
       </div>
