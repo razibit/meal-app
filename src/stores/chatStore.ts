@@ -134,7 +134,7 @@ export const useChatStore = create<ChatState>((set) => ({
             };
           });
 
-          // Call the callback for additional handling (e.g., notifications)
+          // Call the callback for additional handling
           callback(newMessage);
         }
       )

@@ -227,34 +227,6 @@ GROUP BY meal_date
 ORDER BY meal_date DESC;
 
 -- ============================================
--- PUSH SUBSCRIPTION QUERIES
--- ============================================
-
--- Get all active push subscriptions
-SELECT 
-  ps.id,
-  ps.endpoint,
-  ps.created_at,
-  m.name as member_name,
-  m.email
-FROM push_subscriptions ps
-JOIN members m ON m.id = ps.member_id
-ORDER BY ps.created_at DESC;
-
--- Get subscriptions for specific member
-SELECT * FROM push_subscriptions 
-WHERE member_id = 'user-uuid-here';
-
--- Count subscriptions per member
-SELECT 
-  m.name,
-  COUNT(ps.id) as subscription_count
-FROM members m
-LEFT JOIN push_subscriptions ps ON ps.member_id = m.id
-GROUP BY m.id, m.name
-ORDER BY subscription_count DESC;
-
--- ============================================
 -- MAINTENANCE QUERIES
 -- ============================================
 
@@ -271,7 +243,6 @@ VACUUM ANALYZE members;
 VACUUM ANALYZE meals;
 VACUUM ANALYZE meal_details;
 VACUUM ANALYZE chats;
-VACUUM ANALYZE push_subscriptions;
 
 -- Check table sizes
 SELECT 

@@ -74,7 +74,6 @@ function Chat() {
 ## Real-time Features
 
 - Messages are synced in real-time using Supabase Realtime subscriptions
-- When a user is mentioned, they receive a browser notification (if permitted)
 - Optimistic updates for sent messages (appear immediately, then confirmed by server)
 - Duplicate prevention for messages received via subscription
 
@@ -83,6 +82,5 @@ function Chat() {
 - **5.1**: Real-time chat with message list
 - **5.2**: @ mention detection and autocomplete
 - **5.3**: Parse mentions and send with message
-- **5.4**: Browser push notifications for mentions
 - **5.5**: Real-time message updates
 - **4.1, 4.2**: Violation messages displayed in red

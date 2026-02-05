@@ -66,83 +66,6 @@ registerRoute(
 // They are already precached via Workbox manifest (hashed assets) and caching them
 // at runtime can poison the cache if a missing chunk URL gets rewritten to HTML.
 
-// Handle push notifications
-self.addEventListener('push', (event: PushEvent) => {
-  console.log('Push notification received:', event);
-
-  if (!event.data) {
-    console.log('Push event has no data');
-    return;
-  }
-
-  try {
-    const data = event.data.json();
-    console.log('Push notification data:', data);
-
-    const options: NotificationOptions = {
-      body: data.body || 'You have a new notification',
-      icon: data.icon || '/icon-192.png',
-      badge: data.badge || '/badge-72.png',
-      tag: data.tag || 'default',
-      data: {
-        url: data.url || '/',
-      },
-      requireInteraction: false,
-    };
-
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'Mess Meal Management', options)
-    );
-  } catch (error) {
-    console.error('Error handling push notification:', error);
-    
-    // Fallback notification if parsing fails
-    event.waitUntil(
-      self.registration.showNotification('Mess Meal Management', {
-        body: 'You have a new notification',
-        icon: '/icon-192.png',
-        badge: '/badge-72.png',
-      })
-    );
-  }
-});
-
-// Handle notification click
-self.addEventListener('notificationclick', (event: NotificationEvent) => {
-  console.log('Notification clicked:', event);
-
-  event.notification.close();
-
-  const urlToOpen = event.notification.data?.url || '/';
-
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Check if there's already a window open
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          // Navigate to the URL and focus the window
-          return client.focus().then((client) => {
-            if ('navigate' in client) {
-              return (client as any).navigate(urlToOpen);
-            }
-          });
-        }
-      }
-
-      // If no window is open, open a new one
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(urlToOpen);
-      }
-    })
-  );
-});
-
-// Handle notification close
-self.addEventListener('notificationclose', (event: NotificationEvent) => {
-  console.log('Notification closed:', event);
-  // Could track analytics here
-});
-
 // Skip waiting and claim clients immediately
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
@@ -155,4 +78,4 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-console.log('Service Worker loaded with push notification support');
+console.log('Service Worker loaded');

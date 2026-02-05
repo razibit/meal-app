@@ -54,38 +54,6 @@ Allows users to switch between eggplant and dark themes.
 
 **Requirements:** 6.3, 6.4
 
-### NotificationSettings
-**File:** `NotificationSettings.tsx`
-
-Manages browser push notification permissions and settings.
-
-**Features:**
-- Display current notification permission status
-- Toggle to enable/disable notifications
-- Request browser permission when enabling
-- Show instructions if permission is blocked
-- Test notification on successful enable
-- Browser compatibility check
-
-**Requirements:** 6.2
-
-## Services
-
-### notifications.ts
-**File:** `../services/notifications.ts`
-
-Service module for handling Web Push notifications.
-
-**Functions:**
-- `isNotificationSupported()` - Check browser support
-- `getNotificationPermission()` - Get current permission status
-- `requestNotificationPermission()` - Request user permission
-- `showTestNotification()` - Display a test notification
-- `subscribeToPush(userId)` - Subscribe to push notifications (ready for task 10)
-- `unsubscribeFromPush(userId)` - Unsubscribe from push notifications
-
-**Note:** Full push notification implementation with VAPID keys will be completed in task 10.
-
 ## Theme System
 
 The theme system uses CSS variables defined in `src/index.css`:
@@ -109,14 +77,12 @@ Themes are applied by setting `data-theme` attribute on the document root elemen
 ```tsx
 import { ProfileSection } from '../components/preferences/ProfileSection';
 import { ThemeToggle } from '../components/preferences/ThemeToggle';
-import { NotificationSettings } from '../components/preferences/NotificationSettings';
 
 function Preferences() {
   return (
     <div className="space-y-6">
       <ProfileSection />
       <ThemeToggle />
-      <NotificationSettings />
     </div>
   );
 }
@@ -135,12 +101,3 @@ Colors reference CSS variables for theme support:
 - `text-primary`, `text-secondary`, `text-tertiary` - Text colors
 - `border`, `border-light` - Border colors
 - `primary`, `primary-light`, `primary-dark` - Primary colors
-
-## Future Enhancements (Task 10)
-
-When implementing task 10 (Push Notifications), the following will be added:
-- VAPID key configuration
-- Push subscription storage in database
-- Edge Function for sending push notifications
-- Service worker push event handling
-- Notification click handling to open chat tab
