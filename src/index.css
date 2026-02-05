@@ -18,6 +18,7 @@
 /* Eggplant theme variables */
 :root[data-theme="eggplant"] {
   --color-primary: #5B4B8A;
+  --color-primary-rgb: 91, 75, 138;
   --color-primary-light: #7B6BAA;
   --color-primary-dark: #3B2B6A;
   
@@ -45,6 +46,7 @@
 :root[data-theme="dark"],
 .dark {
   --color-primary: #7B6BAA;
+  --color-primary-rgb: 123, 107, 170;
   --color-primary-light: #9B8BCA;
   --color-primary-dark: #5B4B8A;
   
@@ -144,6 +146,21 @@ body {
 
 .animate-slide-down {
   animation: slide-down 0.3s ease-out;
+}
+
+@keyframes soft-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0);
+    opacity: 0.75;
+  }
+  50% {
+    box-shadow: 0 0 8px 2px rgba(var(--color-primary-rgb), 0.18);
+    opacity: 1;
+  }
+}
+
+.animate-soft-glow {
+  animation: soft-glow 2.8s ease-in-out infinite;
 }
 
 /* Touch target minimum size */
