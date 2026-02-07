@@ -157,8 +157,8 @@ BEGIN
       
     -- For today, only materialize periods where cutoff has passed
     ELSIF current_date_val = today THEN
-      -- Morning cutoff is 7 AM
-      IF current_hour >= 7 THEN
+      -- Morning cutoff is 8 AM
+      IF current_hour >= 8 THEN
         RETURN QUERY
         SELECT 
           current_date_val as meal_date,
@@ -167,8 +167,8 @@ BEGIN
         FROM materialize_auto_meals(current_date_val, 'morning');
       END IF;
       
-      -- Night cutoff is 6 PM (18:00)
-      IF current_hour >= 18 THEN
+      -- Night cutoff is 4 PM (16:00)
+      IF current_hour >= 16 THEN
         RETURN QUERY
         SELECT 
           current_date_val as meal_date,
@@ -201,7 +201,7 @@ EXCEPTION
     RAISE NOTICE 'pg_cron extension not available. Please enable it manually in Supabase Dashboard.';
 END $$;
 
--- Schedule morning auto meal materialization at 7:00 AM UTC+6 (1:00 AM UTC)
+-- Schedule morning auto meal materialization at 8:00 AM UTC+6 (2:00 AM UTC)
 -- Cron expression: minute hour day month day-of-week
 DO $$
 DECLARE
@@ -224,16 +224,16 @@ DO $$
 BEGIN
   PERFORM cron.schedule(
     'materialize-morning-auto-meals',
-    '0 1 * * *',  -- 1:00 AM UTC = 7:00 AM UTC+6
+    '0 2 * * *',  -- 2:00 AM UTC = 8:00 AM UTC+6
     'SELECT materialize_auto_meals_for_today(''morning'')'
   );
-  RAISE NOTICE 'Scheduled morning auto meal materialization at 7:00 AM UTC+6';
+  RAISE NOTICE 'Scheduled morning auto meal materialization at 8:00 AM UTC+6';
 EXCEPTION
   WHEN OTHERS THEN
     RAISE NOTICE 'Could not schedule morning job. pg_cron may not be enabled.';
 END $$;
 
--- Schedule night auto meal materialization at 3:00 PM UTC+6 (9:00 AM UTC)
+-- Schedule night auto meal materialization at 4:00 PM UTC+6 (10:00 AM UTC)
 DO $$
 DECLARE
   v_job_id integer;
@@ -255,10 +255,10 @@ DO $$
 BEGIN
   PERFORM cron.schedule(
     'materialize-night-auto-meals',
-    '0 9 * * *',  -- 9:00 AM UTC = 3:00 PM UTC+6
+    '0 10 * * *',  -- 10:00 AM UTC = 4:00 PM UTC+6
     'SELECT materialize_auto_meals_for_today(''night'')'
   );
-  RAISE NOTICE 'Scheduled night auto meal materialization at 3:00 PM UTC+6';
+  RAISE NOTICE 'Scheduled night auto meal materialization at 4:00 PM UTC+6';
 EXCEPTION
   WHEN OTHERS THEN
     RAISE NOTICE 'Could not schedule night job. pg_cron may not be enabled.';
@@ -275,7 +275,7 @@ Can also be called manually for backfilling.';
 
 COMMENT ON FUNCTION materialize_auto_meals_for_today(text) IS 
 'Wrapper for pg_cron to materialize auto meals for today.
-Called at 7:00 AM UTC+6 for morning and 3:00 PM UTC+6 for night (as scheduled).';
+Called at 8:00 AM UTC+6 for morning and 4:00 PM UTC+6 for night (as scheduled).';
 
 COMMENT ON FUNCTION backfill_auto_meals(date, date) IS 
 'Backfill auto meals for a date range. Use for catch-up scenarios.

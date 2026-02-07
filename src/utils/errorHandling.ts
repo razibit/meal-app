@@ -7,7 +7,7 @@
  */
 export class CutoffError extends Error {
   constructor(period: 'morning' | 'night') {
-    const cutoffTime = period === 'morning' ? '7:00 AM' : '6:00 PM';
+    const cutoffTime = period === 'morning' ? '8:00 AM' : '4:00 PM';
     super(`Cannot modify ${period} meal after ${cutoffTime} cutoff`);
     this.name = 'CutoffError';
   }
