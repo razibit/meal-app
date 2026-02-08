@@ -184,13 +184,13 @@ BEGIN
       FROM materialize_auto_meals(current_date_val, 'night'::meal_period);
 
     ELSIF current_date_val = today THEN
-      IF current_hour >= 7 THEN
+      IF current_hour >= 8 THEN
         RETURN QUERY
         SELECT current_date_val, 'morning'::text, COUNT(*)::bigint
         FROM materialize_auto_meals(current_date_val, 'morning'::meal_period);
       END IF;
 
-      IF current_hour >= 18 THEN
+      IF current_hour >= 16 THEN
         RETURN QUERY
         SELECT current_date_val, 'night'::text, COUNT(*)::bigint
         FROM materialize_auto_meals(current_date_val, 'night'::meal_period);
@@ -220,7 +220,7 @@ BEGIN
 
   PERFORM cron.schedule(
     'materialize-morning-auto-meals',
-    '0 1 * * *',
+    '0 2 * * *',
     'SELECT materialize_auto_meals_for_today(''morning''::meal_period)'
   );
 EXCEPTION
@@ -241,7 +241,7 @@ BEGIN
 
   PERFORM cron.schedule(
     'materialize-night-auto-meals',
-    '0 9 * * *',
+    '0 10 * * *',
     'SELECT materialize_auto_meals_for_today(''night''::meal_period)'
   );
 EXCEPTION
