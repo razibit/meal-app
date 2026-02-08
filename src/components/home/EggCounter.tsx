@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { useEggStore } from '../../stores/eggStore';
+import { playSuccessSound } from '../../utils/soundFeedback';
 
 interface EggCounterProps {
   date: string;
@@ -36,6 +37,7 @@ function EggCounter({ date }: EggCounterProps) {
     
     try {
       await updateEggQuantity(user.id, date, tempQuantity);
+      playSuccessSound();
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to save egg quantity:', error);

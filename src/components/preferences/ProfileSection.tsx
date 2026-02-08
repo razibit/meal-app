@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
 import { timeService } from '../../services/timeService';
+import { playSuccessSound } from '../../utils/soundFeedback';
 
 export function ProfileSection() {
   const user = useAuthStore((state) => state.user);
@@ -45,6 +46,7 @@ export function ProfileSection() {
       // Update auth store
       useAuthStore.setState({ user: updatedMember });
 
+      playSuccessSound();
       setSuccess(true);
       setIsEditing(false);
 

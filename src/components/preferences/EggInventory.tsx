@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useEggStore } from '../../stores/eggStore';
 import { getTodayDate } from '../../utils/dateHelpers';
+import { playSuccessSound } from '../../utils/soundFeedback';
 
 export function EggInventory() {
   const { 
@@ -55,6 +56,7 @@ export function EggInventory() {
 
     try {
       await updateTotalEggs(total, notes || undefined);
+      playSuccessSound();
       setIsEditing(false);
       setNewTotal('');
       setNotes('');

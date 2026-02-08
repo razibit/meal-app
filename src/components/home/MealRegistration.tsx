@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MealPeriod } from '../../utils/cutoffChecker';
+import { playSuccessSound } from '../../utils/soundFeedback';
 
 interface MealRegistrationProps {
   period: MealPeriod;
@@ -70,6 +71,7 @@ function MealRegistration({
     setIsSaving(true);
     try {
       await onSaveQuantity(quantity);
+      playSuccessSound();
     } catch (error) {
       // Revert on error
       setQuantity(currentQuantity);
@@ -82,6 +84,7 @@ function MealRegistration({
     setIsTogglingAutoMeal(true);
     try {
       await onToggleAutoMeal(!autoMealEnabled);
+      playSuccessSound();
     } finally {
       setIsTogglingAutoMeal(false);
     }
@@ -94,6 +97,7 @@ function MealRegistration({
     if (!isAutoMealQuantityDirty) return;
     // You can update Auto Meal even after cutoff; this does not touch today's meal record.
     await onSaveAutoMealQuantity(quantity);
+    playSuccessSound();
   };
 
   return (
