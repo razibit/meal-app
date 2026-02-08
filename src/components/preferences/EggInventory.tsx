@@ -2,8 +2,16 @@ import { useState, useEffect } from 'react';
 import { useEggStore } from '../../stores/eggStore';
 
 export function EggInventory() {
-  const { totalEggs, fetchTotalEggs, updateTotalEggs, loading } = useEggStore();
+  const { 
+    totalEggs, 
+    inventoryHistory, 
+    fetchTotalEggs, 
+    fetchInventoryHistory,
+    updateTotalEggs, 
+    loading 
+  } = useEggStore();
   const [isEditing, setIsEditing] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [newTotal, setNewTotal] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +34,13 @@ export function EggInventory() {
     setError(null);
   };
 
+  const handleToggleHistory = async () => {
+    if (!showHistory) {
+      await fetchInventoryHistory();
+    }
+    setShowHistory(!showHistory);
+  };
+
   const handleSave = async () => {
     const total = parseInt(newTotal, 10);
     
@@ -40,9 +55,24 @@ export function EggInventory() {
       setNewTotal('');
       setNotes('');
       setError(null);
+      // Refresh history if it's being shown
+      if (showHistory) {
+        await fetchInventoryHistory();
+      }
     } catch (err) {
       setError('Failed to update egg inventory');
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -54,15 +84,24 @@ export function EggInventory() {
             Manage total eggs available in the kitchen
           </p>
         </div>
-        {!isEditing && (
+        <div className="flex gap-2">
           <button
-            onClick={handleEdit}
+            onClick={handleToggleHistory}
             className="btn-secondary px-4 py-2 rounded-lg font-medium"
             disabled={loading}
           >
-            Update
+            {showHistory ? 'Hide' : 'Show'}
           </button>
-        )}
+          {!isEditing && (
+            <button
+              onClick={handleEdit}
+              className="btn-secondary px-4 py-2 rounded-lg font-medium"
+              disabled={loading}
+            >
+              Update
+            </button>
+          )}
+        </div>
       </div>
 
       {!isEditing ? (
@@ -137,6 +176,48 @@ export function EggInventory() {
           <div className="text-xs text-text-tertiary mt-2">
             💡 This will set the total eggs available. Members track what they take from the kitchen.
           </div>
+        </div>
+      )}
+
+      {showHistory && (
+        <div className="mt-6">
+          <h4 className="text-md font-semibold text-text-primary mb-3">Inventory History</h4>
+          {loading ? (
+            <div className="text-center py-4 text-text-secondary">Loading...</div>
+          ) : inventoryHistory.length === 0 ? (
+            <div className="text-center py-4 text-text-secondary">No history available</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-text-primary">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-text-primary">Added By</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-text-primary">Eggs</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-text-primary">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventoryHistory.map((item) => (
+                    <tr key={item.id} className="border-b border-border hover:bg-bg-secondary/50 transition-colors">
+                      <td className="py-3 px-4 text-sm text-text-primary">
+                        {formatDate(item.created_at)}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-text-primary">
+                        {item.member_name}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-text-primary text-right font-semibold">
+                        {item.total_eggs}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-text-secondary">
+                        {item.notes || '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

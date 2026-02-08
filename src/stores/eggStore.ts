@@ -1,13 +1,18 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
-import type { Egg } from '../types';
+import type { Egg, EggInventory } from '../types';
 import { handleError, showErrorToast } from '../utils/errorHandling';
 import { getMealMonthDateRange } from '../utils/mealMonthHelpers';
+
+interface EggInventoryWithMember extends EggInventory {
+  member_name?: string;
+}
 
 interface EggState {
   eggs: Egg[];
   availableEggs: number;
   totalEggs: number;
+  inventoryHistory: EggInventoryWithMember[];
   loading: boolean;
   error: string | null;
 
@@ -15,6 +20,7 @@ interface EggState {
   fetchEggs: (date: string) => Promise<void>;
   fetchAvailableEggs: (date: string) => Promise<void>;
   fetchTotalEggs: () => Promise<void>;
+  fetchInventoryHistory: () => Promise<void>;
   getUserEggQuantity: (userId: string, date: string) => number;
   updateEggQuantity: (memberId: string, date: string, quantity: number) => Promise<void>;
   updateTotalEggs: (totalEggs: number, notes?: string) => Promise<void>;
@@ -25,6 +31,7 @@ export const useEggStore = create<EggState>((set, get) => ({
   eggs: [],
   availableEggs: 0,
   totalEggs: 0,
+  inventoryHistory: [],
   loading: false,
   error: null,
 
@@ -84,6 +91,47 @@ export const useEggStore = create<EggState>((set, get) => ({
       set({ totalEggs: data?.total_eggs || 0 });
     } catch (err) {
       console.error('Error fetching total eggs:', err);
+    }
+  },
+
+  fetchInventoryHistory: async () => {
+    set({ loading: true, error: null });
+    
+    try {
+      const { data, error } = await supabase
+        .from('egg_inventory')
+        .select(`
+          id,
+          total_eggs,
+          added_by,
+          notes,
+          created_at,
+          updated_at,
+          members:added_by (
+            name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform the data to include member_name
+      const historyWithNames = (data || []).map((item: any) => ({
+        id: item.id,
+        total_eggs: item.total_eggs,
+        added_by: item.added_by,
+        notes: item.notes,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        member_name: item.members?.name || 'Unknown',
+      }));
+
+      set({ inventoryHistory: historyWithNames, loading: false });
+    } catch (err) {
+      console.error('Error fetching inventory history:', err);
+      const errorMessage = handleError(err);
+      set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
     }
   },
 
