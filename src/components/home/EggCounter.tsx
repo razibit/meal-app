@@ -13,6 +13,7 @@ function EggCounter({ date }: EggCounterProps) {
   const [tempQuantity, setTempQuantity] = useState(0);
 
   const currentQuantity = user ? getUserEggQuantity(user.id, date) : 0;
+  const maxAllowed = Math.min(50, availableEggs + currentQuantity);
 
   const handleStartEdit = () => {
     setTempQuantity(currentQuantity);
@@ -28,8 +29,8 @@ function EggCounter({ date }: EggCounterProps) {
     if (!user) return;
     
     // Validate that we're not taking more than available
-    if (tempQuantity > availableEggs) {
-      console.error(`Cannot take ${tempQuantity} eggs when only ${availableEggs} are available`);
+    if (tempQuantity > maxAllowed) {
+      console.error(`Cannot take ${tempQuantity} eggs when max allowed is ${maxAllowed}`);
       return;
     }
     
@@ -42,7 +43,7 @@ function EggCounter({ date }: EggCounterProps) {
   };
 
   const increment = () => {
-    setTempQuantity((prev) => Math.min(prev + 1, Math.min(50, availableEggs)));
+    setTempQuantity((prev) => Math.min(prev + 1, maxAllowed));
   };
 
   const decrement = () => {
@@ -69,7 +70,7 @@ function EggCounter({ date }: EggCounterProps) {
         </span>
         <button
           onClick={increment}
-          disabled={loading || tempQuantity >= availableEggs || tempQuantity >= 50}
+          disabled={loading || tempQuantity >= maxAllowed}
           className="w-7 h-7 flex items-center justify-center rounded-full bg-bg-primary hover:bg-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Increase eggs"
         >

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import type { Egg, EggInventory } from '../types';
 import { handleError, showErrorToast } from '../utils/errorHandling';
-import { getMealMonthDateRange } from '../utils/mealMonthHelpers';
+import { getTodayDate } from '../utils/dateHelpers';
 
 interface EggInventoryWithMember extends EggInventory {
   member_name?: string;
@@ -61,12 +61,9 @@ export const useEggStore = create<EggState>((set, get) => ({
 
   fetchAvailableEggs: async (_date: string) => {
     try {
-      // Use the meal month period for cumulative available-eggs calculation
-      const { startDate, endDate } = getMealMonthDateRange(null);
       const { data, error } = await supabase
         .rpc('get_available_eggs', {
-          p_period_start: startDate,
-          p_period_end: endDate,
+          p_as_of_date: _date,
         });
 
       if (error) throw error;
@@ -205,6 +202,9 @@ export const useEggStore = create<EggState>((set, get) => ({
 
       // Refresh total eggs
       await get().fetchTotalEggs();
+
+      // Refresh available eggs shown in header (use today's date)
+      await get().fetchAvailableEggs(getTodayDate());
       set({ loading: false });
     } catch (err) {
       console.error('Error updating total eggs:', err);
