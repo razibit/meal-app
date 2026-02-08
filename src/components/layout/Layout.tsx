@@ -5,6 +5,8 @@ import Navigation from './Navigation';
 import { OfflineIndicator } from './OfflineIndicator';
 import { TimeSyncIndicator } from './TimeSyncIndicator';
 import { useMembers } from '../../hooks/useMembers';
+/* VALENTINE'S WEEK - Can be removed after Feb 14, 2026 */
+import { ValentinesWeek } from '../ValentinesWeek';
 
 interface LayoutProps {
   children?: ReactNode;
@@ -133,6 +135,9 @@ function Layout({ children }: LayoutProps) {
           </div>
         </div>
       )}
+
+      {/* VALENTINE'S WEEK POPUP - Can be removed after Feb 14, 2026 */}
+      <ValentinesWeek />
     </div>
   );
 }
