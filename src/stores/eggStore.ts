@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import type { Egg } from '../types';
 import { handleError, showErrorToast } from '../utils/errorHandling';
+import { getMealMonthDateRange } from '../utils/mealMonthHelpers';
 
 interface EggState {
   eggs: Egg[];
@@ -51,10 +52,15 @@ export const useEggStore = create<EggState>((set, get) => ({
     }
   },
 
-  fetchAvailableEggs: async (date: string) => {
+  fetchAvailableEggs: async (_date: string) => {
     try {
+      // Use the meal month period for cumulative available-eggs calculation
+      const { startDate, endDate } = getMealMonthDateRange(null);
       const { data, error } = await supabase
-        .rpc('get_available_eggs', { target_date: date });
+        .rpc('get_available_eggs', {
+          p_period_start: startDate,
+          p_period_end: endDate,
+        });
 
       if (error) throw error;
 
