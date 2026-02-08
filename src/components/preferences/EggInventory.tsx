@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useEggStore } from '../../stores/eggStore';
+import { getTodayDate } from '../../utils/dateHelpers';
 
 export function EggInventory() {
   const { 
     totalEggs, 
+    totalAddedThisPeriod,
     inventoryHistory, 
     fetchTotalEggs, 
+    fetchTotalAddedThisPeriod,
     fetchInventoryHistory,
     updateTotalEggs, 
     loading 
@@ -18,7 +21,8 @@ export function EggInventory() {
 
   useEffect(() => {
     fetchTotalEggs();
-  }, [fetchTotalEggs]);
+    fetchTotalAddedThisPeriod(getTodayDate());
+  }, [fetchTotalEggs, fetchTotalAddedThisPeriod]);
 
   const handleEdit = () => {
     setNewTotal(totalEggs.toString());
@@ -110,10 +114,10 @@ export function EggInventory() {
             <span className="text-3xl">🥚</span>
             <div>
               <div className="text-2xl font-bold text-text-primary">
-                {totalEggs}
+                {totalAddedThisPeriod}
               </div>
               <div className="text-sm text-text-secondary">
-                eggs available in kitchen
+                eggs added this period
               </div>
             </div>
           </div>

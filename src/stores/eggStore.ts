@@ -12,6 +12,7 @@ interface EggState {
   eggs: Egg[];
   availableEggs: number;
   totalEggs: number;
+  totalAddedThisPeriod: number;
   inventoryHistory: EggInventoryWithMember[];
   loading: boolean;
   error: string | null;
@@ -20,6 +21,7 @@ interface EggState {
   fetchEggs: (date: string) => Promise<void>;
   fetchAvailableEggs: (date: string) => Promise<void>;
   fetchTotalEggs: () => Promise<void>;
+  fetchTotalAddedThisPeriod: (asOfDate: string) => Promise<void>;
   fetchInventoryHistory: () => Promise<void>;
   getUserEggQuantity: (userId: string, date: string) => number;
   updateEggQuantity: (memberId: string, date: string, quantity: number) => Promise<void>;
@@ -31,6 +33,7 @@ export const useEggStore = create<EggState>((set, get) => ({
   eggs: [],
   availableEggs: 0,
   totalEggs: 0,
+  totalAddedThisPeriod: 0,
   inventoryHistory: [],
   loading: false,
   error: null,
@@ -88,6 +91,19 @@ export const useEggStore = create<EggState>((set, get) => ({
       set({ totalEggs: data?.total_eggs || 0 });
     } catch (err) {
       console.error('Error fetching total eggs:', err);
+    }
+  },
+
+  fetchTotalAddedThisPeriod: async (asOfDate: string) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_total_eggs_added', { p_as_of_date: asOfDate });
+
+      if (error) throw error;
+
+      set({ totalAddedThisPeriod: data || 0 });
+    } catch (err) {
+      console.error('Error fetching total eggs added this period:', err);
     }
   },
 
@@ -202,6 +218,9 @@ export const useEggStore = create<EggState>((set, get) => ({
 
       // Refresh total eggs
       await get().fetchTotalEggs();
+
+      // Refresh total added this period for the Preferences card
+      await get().fetchTotalAddedThisPeriod(getTodayDate());
 
       // Refresh available eggs shown in header (use today's date)
       await get().fetchAvailableEggs(getTodayDate());
