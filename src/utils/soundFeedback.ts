@@ -38,14 +38,15 @@ export function playSuccessSound(): void {
 
   // Master gain
   const master = ctx.createGain();
-  master.gain.setValueAtTime(0.18, now);
+  // Slightly louder than before, still conservative to avoid clipping.
+  master.gain.setValueAtTime(0.24, now);
   master.gain.linearRampToValueAtTime(0, now + 0.35);
   master.connect(ctx.destination);
 
-  // Tone 1 — E5 (659 Hz)
+  // Tone 1 — slightly higher than E5 (~+6%)
   const osc1 = ctx.createOscillator();
   osc1.type = 'sine';
-  osc1.frequency.setValueAtTime(659.25, now);
+  osc1.frequency.setValueAtTime(699.8, now);
 
   const gain1 = ctx.createGain();
   gain1.gain.setValueAtTime(0.6, now);
@@ -56,10 +57,10 @@ export function playSuccessSound(): void {
   osc1.start(now);
   osc1.stop(now + 0.3);
 
-  // Tone 2 — A5 (880 Hz), starts slightly delayed for a "ding-ding" feel
+  // Tone 2 — slightly higher than A5 (~+6%), starts slightly delayed for a "ding-ding" feel
   const osc2 = ctx.createOscillator();
   osc2.type = 'sine';
-  osc2.frequency.setValueAtTime(880, now + 0.08);
+  osc2.frequency.setValueAtTime(933.0, now + 0.08);
 
   const gain2 = ctx.createGain();
   gain2.gain.setValueAtTime(0, now);
