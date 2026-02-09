@@ -5,7 +5,6 @@ import { playSuccessSound } from '../../utils/soundFeedback';
 
 export function EggInventory() {
   const { 
-    totalEggs, 
     totalAddedThisPeriod,
     inventoryHistory, 
     fetchTotalEggs, 
@@ -16,6 +15,7 @@ export function EggInventory() {
   } = useEggStore();
   const [isEditing, setIsEditing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [mode, setMode] = useState<'add' | 'remove'>('add');
   const [newTotal, setNewTotal] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -26,8 +26,9 @@ export function EggInventory() {
   }, [fetchTotalEggs, fetchTotalAddedThisPeriod]);
 
   const handleEdit = () => {
-    setNewTotal(totalEggs.toString());
+    setNewTotal('');
     setNotes('');
+    setMode('add');
     setError(null);
     setIsEditing(true);
   };
@@ -36,6 +37,7 @@ export function EggInventory() {
     setIsEditing(false);
     setNewTotal('');
     setNotes('');
+    setMode('add');
     setError(null);
   };
 
@@ -47,19 +49,25 @@ export function EggInventory() {
   };
 
   const handleSave = async () => {
-    const total = parseInt(newTotal, 10);
+    const amount = parseInt(newTotal, 10);
     
-    if (isNaN(total) || total < 0) {
-      setError('Please enter a valid number (0 or greater)');
+    if (isNaN(amount) || amount <= 0) {
+      setError('Please enter a valid number (greater than 0)');
       return;
     }
 
+    const effectiveAmount = mode === 'remove' ? -amount : amount;
+    const autoNote = mode === 'remove'
+      ? `Removed ${amount} eggs${notes ? ': ' + notes : ' (given to cook)'}`
+      : notes || undefined;
+
     try {
-      await updateTotalEggs(total, notes || undefined);
+      await updateTotalEggs(effectiveAmount, autoNote);
       playSuccessSound();
       setIsEditing(false);
       setNewTotal('');
       setNotes('');
+      setMode('add');
       setError(null);
       // Refresh history if it's being shown
       if (showHistory) {
@@ -127,17 +135,32 @@ export function EggInventory() {
       ) : (
         <div className="space-y-4">
           <div>
+            <label htmlFor="egg-mode" className="block text-sm font-medium text-text-secondary mb-2">
+              Action
+            </label>
+            <select
+              id="egg-mode"
+              value={mode}
+              onChange={(e) => setMode(e.target.value as 'add' | 'remove')}
+              className="input w-full px-4 py-2 rounded-lg border-2 border-border bg-bg-primary text-text-primary"
+            >
+              <option value="add">Add eggs to inventory</option>
+              <option value="remove">Remove eggs (e.g. given to cook)</option>
+            </select>
+          </div>
+
+          <div>
             <label htmlFor="total-eggs" className="block text-sm font-medium text-text-secondary mb-2">
-              Total Eggs in Kitchen
+              {mode === 'add' ? 'Number of Eggs to Add' : 'Number of Eggs to Remove'}
             </label>
             <input
               id="total-eggs"
               type="number"
-              min="0"
+              min="1"
               value={newTotal}
               onChange={(e) => setNewTotal(e.target.value)}
               className="input w-full px-4 py-2 rounded-lg border-2 border-border bg-bg-primary text-text-primary"
-              placeholder="Enter number of eggs"
+              placeholder={mode === 'add' ? 'e.g. 24' : 'e.g. 8'}
               autoFocus
             />
           </div>
@@ -180,7 +203,9 @@ export function EggInventory() {
           </div>
 
           <div className="text-xs text-text-tertiary mt-2">
-            💡 This will set the total eggs available. Members track what they take from the kitchen.
+            {mode === 'add'
+              ? '💡 Adds eggs to the inventory pool. All members share from this pool.'
+              : '💡 Removes eggs from the pool (not counted against any member). Use when eggs are given to the cook for a meal.'}
           </div>
         </div>
       )}
@@ -212,8 +237,10 @@ export function EggInventory() {
                       <td className="py-3 px-4 text-sm text-text-primary">
                         {item.member_name}
                       </td>
-                      <td className="py-3 px-4 text-sm text-text-primary text-right font-semibold">
-                        {item.total_eggs}
+                      <td className={`py-3 px-4 text-sm text-right font-semibold ${
+                        item.total_eggs >= 0 ? 'text-green-600' : 'text-red-500'
+                      }`}>
+                        {item.total_eggs >= 0 ? `+${item.total_eggs}` : item.total_eggs}
                       </td>
                       <td className="py-3 px-4 text-sm text-text-secondary">
                         {item.notes || '—'}
