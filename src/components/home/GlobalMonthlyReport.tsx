@@ -128,11 +128,12 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
   const handleExportCSV = useCallback(() => {
     if (reportData.length === 0 || members.length === 0) return;
 
-    // Build headers: Date, then for each member: Name_M, Name_N, Name_E
+    // Build headers: Date, then for each member: Name_M, Name_N, Name_E, then Daily Total
     const headers = ['Date'];
     members.forEach((member) => {
       headers.push(`${member.name}_Morning`, `${member.name}_Night`, `${member.name}_Eggs`);
     });
+    headers.push('DailyTotal_Morning', 'DailyTotal_Night', 'DailyTotal_Eggs');
 
     // Build data rows
     const rows = dates.map((date) => {
@@ -142,14 +143,28 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
         day: 'numeric',
       });
       const row = [formattedDate];
+      
+      // Add member data
+      let dailyMorning = 0;
+      let dailyNight = 0;
+      let dailyEggs = 0;
+      
       members.forEach((member) => {
         const memberRow = dateData?.get(member.id);
-        row.push(
-          String(memberRow?.morning_count || 0),
-          String(memberRow?.night_count || 0),
-          String(memberRow?.egg_count || 0)
-        );
+        const morning = memberRow?.morning_count || 0;
+        const night = memberRow?.night_count || 0;
+        const eggs = memberRow?.egg_count || 0;
+        
+        row.push(String(morning), String(night), String(eggs));
+        
+        dailyMorning += morning;
+        dailyNight += night;
+        dailyEggs += eggs;
       });
+      
+      // Add daily totals
+      row.push(String(dailyMorning), String(dailyNight), String(dailyEggs));
+      
       return row;
     });
 
@@ -158,6 +173,8 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
     memberTotals.forEach((member) => {
       totalsRow.push(String(member.morning), String(member.night), String(member.eggs));
     });
+    // Add grand totals to daily total columns
+    totalsRow.push(String(grandTotals.morning), String(grandTotals.night), String(grandTotals.eggs));
     rows.push(totalsRow);
 
     // Add grand total row
@@ -199,6 +216,7 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
     members.forEach((member) => {
       headers.push(`${member.name} M`, `${member.name} N`, `${member.name} E`);
     });
+    headers.push('Daily M', 'Daily N', 'Daily E');
 
     // Prepare table data
     const tableData = dates.map((date) => {
@@ -209,14 +227,28 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
         day: 'numeric',
       });
       const row = [formattedDate];
+      
+      // Add member data and calculate daily totals
+      let dailyMorning = 0;
+      let dailyNight = 0;
+      let dailyEggs = 0;
+      
       members.forEach((member) => {
         const memberRow = dateData?.get(member.id);
-        row.push(
-          String(memberRow?.morning_count || 0),
-          String(memberRow?.night_count || 0),
-          String(memberRow?.egg_count || 0)
-        );
+        const morning = memberRow?.morning_count || 0;
+        const night = memberRow?.night_count || 0;
+        const eggs = memberRow?.egg_count || 0;
+        
+        row.push(String(morning), String(night), String(eggs));
+        
+        dailyMorning += morning;
+        dailyNight += night;
+        dailyEggs += eggs;
       });
+      
+      // Add daily totals
+      row.push(String(dailyMorning), String(dailyNight), String(dailyEggs));
+      
       return row;
     });
 
@@ -225,13 +257,15 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
     memberTotals.forEach((member) => {
       totalsRow.push(String(member.morning), String(member.night), String(member.eggs));
     });
+    // Add grand totals to daily total columns
+    totalsRow.push(String(grandTotals.morning), String(grandTotals.night), String(grandTotals.eggs));
     tableData.push(totalsRow);
 
     // Add grand total row
     const grandTotalRow = ['Grand Total'];
     grandTotalRow.push(`Meals: ${grandTotals.totalMeals}, Eggs: ${grandTotals.eggs}`);
     // Fill remaining columns
-    for (let i = 1; i < members.length * 3; i++) {
+    for (let i = 1; i < members.length * 3 + 3; i++) {
       grandTotalRow.push('');
     }
     tableData.push(grandTotalRow);
@@ -414,6 +448,12 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
                   {member.name}
                 </th>
               ))}
+              <th
+                colSpan={3}
+                className="px-2 py-2 text-center text-sm font-semibold text-text-primary border-l-2 border-border bg-primary/5"
+              >
+                Daily Total
+              </th>
             </tr>
             {/* Sub-columns Row */}
             <tr className="bg-bg-tertiary border-b border-border">
@@ -430,6 +470,15 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
                   </th>
                 </th>
               ))}
+              <th className="px-2 py-2 text-center text-xs font-medium text-text-secondary border-l-2 border-border min-w-[50px] bg-primary/5">
+                M
+              </th>
+              <th className="px-2 py-2 text-center text-xs font-medium text-text-secondary min-w-[50px] bg-primary/5">
+                N
+              </th>
+              <th className="px-2 py-2 text-center text-xs font-medium text-text-secondary min-w-[50px] bg-primary/5">
+                E
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -443,6 +492,19 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
                   (row.morning_count > 0 || row.night_count > 0 || row.egg_count > 0)
                 );
               });
+
+              // Calculate daily totals for this date
+              const dailyTotal = members.reduce(
+                (acc, member) => {
+                  const row = dateData?.get(member.id);
+                  return {
+                    morning: acc.morning + (row?.morning_count || 0),
+                    night: acc.night + (row?.night_count || 0),
+                    eggs: acc.eggs + (row?.egg_count || 0),
+                  };
+                },
+                { morning: 0, night: 0, eggs: 0 }
+              );
 
               return (
                 <tr
@@ -470,6 +532,16 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
                       </td>
                     );
                   })}
+                  {/* Daily Total Columns */}
+                  <td className="px-2 py-2 text-center text-sm font-semibold text-text-primary border-l-2 border-border bg-primary/5">
+                    {dailyTotal.morning > 0 ? dailyTotal.morning : '-'}
+                  </td>
+                  <td className="px-2 py-2 text-center text-sm font-semibold text-text-primary bg-primary/5">
+                    {dailyTotal.night > 0 ? dailyTotal.night : '-'}
+                  </td>
+                  <td className="px-2 py-2 text-center text-sm font-semibold text-text-primary bg-primary/5">
+                    {dailyTotal.eggs > 0 ? dailyTotal.eggs : '-'}
+                  </td>
                 </tr>
               );
             })}
@@ -492,6 +564,16 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
                   </td>
                 </td>
               ))}
+              {/* Daily Total Column Totals (same as grand totals) */}
+              <td className="px-2 py-3 text-center text-sm text-text-primary border-l-2 border-border bg-primary/10 font-bold">
+                {grandTotals.morning}
+              </td>
+              <td className="px-2 py-3 text-center text-sm text-text-primary bg-primary/10 font-bold">
+                {grandTotals.night}
+              </td>
+              <td className="px-2 py-3 text-center text-sm text-text-primary bg-primary/10 font-bold">
+                {grandTotals.eggs}
+              </td>
             </tr>
 
             {/* Grand Total Row */}
@@ -500,7 +582,7 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
                 Grand Total
               </td>
               <td
-                colSpan={members.length * 3}
+                colSpan={members.length * 3 + 3}
                 className="px-4 py-3 text-center text-text-primary border-l border-border"
               >
                 <div className="flex justify-center gap-8">
