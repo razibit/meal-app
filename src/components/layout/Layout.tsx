@@ -111,7 +111,34 @@ function Layout({ children }: LayoutProps) {
                   />
                 </svg>
               </button>
-            </div>start justify-between gap-3">
+            </div>
+
+            {/* Loading State */}
+            {loading && (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              </div>
+            )}
+
+            {/* Members List */}
+            {!loading && !error && (
+              <div className="space-y-2">
+                {members.length === 0 ? (
+                  <p className="text-text-secondary text-center py-4">No members found</p>
+                ) : (
+                  members.map((member) => (
+                    <div
+                      key={member.id}
+                      className="p-3 bg-bg-secondary rounded-lg hover:bg-bg-tertiary transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <p className="font-medium text-text-primary">{member.name}</p>
                           <p className="text-sm text-text-secondary">{member.email}</p>
@@ -128,41 +155,11 @@ function Layout({ children }: LayoutProps) {
                               Admin
                             </span>
                           )}
-                          {/* Deposit Total */}
-                          {memberDeposits[member.id] !== undefined && memberDeposits[member.id] > 0 && (
-                            <span className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-semibold">
-                              ৳ {memberDeposits[member.id].toFixed(0)} bdt
-                            </span>
-                          )}
-                        </div>
-                      </div>Name="space-y-2">
-                {members.length === 0 ? (
-                  <p className="text-text-secondary text-center py-4">No members found</p>
-                ) : (
-                  members.map((member) => (
-                    <div
-                      key={member.id}
-                      className="p-3 bg-bg-secondary rounded-lg hover:bg-bg-tertiary transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-text-primary">{member.name}</p>
-                          <p className="text-sm text-text-secondary">{member.email}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary capitalize">
-                            {member.rice_preference}
+                          <span className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-semibold">
+                            ৳ {(memberDeposits[member.id] ?? 0).toFixed(0)} bdt
                           </span>
-                          {member.role === 'admin' && (
-                            <span className="ml-2 inline-block px-2 py-1 text-xs rounded-full bg-accent/10 text-accent">
-                              Admin
-                            </span>
-                          )}
                         </div>
                       </div>
-                      {member.phone && (
-                        <p className="text-sm text-text-secondary mt-1">{member.phone}</p>
-                      )}
                     </div>
                   ))
                 )}
