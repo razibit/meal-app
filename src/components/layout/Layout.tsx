@@ -1,10 +1,13 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect, useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Navigation from './Navigation';
 import { OfflineIndicator } from './OfflineIndicator';
 import { TimeSyncIndicator } from './TimeSyncIndicator';
 import { useMembers } from '../../hooks/useMembers';
+import { useDepositStore } from '../../stores/depositStore';
+import { useAuthStore } from '../../stores/authStore';
+import { getMealMonthDateRange } from '../../utils/mealMonthHelpers';
 /* VALENTINE'S WEEK - Can be removed after Feb 14, 2026 */
 import { ValentinesWeek } from '../ValentinesWeek';
 
@@ -15,6 +18,33 @@ interface LayoutProps {
 function Layout({ children }: LayoutProps) {
   const [showMembersModal, setShowMembersModal] = useState(false);
   const { members, loading, error } = useMembers();
+  const { user } = useAuthStore();
+  const { getMemberTotalDeposit } = useDepositStore();
+  const [memberDeposits, setMemberDeposits] = useState<Record<string, number>>({});
+
+  // Get the current meal month date range for the user
+  const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
+
+  // Fetch deposit totals for all members when modal opens
+  useEffect(() => {
+    if (showMembersModal && members.length > 0) {
+      const fetchDeposits = async () => {
+        const deposits: Record<string, number> = {};
+        await Promise.all(
+          members.map(async (member) => {
+            const total = await getMemberTotalDeposit(
+              member.id,
+              dateRange.startDate,
+              dateRange.endDate
+            );
+            deposits[member.id] = total;
+          })
+        );
+        setMemberDeposits(deposits);
+      };
+      fetchDeposits();
+    }
+  }, [showMembersModal, members, getMemberTotalDeposit, dateRange]);
 
   const handlePeopleClick = () => {
     setShowMembersModal(true);
@@ -81,25 +111,31 @@ function Layout({ children }: LayoutProps) {
                   />
                 </svg>
               </button>
-            </div>
-
-            {/* Loading State */}
-            {loading && (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && (
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-              </div>
-            )}
-
-            {/* Members List */}
-            {!loading && !error && (
-              <div className="space-y-2">
+            </div>start justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="font-medium text-text-primary">{member.name}</p>
+                          <p className="text-sm text-text-secondary">{member.email}</p>
+                          {member.phone && (
+                            <p className="text-sm text-text-secondary mt-1">{member.phone}</p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary capitalize">
+                            {member.rice_preference}
+                          </span>
+                          {member.role === 'admin' && (
+                            <span className="inline-block px-2 py-1 text-xs rounded-full bg-accent/10 text-accent">
+                              Admin
+                            </span>
+                          )}
+                          {/* Deposit Total */}
+                          {memberDeposits[member.id] !== undefined && memberDeposits[member.id] > 0 && (
+                            <span className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-semibold">
+                              ৳ {memberDeposits[member.id].toFixed(0)} bdt
+                            </span>
+                          )}
+                        </div>
+                      </div>Name="space-y-2">
                 {members.length === 0 ? (
                   <p className="text-text-secondary text-center py-4">No members found</p>
                 ) : (

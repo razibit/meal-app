@@ -113,4 +113,25 @@ export interface MemberTotals {
   eggs: number;
 }
 
+export interface Deposit {
+  id: string;
+  depositor_id: string;
+  added_by: string;
+  amount: number;
+  details?: string;
+  deposit_date: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface DepositReportRow {
+  depositor_id: string;
+  depositor_name: string;
+  deposit_date: string;
+  added_by_name: string;
+  amount: number;
+  details?: string;
+  total_amount: number;
+}
+
 export type { Session, User };
