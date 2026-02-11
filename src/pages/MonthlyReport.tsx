@@ -4,6 +4,7 @@ import { DailyReportRow } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { getMealMonthDateRange, formatDateRangeForDisplay } from '../utils/mealMonthHelpers';
 import GlobalMonthlyReport from '../components/home/GlobalMonthlyReport';
+import DepositReport from '../components/home/DepositReport';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -351,6 +352,11 @@ function MonthlyReport() {
       {/* Global Monthly Report Section */}
       <div className="mt-8">
         <GlobalMonthlyReport user={user} />
+      </div>
+
+      {/* Deposit Report Section */}
+      <div className="mt-8">
+        <DepositReport user={user} />
       </div>
     </div>
   );
