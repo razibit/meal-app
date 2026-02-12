@@ -12,7 +12,6 @@ The Mess Meal Management System is a progressive web application designed to man
 - **Meal Registration**: The act of a member indicating they will consume a meal during a specific period
 - **Cutoff Time**: The deadline after which meal registrations cannot be modified (7:00 AM for morning, 6:00 PM for night)
 - **Meal Details**: The menu description for a specific date and meal period
-- **Notice Board**: A shared editable text area for general announcements
 - **Mention**: A chat message that references a specific member using @username syntax
 - **PWA**: Progressive Web Application - a web app that can be installed and work offline
 
@@ -51,8 +50,7 @@ The Mess Meal Management System is a progressive web application designed to man
 1. THE System SHALL display an editable meal details section showing the menu for morning and night periods
 2. WHEN any member edits the meal details, THE System SHALL save the changes and display them to all members within 2 seconds
 3. THE System SHALL record which member last updated the meal details and the timestamp of the update
-4. THE System SHALL provide a notice board section that any member can edit for general announcements
-5. WHEN a member edits meal details or the notice board, THE System SHALL apply the changes optimistically in the UI before server confirmation
+4. WHEN a member edits meal details, THE System SHALL apply the changes optimistically in the UI before server confirmation
 
 ### Requirement 4: Post-Cutoff Violation Notifications
 
@@ -133,7 +131,7 @@ The Mess Meal Management System is a progressive web application designed to man
 1. THE System SHALL require members to authenticate using email and password via Supabase Auth
 2. WHEN a member successfully authenticates, THE System SHALL create or retrieve their member profile
 3. THE System SHALL enforce row-level security policies ensuring members can only modify their own meal registrations
-4. THE System SHALL allow any authenticated member to edit meal details and the notice board
+4. THE System SHALL allow any authenticated member to edit meal details
 5. THE System SHALL automatically log out members after 30 days of inactivity
 
 ### Requirement 11: Cutoff Time Enforcement

@@ -153,13 +153,6 @@
 
     - _Requirements: 3.1, 3.2, 3.3, 3.5_
   
-  - [x] 5.5 Build notice board component
-
-    - Create small editable text area (3-4 lines)
-    - Implement click-to-edit functionality
-    - Show last editor and timestamp
-    - _Requirements: 3.4_
-  
   - [x] 5.6 Create members list modal
 
     - Build modal triggered by people icon

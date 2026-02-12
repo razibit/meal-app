@@ -9,7 +9,6 @@ import MealToggle from '../components/home/MealToggle';
 import MealCounts from '../components/home/MealCounts';
 import MealRegistration from '../components/home/MealRegistration';
 import MealDetailsEditor from '../components/home/MealDetailsEditor';
-import NoticeBoard from '../components/home/NoticeBoard';
 import ParticipantsModal from '../components/home/ParticipantsModal';
 
 function Home() {
@@ -96,11 +95,6 @@ function Home() {
     const field = activePeriod === 'morning' ? 'morning_details' : 'night_details';
     await updateMealDetails(selectedDate, field, details, user.id);
   }, [user, selectedDate, activePeriod, updateMealDetails]);
-
-  const handleSaveNotice = useCallback(async (notice: string) => {
-    if (!user) return;
-    await updateMealDetails(selectedDate, 'notice', notice, user.id);
-  }, [user, selectedDate, updateMealDetails]);
 
   const handleShowParticipants = useCallback(() => {
     setShowParticipantsModal(true);
@@ -202,15 +196,6 @@ function Home() {
         updatedByName={mealDetails?.updated_by_name}
         updatedAt={mealDetails?.updated_at}
         onSave={handleSaveMealDetails}
-      />
-
-      {/* Notice Board */}
-      <NoticeBoard
-        notice={mealDetails?.notice || ''}
-        updatedBy={mealDetails?.updated_by}
-        updatedByName={mealDetails?.updated_by_name}
-        updatedAt={mealDetails?.updated_at}
-        onSave={handleSaveNotice}
       />
 
       {/* Participants Modal */}

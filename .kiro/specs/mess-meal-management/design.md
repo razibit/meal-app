@@ -63,7 +63,6 @@ src/
 │   │   ├── MealToggle.tsx         # Morning/Night toggle
 │   │   ├── MealCounts.tsx         # Rice type counts
 │   │   ├── MealDetails.tsx        # Editable menu
-│   │   ├── NoticeBoard.tsx        # Editable notice
 │   │   └── MembersList.tsx        # Modal with all members
 │   ├── chat/
 │   │   ├── ChatMessages.tsx       # Message list
@@ -182,26 +181,6 @@ interface MealDetailsProps {
 - Shows "Edited by [Name] at [Time]" below
 - Auto-saves on blur with 500ms debounce
 
-
-#### NoticeBoard Component
-
-**Purpose**: Shared editable announcement area
-
-**Interface**:
-```typescript
-interface NoticeBoardProps {
-  notice: string;
-  onUpdate: (notice: string) => Promise<void>;
-  updatedBy?: string;
-  updatedAt?: string;
-}
-```
-
-**Behavior**:
-- Small text area (3-4 lines)
-- Click to edit, save on blur
-- Shows last editor and timestamp
-- Real-time updates for all users
 
 #### MembersList Component
 
@@ -412,7 +391,6 @@ CREATE TABLE meal_details (
   meal_date date UNIQUE NOT NULL,
   morning_details text,
   night_details text,
-  notice text,
   updated_by uuid REFERENCES members(id),
   updated_at timestamptz DEFAULT now()
 );
@@ -476,7 +454,6 @@ export interface MealDetails {
   mealDate: string;
   morningDetails?: string;
   nightDetails?: string;
-  notice?: string;
   updatedBy?: string;
   updatedAt?: string;
 }

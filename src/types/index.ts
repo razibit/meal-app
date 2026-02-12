@@ -32,7 +32,6 @@ export interface MealDetails {
   meal_date: string;
   morning_details?: string;
   night_details?: string;
-  notice?: string;
   updated_by?: string;
   updated_by_name?: string;
   updated_at?: string;

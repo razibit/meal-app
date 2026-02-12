@@ -34,7 +34,7 @@ interface MealState {
   updateMealQuantity: (memberId: string, date: string, period: MealPeriod, quantity: number) => Promise<void>;
   updateAutoMeal: (memberId: string, period: MealPeriod, enabled: boolean) => Promise<void>;
   resetFutureMeals: (memberId: string, period: MealPeriod) => Promise<void>;
-  updateMealDetails: (date: string, field: 'morning_details' | 'night_details' | 'notice', value: string, updatedBy: string) => Promise<void>;
+  updateMealDetails: (date: string, field: 'morning_details' | 'night_details', value: string, updatedBy: string) => Promise<void>;
   getMealCounts: (period?: MealPeriod, date?: string) => MealCount;
   getUserMealQuantity: (userId: string, period: MealPeriod, date: string) => number;
   getUserAutoMeal: (userId: string, period: MealPeriod) => boolean;
@@ -442,7 +442,7 @@ export const useMealStore = create<MealState>((set, get) => ({
 
   updateMealDetails: async (
     date: string,
-    field: 'morning_details' | 'night_details' | 'notice',
+    field: 'morning_details' | 'night_details',
     value: string,
     updatedBy: string
   ) => {

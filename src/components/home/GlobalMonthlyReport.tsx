@@ -355,6 +355,14 @@ function GlobalMonthlyReport({ user }: GlobalMonthlyReportProps) {
             <p className="text-sm text-text-secondary">
               {formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate)}
             </p>
+            {reportData.length > 0 && (
+              <p className="text-sm text-text-secondary mt-1">
+                Total Meals: <span className="font-medium text-text-primary">{grandTotals.totalMeals}</span>
+                <span className="text-text-tertiary"> (M: {grandTotals.morning} + N: {grandTotals.night})</span>
+                {' · '}
+                Total Eggs 🥚: <span className="font-medium text-text-primary">{grandTotals.eggs}</span>
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <button

@@ -79,7 +79,7 @@ This directory contains SQL migration files for the Mess Meal Management System 
 
 - **members** - User profiles with rice preferences
 - **meals** - Meal registrations (member_id, date, period)
-- **meal_details** - Daily menu descriptions and notices
+- **meal_details** - Daily menu descriptions
 - **chats** - Chat messages with mentions support
 - **push_subscriptions** - Web push notification subscriptions
 
@@ -128,4 +128,4 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 - Service role key should only be used in Edge Functions
 - Anon key is safe for client-side use with RLS
 - Members can only modify their own meal registrations
-- All authenticated users can edit meal details and notices
+- All authenticated users can edit meal details

@@ -39,7 +39,7 @@
 - Adding meals
 - Removing meals
 - Sending chat messages
-- Updating meal details/notice
+- Updating meal details
 
 ❌ **What doesn't work offline**:
 - Loading new data
