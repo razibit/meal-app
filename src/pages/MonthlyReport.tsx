@@ -13,6 +13,7 @@ function MonthlyReport() {
   const [reportData, setReportData] = useState<DailyReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showMyReport, setShowMyReport] = useState(false);
 
   // Get the current meal month date range for the user
   const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
@@ -176,25 +177,47 @@ function MonthlyReport() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto animate-fade-in">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4 text-text-primary">My Monthly Report</h2>
-        
-        {/* Date Range Display and Export Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-text-secondary">Report Period:</p>
-            <p className="text-lg font-semibold text-text-primary">
-              {formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate)}
-            </p>
-            <p className="text-xs text-text-tertiary">
-              Configure your meal month dates in{' '}
-              <a href="/preferences" className="text-primary hover:underline">
-                Preferences
-              </a>
-            </p>
+      {/* My Monthly Report Summary Card */}
+      <div className="card mb-6">
+        <div className="flex flex-col gap-3">
+          {/* Header Row with Summary and Show Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <h2 className="text-xl font-bold text-text-primary">My Monthly Report</h2>
+              {!loading && reportData.length > 0 && (
+                <>
+                  <span className="text-sm text-text-secondary hidden sm:inline">|</span>
+                  <span className="text-sm font-medium text-text-primary">
+                    Total Meal (M+N): {totals.morning + totals.night}
+                  </span>
+                  <span className="text-sm text-text-secondary hidden sm:inline">|</span>
+                  <span className="text-sm font-medium text-text-primary">
+                    Total Eggs 🥚: {totals.eggs}
+                  </span>
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => setShowMyReport(!showMyReport)}
+              className="btn-secondary px-4 py-2 rounded-lg font-medium self-start sm:self-auto"
+              disabled={loading}
+            >
+              {showMyReport ? 'Hide' : 'Show'}
+            </button>
           </div>
           
-          <div className="flex gap-2">
+          {/* Date Range */}
+          <p className="text-sm text-text-secondary">
+            {formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate)}
+          </p>
+        </div>
+      </div>
+
+      {/* Expanded Report Details */}
+      {showMyReport && (
+        <div className="mb-6">
+          {/* Export Buttons */}
+          <div className="flex gap-2 mb-4 justify-end">
             <button
               onClick={handleExportPDF}
               disabled={reportData.length === 0 || loading}
@@ -237,115 +260,115 @@ function MonthlyReport() {
               Export CSV
             </button>
           </div>
-        </div>
-      </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-4 bg-error/10 border border-error text-error px-4 py-3 rounded-lg animate-slide-down">
-          {error}
-        </div>
-      )}
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 bg-error/10 border border-error text-error px-4 py-3 rounded-lg animate-slide-down">
+              {error}
+            </div>
+          )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-        </div>
-      )}
+          {/* Loading State */}
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+            </div>
+          )}
 
-      {/* Report Table */}
-      {!loading && reportData.length > 0 && (
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-bg-tertiary border-b border-border">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-text-primary">
-                    Date
-                  </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
-                    Morning
-                  </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
-                    Night
-                  </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
-                    Eggs
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {reportData.map((row) => {
-                  const date = new Date(row.meal_date + 'T00:00:00');
-                  const dateStr = date.toLocaleDateString('en-US', { 
-                    weekday: 'short',
-                    month: 'short', 
-                    day: 'numeric' 
-                  });
-                  const hasData = row.morning_count > 0 || row.night_count > 0 || row.egg_count > 0;
-                  
-                  return (
-                    <tr
-                      key={row.meal_date}
-                      className={`border-b border-border transition-colors ${
-                        hasData ? 'hover:bg-bg-secondary' : 'opacity-50'
-                      }`}
-                    >
-                      <td className="px-4 py-3 text-text-primary font-medium">
-                        {dateStr}
+          {/* Report Table */}
+          {!loading && reportData.length > 0 && (
+            <div className="card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-bg-tertiary border-b border-border">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-text-primary">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
+                        Morning
+                      </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
+                        Night
+                      </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
+                        Eggs
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.map((row) => {
+                      const date = new Date(row.meal_date + 'T00:00:00');
+                      const dateStr = date.toLocaleDateString('en-US', { 
+                        weekday: 'short',
+                        month: 'short', 
+                        day: 'numeric' 
+                      });
+                      const hasData = row.morning_count > 0 || row.night_count > 0 || row.egg_count > 0;
+                      
+                      return (
+                        <tr
+                          key={row.meal_date}
+                          className={`border-b border-border transition-colors ${
+                            hasData ? 'hover:bg-bg-secondary' : 'opacity-50'
+                          }`}
+                        >
+                          <td className="px-4 py-3 text-text-primary font-medium">
+                            {dateStr}
+                          </td>
+                          <td className="px-4 py-3 text-center text-text-secondary">
+                            {row.morning_count > 0 ? row.morning_count : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-center text-text-secondary">
+                            {row.night_count > 0 ? row.night_count : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-center text-text-secondary">
+                            {row.egg_count > 0 ? row.egg_count : '-'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    
+                    {/* Totals Row */}
+                    <tr className="bg-bg-tertiary font-bold">
+                      <td className="px-4 py-3 text-text-primary">
+                        Total
                       </td>
-                      <td className="px-4 py-3 text-center text-text-secondary">
-                        {row.morning_count > 0 ? row.morning_count : '-'}
+                      <td className="px-4 py-3 text-center text-text-primary">
+                        {totals.morning}
                       </td>
-                      <td className="px-4 py-3 text-center text-text-secondary">
-                        {row.night_count > 0 ? row.night_count : '-'}
+                      <td className="px-4 py-3 text-center text-text-primary">
+                        {totals.night}
                       </td>
-                      <td className="px-4 py-3 text-center text-text-secondary">
-                        {row.egg_count > 0 ? row.egg_count : '-'}
+                      <td className="px-4 py-3 text-center text-text-primary">
+                        {totals.eggs}
                       </td>
                     </tr>
-                  );
-                })}
-                
-                {/* Totals Row */}
-                <tr className="bg-bg-tertiary font-bold">
-                  <td className="px-4 py-3 text-text-primary">
-                    Total
-                  </td>
-                  <td className="px-4 py-3 text-center text-text-primary">
-                    {totals.morning}
-                  </td>
-                  <td className="px-4 py-3 text-center text-text-primary">
-                    {totals.night}
-                  </td>
-                  <td className="px-4 py-3 text-center text-text-primary">
-                    {totals.eggs}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
-      {/* Empty State */}
-      {!loading && reportData.length === 0 && !error && (
-        <div className="card text-center py-12">
-          <svg
-            className="w-16 h-16 mx-auto text-text-tertiary mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <p className="text-text-secondary">No meal data available for this period</p>
+          {/* Empty State */}
+          {!loading && reportData.length === 0 && !error && (
+            <div className="card text-center py-12">
+              <svg
+                className="w-16 h-16 mx-auto text-text-tertiary mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <p className="text-text-secondary">No meal data available for this period</p>
+            </div>
+          )}
         </div>
       )}
 

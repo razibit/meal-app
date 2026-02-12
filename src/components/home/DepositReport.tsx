@@ -93,7 +93,7 @@ function DepositReport({ user }: DepositReportProps) {
             {formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate)}
           </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex items-center gap-4">
           <div className="text-right">
             <p className="text-xs text-text-tertiary">Grand Total</p>
             <p className="text-lg font-bold text-green-600 dark:text-green-400">
