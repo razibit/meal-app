@@ -37,7 +37,6 @@ CREATE TABLE meal_details (
   meal_date date UNIQUE NOT NULL,
   morning_details text,
   night_details text,
-  notice text,
   updated_by uuid REFERENCES members(id),
   updated_at timestamptz DEFAULT now()
 );

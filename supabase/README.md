@@ -128,4 +128,4 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 - Service role key should only be used in Edge Functions
 - Anon key is safe for client-side use with RLS
 - Members can only modify their own meal registrations
-- All authenticated users can edit meal details and notices
+- All authenticated users can edit meal details
