@@ -10,6 +10,7 @@ interface DepositReportProps {
 function DepositReport({ user }: DepositReportProps) {
   const { depositReport, loading, error, fetchDepositReport } = useDepositStore();
   const [showReport, setShowReport] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   // Get the current meal month date range for the user
   const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
@@ -17,13 +18,14 @@ function DepositReport({ user }: DepositReportProps) {
   const loadReport = useCallback(async () => {
     if (!user) return;
     await fetchDepositReport(dateRange.startDate, dateRange.endDate);
+    setHasLoaded(true);
   }, [user, dateRange, fetchDepositReport]);
 
   useEffect(() => {
-    if (showReport) {
-      loadReport();
-    }
-  }, [showReport, loadReport]);
+    // Preload so we can show Grand Total even when collapsed.
+    setHasLoaded(false);
+    loadReport();
+  }, [loadReport]);
 
   // Group deposits by depositor
   const groupedDeposits = useMemo(() => {
@@ -91,13 +93,21 @@ function DepositReport({ user }: DepositReportProps) {
             {formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate)}
           </p>
         </div>
-        <button
-          onClick={() => setShowReport(!showReport)}
-          className="btn-secondary px-4 py-2 rounded-lg font-medium"
-          disabled={loading}
-        >
-          {showReport ? 'Hide' : 'Show'}
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-xs text-text-tertiary">Grand Total</p>
+            <p className="text-lg font-bold text-green-600 dark:text-green-400">
+              ৳ {!hasLoaded && loading ? '...' : grandTotal.toFixed(2)}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowReport(!showReport)}
+            className="btn-secondary px-4 py-2 rounded-lg font-medium"
+            disabled={loading && !hasLoaded}
+          >
+            {showReport ? 'Hide' : 'Show'}
+          </button>
+        </div>
       </div>
 
       {showReport && (

@@ -13,6 +13,7 @@ function MonthlyReport() {
   const [reportData, setReportData] = useState<DailyReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showMyReport, setShowMyReport] = useState(false);
 
   // Get the current meal month date range for the user
   const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
@@ -176,87 +177,110 @@ function MonthlyReport() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto animate-fade-in">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4 text-text-primary">My Monthly Report</h2>
-        
-        {/* Date Range Display and Export Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-text-secondary">Report Period:</p>
-            <p className="text-lg font-semibold text-text-primary">
-              {formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate)}
-            </p>
-            <p className="text-xs text-text-tertiary">
-              Configure your meal month dates in{' '}
-              <a href="/preferences" className="text-primary hover:underline">
-                Preferences
-              </a>
-            </p>
-          </div>
-          
-          <div className="flex gap-2">
-            <button
-              onClick={handleExportPDF}
-              disabled={reportData.length === 0 || loading}
-              className="btn-primary px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+      {/* My Monthly Report */}
+      <div className="card overflow-hidden">
+        {/* Header with buttons */}
+        <div className="p-4 bg-bg-secondary border-b border-border">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary">My Monthly Report</h3>
+              <p className="text-sm text-text-secondary">
+                {formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate)}
+              </p>
+              {!loading && reportData.length > 0 && (
+                <p className="text-sm text-text-secondary mt-1">
+                  Total Meal (M+N): <span className="font-medium text-text-primary">{totals.morning + totals.night}</span>
+                  {' · '}
+                  Total Eggs 🥚: <span className="font-medium text-text-primary">{totals.eggs}</span>
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleExportPDF}
+                disabled={reportData.length === 0 || loading}
+                className="btn-primary px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                />
-              </svg>
-              Export PDF
-            </button>
-            
-            <button
-              onClick={handleExportCSV}
-              disabled={reportData.length === 0 || loading}
-              className="btn-secondary px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
+                </svg>
+                PDF
+              </button>
+              <button
+                onClick={handleExportCSV}
+                disabled={reportData.length === 0 || loading}
+                className="btn-secondary px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Export CSV
-            </button>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                CSV
+              </button>
+              <button
+                onClick={() => setShowMyReport(!showMyReport)}
+                disabled={reportData.length === 0 || loading}
+                className="btn-secondary px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform ${showMyReport ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+                {showMyReport ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-4 bg-error/10 border border-error text-error px-4 py-3 rounded-lg animate-slide-down">
-          {error}
-        </div>
-      )}
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+          </div>
+        )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-        </div>
-      )}
+        {/* Error Message */}
+        {error && !loading && (
+          <div className="m-4 bg-error/10 border border-error text-error px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
 
-      {/* Report Table */}
-      {!loading && reportData.length > 0 && (
-        <div className="card overflow-hidden">
+        {/* Empty state when no data */}
+        {!loading && !error && reportData.length === 0 && (
+          <div className="text-center py-12">
+            <svg
+              className="w-16 h-16 mx-auto text-text-tertiary mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <p className="text-text-secondary">No meal data available for this period</p>
+          </div>
+        )}
+
+        {/* Collapsible Table */}
+        {showMyReport && reportData.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -278,13 +302,13 @@ function MonthlyReport() {
               <tbody>
                 {reportData.map((row) => {
                   const date = new Date(row.meal_date + 'T00:00:00');
-                  const dateStr = date.toLocaleDateString('en-US', { 
+                  const dateStr = date.toLocaleDateString('en-US', {
                     weekday: 'short',
-                    month: 'short', 
-                    day: 'numeric' 
+                    month: 'short',
+                    day: 'numeric'
                   });
                   const hasData = row.morning_count > 0 || row.night_count > 0 || row.egg_count > 0;
-                  
+
                   return (
                     <tr
                       key={row.meal_date}
@@ -307,7 +331,7 @@ function MonthlyReport() {
                     </tr>
                   );
                 })}
-                
+
                 {/* Totals Row */}
                 <tr className="bg-bg-tertiary font-bold">
                   <td className="px-4 py-3 text-text-primary">
@@ -326,28 +350,8 @@ function MonthlyReport() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && reportData.length === 0 && !error && (
-        <div className="card text-center py-12">
-          <svg
-            className="w-16 h-16 mx-auto text-text-tertiary mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <p className="text-text-secondary">No meal data available for this period</p>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Global Monthly Report Section */}
       <div className="mt-8">
