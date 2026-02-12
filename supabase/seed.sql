@@ -32,13 +32,9 @@
 -- ('00000000-0000-0000-0000-000000000015', 'Mike Ross', 'mike@example.com', '+8801712345615', 'boiled', 'member'),
 -- ('00000000-0000-0000-0000-000000000016', 'Nina Simone', 'nina@example.com', '+8801712345616', 'atop', 'member');
 
--- ============================================
--- Sample Meal Details
--- ============================================
--- Insert today's meal details
-INSERT INTO meal_details (meal_date, morning_details, night_details, notice) VALUES
-(CURRENT_DATE, 'Rice, Dal, Fish Curry, Mixed Vegetables', 'Rice, Chicken Curry, Salad', 'Please register your meals before cutoff time!'),
-(CURRENT_DATE + INTERVAL '1 day', 'Rice, Dal, Egg Curry, Potato Fry', 'Rice, Beef Curry, Vegetables', 'Tomorrow is Friday - special menu!');
+INSERT INTO meal_details (meal_date, morning_details, night_details) VALUES
+ (CURRENT_DATE, 'Rice, Dal, Fish Curry, Mixed Vegetables', 'Rice, Chicken Curry, Salad'),
+ (CURRENT_DATE + INTERVAL '1 day', 'Rice, Dal, Egg Curry, Potato Fry', 'Rice, Beef Curry, Vegetables');
 
 -- ============================================
 -- Sample Meals (Registrations)

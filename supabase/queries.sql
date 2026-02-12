@@ -89,7 +89,6 @@ SELECT
   meal_date,
   morning_details,
   night_details,
-  notice,
   m.name as updated_by_name,
   updated_at
 FROM meal_details md
@@ -98,13 +97,12 @@ WHERE meal_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '7 days'
 ORDER BY meal_date;
 
 -- Update meal details
-INSERT INTO meal_details (meal_date, morning_details, night_details, notice, updated_by)
-VALUES (CURRENT_DATE, 'Rice, Dal, Fish Curry', 'Rice, Chicken Curry', 'Notice here', 'user-uuid-here')
+INSERT INTO meal_details (meal_date, morning_details, night_details, updated_by)
+VALUES (CURRENT_DATE, 'Rice, Dal, Fish Curry', 'Rice, Chicken Curry', 'user-uuid-here')
 ON CONFLICT (meal_date) 
 DO UPDATE SET
   morning_details = EXCLUDED.morning_details,
   night_details = EXCLUDED.night_details,
-  notice = EXCLUDED.notice,
   updated_by = EXCLUDED.updated_by,
   updated_at = now();
 
