@@ -56,95 +56,99 @@ function GroceryExpenseCard() {
   return (
     <div className="mb-6">
       <div className="card">
-        <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
-          <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <h3 className="text-base font-semibold text-text-primary mb-2 flex items-center gap-2">
+          <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
           </svg>
           Grocery Expense
         </h3>
 
-        {/* Shopper Dropdown */}
-        <div className="mb-3">
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Shopper
-          </label>
-          <select
-            value={shopperId}
-            onChange={(e) => setShopperId(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="">Select shopper...</option>
-            {members.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+          {/* Shopper Dropdown */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1">
+              Shopper
+            </label>
+            <select
+              value={shopperId}
+              onChange={(e) => setShopperId(e.target.value)}
+              className="w-full px-2 py-1.5 text-sm rounded-lg border border-border bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+              <option value="">Select...</option>
+              {members.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Transaction Type */}
-        <div className="mb-3">
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Transaction Type
-          </label>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTransactionType('cash')}
-              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                transactionType === 'cash'
-                  ? 'bg-primary text-white'
-                  : 'bg-bg-tertiary text-text-secondary hover:bg-bg-secondary'
-              }`}
-            >
-              💵 Cash
-            </button>
-            <button
-              onClick={() => setTransactionType('credit')}
-              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                transactionType === 'credit'
-                  ? 'bg-primary text-white'
-                  : 'bg-bg-tertiary text-text-secondary hover:bg-bg-secondary'
-              }`}
-            >
-              💳 Credit
-            </button>
+          {/* Transaction Type */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1">
+              Type
+            </label>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setTransactionType('cash')}
+                className={`flex-1 px-2 py-1.5 text-xs rounded-lg font-medium transition-all ${
+                  transactionType === 'cash'
+                    ? 'bg-primary text-white'
+                    : 'bg-bg-tertiary text-text-secondary hover:bg-bg-secondary'
+                }`}
+              >
+                💵 Cash
+              </button>
+              <button
+                onClick={() => setTransactionType('credit')}
+                className={`flex-1 px-2 py-1.5 text-xs rounded-lg font-medium transition-all ${
+                  transactionType === 'credit'
+                    ? 'bg-primary text-white'
+                    : 'bg-bg-tertiary text-text-secondary hover:bg-bg-secondary'
+                }`}
+              >
+                💳 Credit
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Details */}
-        <div className="mb-3">
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Details of items bought
-          </label>
-          <input
-            type="text"
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-            placeholder="e.g. Rice, Oil, Vegetables..."
-            className="w-full px-3 py-2 rounded-lg border border-border bg-bg-secondary text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+          {/* Details */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1">
+              Details
+            </label>
+            <input
+              type="text"
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              placeholder="Rice, Oil, etc..."
+              className="w-full px-2 py-1.5 text-sm rounded-lg border border-border bg-bg-secondary text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
 
-        {/* Amount */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Amount (৳)
-          </label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-            min="0"
-            step="0.01"
-            className="w-full px-3 py-2 rounded-lg border border-border bg-bg-secondary text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
+          {/* Amount */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1">
+              Amount (৳)
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              className="w-full px-2 py-1.5 text-sm rounded-lg border border-border bg-bg-secondary text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
         </div>
 
         {/* Error Message */}
         {errorMessage && (
-          <div className="mb-3 flex items-center gap-2 text-error text-sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-2 flex items-center gap-1 text-error text-xs">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <span>{errorMessage}</span>
@@ -153,8 +157,8 @@ function GroceryExpenseCard() {
 
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-3 flex items-center gap-2 text-success text-sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-2 flex items-center gap-1 text-success text-xs">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             <span>{successMessage}</span>
@@ -166,8 +170,8 @@ function GroceryExpenseCard() {
           onClick={handleSave}
           disabled={isSaving || storeLoading}
           className={`
-            w-full px-6 py-2.5 rounded-lg font-semibold transition-all min-h-touch
-            flex items-center justify-center gap-2
+            w-full px-4 py-1.5 text-sm rounded-lg font-semibold transition-all
+            flex items-center justify-center gap-1.5
             ${isSaving
               ? 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
               : 'bg-primary text-white hover:bg-primary-dark active:scale-95'
@@ -176,7 +180,7 @@ function GroceryExpenseCard() {
         >
           {isSaving ? (
             <>
-              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
@@ -184,7 +188,7 @@ function GroceryExpenseCard() {
             </>
           ) : (
             <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span>Save Expense</span>
