@@ -14,6 +14,7 @@ interface EggState {
   totalEggs: number;
   totalAddedThisPeriod: number;
   inventoryHistory: EggInventoryWithMember[];
+  eggPrice: number;
   loading: boolean;
   error: string | null;
 
@@ -23,6 +24,8 @@ interface EggState {
   fetchTotalEggs: () => Promise<void>;
   fetchTotalAddedThisPeriod: (asOfDate: string) => Promise<void>;
   fetchInventoryHistory: () => Promise<void>;
+  fetchEggPrice: () => Promise<void>;
+  updateEggPrice: (price: number) => Promise<void>;
   getUserEggQuantity: (userId: string, date: string) => number;
   updateEggQuantity: (memberId: string, date: string, quantity: number) => Promise<void>;
   updateTotalEggs: (totalEggs: number, notes?: string) => Promise<void>;
@@ -35,6 +38,7 @@ export const useEggStore = create<EggState>((set, get) => ({
   totalEggs: 0,
   totalAddedThisPeriod: 0,
   inventoryHistory: [],
+  eggPrice: 0,
   loading: false,
   error: null,
 
@@ -145,6 +149,49 @@ export const useEggStore = create<EggState>((set, get) => ({
       const errorMessage = handleError(err);
       set({ error: errorMessage, loading: false });
       showErrorToast(errorMessage);
+    }
+  },
+
+  fetchEggPrice: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('egg_price_config')
+        .select('price_per_egg')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      set({ eggPrice: data?.price_per_egg ?? 0 });
+    } catch (err) {
+      console.error('Error fetching egg price:', err);
+    }
+  },
+
+  updateEggPrice: async (price: number) => {
+    set({ loading: true, error: null });
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('egg_price_config')
+        .insert({
+          price_per_egg: price,
+          updated_by: userData.user.id,
+        });
+
+      if (error) throw error;
+
+      set({ eggPrice: price, loading: false });
+    } catch (err) {
+      console.error('Error updating egg price:', err);
+      const errorMessage = handleError(err);
+      set({ error: errorMessage, loading: false });
+      showErrorToast(errorMessage);
+      throw err;
     }
   },
 
