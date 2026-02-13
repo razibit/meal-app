@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 import { getMealMonthDateRange, formatDateRangeForDisplay } from '../utils/mealMonthHelpers';
 import GlobalMonthlyReport from '../components/home/GlobalMonthlyReport';
 import DepositReport from '../components/home/DepositReport';
+import GroceryExpenseReport from '../components/home/GroceryExpenseReport';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -361,6 +362,11 @@ function MonthlyReport() {
       {/* Deposit Report Section */}
       <div className="mt-8">
         <DepositReport user={user} />
+      </div>
+
+      {/* Grocery Expense Report Section */}
+      <div className="mt-8">
+        <GroceryExpenseReport user={user} />
       </div>
     </div>
   );

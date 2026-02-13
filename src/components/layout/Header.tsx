@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getCurrentTimeInTimezone, formatDate as formatDateStr } from '../../utils/dateHelpers';
 import EggCounter from '../home/EggCounter';
+import BalanceBadge from '../home/BalanceBadge';
 import { ThemeToggle } from '../preferences/ThemeToggle';
 
 interface HeaderProps {
@@ -57,6 +58,11 @@ function Header({ onPeopleClick }: HeaderProps) {
             {showEggCounter && (
               <span className="ml-2">
                 <EggCounter date={todayDate} />
+              </span>
+            )}
+            {showEggCounter && (
+              <span className="ml-1">
+                <BalanceBadge />
               </span>
             )}
           </h1>

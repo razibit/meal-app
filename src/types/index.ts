@@ -133,4 +133,28 @@ export interface DepositReportRow {
   total_amount: number;
 }
 
+export interface GroceryExpense {
+  id: string;
+  shopper_id: string;
+  added_by: string;
+  transaction_type: 'cash' | 'credit';
+  details?: string;
+  amount: number;
+  expense_date: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface GroceryExpenseReportRow {
+  expense_id: string;
+  expense_date: string;
+  added_by_id: string;
+  added_by_name: string;
+  shopper_id: string;
+  shopper_name: string;
+  transaction_type: 'cash' | 'credit';
+  details?: string;
+  amount: number;
+}
+
 export type { Session, User };

@@ -9,6 +9,7 @@ import MealToggle from '../components/home/MealToggle';
 import MealCounts from '../components/home/MealCounts';
 import MealRegistration from '../components/home/MealRegistration';
 import MealDetailsEditor from '../components/home/MealDetailsEditor';
+import GroceryExpenseCard from '../components/home/GroceryExpenseCard';
 import ParticipantsModal from '../components/home/ParticipantsModal';
 
 function Home() {
@@ -197,6 +198,9 @@ function Home() {
         updatedAt={mealDetails?.updated_at}
         onSave={handleSaveMealDetails}
       />
+
+      {/* Grocery Expense Card */}
+      <GroceryExpenseCard />
 
       {/* Participants Modal */}
       <ParticipantsModal
