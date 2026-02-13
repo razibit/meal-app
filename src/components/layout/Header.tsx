@@ -3,8 +3,6 @@ import { useLocation } from 'react-router-dom';
 import { getCurrentTimeInTimezone, formatDate as formatDateStr } from '../../utils/dateHelpers';
 import EggCounter from '../home/EggCounter';
 import { ThemeToggle } from '../preferences/ThemeToggle';
-/* VALENTINE'S WEEK - Can be removed after Feb 14, 2026 */
-import { ValentineThemeIndicator } from '../ValentinesWeek';
 
 interface HeaderProps {
   onPeopleClick: () => void;
@@ -61,8 +59,6 @@ function Header({ onPeopleClick }: HeaderProps) {
                 <EggCounter date={todayDate} />
               </span>
             )}
-            {/* VALENTINE'S WEEK THEME - Can be removed after Feb 14, 2026 */}
-            <ValentineThemeIndicator />
           </h1>
         </div>
 
