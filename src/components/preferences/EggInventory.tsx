@@ -7,9 +7,12 @@ export function EggInventory() {
   const { 
     totalAddedThisPeriod,
     inventoryHistory, 
+    eggPrice,
     fetchTotalEggs, 
     fetchTotalAddedThisPeriod,
     fetchInventoryHistory,
+    fetchEggPrice,
+    updateEggPrice,
     updateTotalEggs, 
     loading 
   } = useEggStore();
@@ -19,11 +22,42 @@ export function EggInventory() {
   const [newTotal, setNewTotal] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [priceInput, setPriceInput] = useState('');
 
   useEffect(() => {
     fetchTotalEggs();
     fetchTotalAddedThisPeriod(getTodayDate());
-  }, [fetchTotalEggs, fetchTotalAddedThisPeriod]);
+    fetchEggPrice();
+  }, [fetchTotalEggs, fetchTotalAddedThisPeriod, fetchEggPrice]);
+
+  const handleEditPrice = () => {
+    setPriceInput(eggPrice > 0 ? String(eggPrice) : '');
+    setIsEditingPrice(true);
+  };
+
+  const handleSavePrice = async () => {
+    const price = parseFloat(priceInput);
+    if (isNaN(price) || price < 0) {
+      setError('Please enter a valid price');
+      return;
+    }
+    try {
+      await updateEggPrice(price);
+      playSuccessSound();
+      setIsEditingPrice(false);
+      setPriceInput('');
+      setError(null);
+    } catch {
+      setError('Failed to update egg price');
+    }
+  };
+
+  const handleCancelPrice = () => {
+    setIsEditingPrice(false);
+    setPriceInput('');
+    setError(null);
+  };
 
   const handleEdit = () => {
     setNewTotal('');
@@ -98,7 +132,43 @@ export function EggInventory() {
             Manage total eggs available in the kitchen
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {isEditingPrice ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-text-secondary">৳</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={priceInput}
+                onChange={(e) => setPriceInput(e.target.value)}
+                className="input w-20 px-2 py-1.5 rounded-lg border-2 border-border bg-bg-primary text-text-primary text-sm"
+                placeholder="0"
+                autoFocus
+              />
+              <button
+                onClick={handleSavePrice}
+                disabled={loading || !priceInput}
+                className="btn-primary px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
+              >
+                Set
+              </button>
+              <button
+                onClick={handleCancelPrice}
+                className="btn-secondary px-3 py-1.5 rounded-lg text-sm font-medium"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleEditPrice}
+              className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/40 px-3 py-1 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors text-sm font-bold text-amber-700 dark:text-amber-400"
+              title="Click to set egg price"
+            >
+              {eggPrice > 0 ? `৳${eggPrice}/pc` : 'Set Price'}
+            </button>
+          )}
           <button
             onClick={handleToggleHistory}
             className="btn-secondary px-4 py-2 rounded-lg font-medium"
@@ -127,7 +197,7 @@ export function EggInventory() {
                 {totalAddedThisPeriod}
               </div>
               <div className="text-sm text-text-secondary">
-                eggs added this period
+                eggs were taken by members
               </div>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { getCurrentTimeInTimezone, formatDate as formatDateStr } from '../../utils/dateHelpers';
 import EggCounter from '../home/EggCounter';
 import BalanceBadge from '../home/BalanceBadge';
+import MealRateBadge from '../home/MealRateBadge';
 import { ThemeToggle } from '../preferences/ThemeToggle';
 
 interface HeaderProps {
@@ -63,6 +64,11 @@ function Header({ onPeopleClick }: HeaderProps) {
             {showEggCounter && (
               <span className="ml-1">
                 <BalanceBadge />
+              </span>
+            )}
+            {showEggCounter && (
+              <span className="ml-1">
+                <MealRateBadge />
               </span>
             )}
           </h1>
