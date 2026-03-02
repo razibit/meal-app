@@ -157,4 +157,18 @@ export interface GroceryExpenseReportRow {
   amount: number;
 }
 
+export interface MealRateSnapshot {
+  id?: string;
+  meal_rate: number;
+  total_expenses: number;
+  total_egg_cost: number;
+  total_meals: number;
+  total_eggs: number;
+  egg_price: number;
+  trigger_source: 'meals' | 'grocery_expenses' | 'eggs' | 'egg_price_config' | 'manual';
+  period_start: string;
+  period_end: string;
+  created_at: string;
+}
+
 export type { Session, User };

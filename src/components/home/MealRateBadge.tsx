@@ -1,84 +1,59 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../../stores/authStore';
-import { useEggStore } from '../../stores/eggStore';
-import { supabase } from '../../services/supabase';
+import { useMealRateStore } from '../../stores/mealRateStore';
 import { getMealMonthDateRange } from '../../utils/mealMonthHelpers';
 
 function MealRateBadge() {
   const { user } = useAuthStore();
-  const { eggPrice, fetchEggPrice } = useEggStore();
-  const [mealRate, setMealRate] = useState<number | null>(null);
+  const {
+    currentRate,
+    fetchLatestRate,
+    subscribeToRateChanges,
+    unsubscribeFromRateChanges,
+  } = useMealRateStore();
   const [showTooltip, setShowTooltip] = useState(false);
 
   const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
 
   useEffect(() => {
-    fetchEggPrice();
-  }, [fetchEggPrice]);
-
-  const fetchMealRate = useCallback(async () => {
     if (!user) return;
 
-    try {
-      // Fetch total grocery expenses (cash + credit)
-      const { data: totalExpenses, error: expError } = await supabase.rpc(
-        'get_total_grocery_expenses',
-        {
-          p_start_date: dateRange.startDate,
-          p_end_date: dateRange.endDate,
-        }
-      );
-      if (expError) throw expError;
+    // Initial fetch
+    fetchLatestRate(dateRange.startDate, dateRange.endDate);
 
-      // Fetch global monthly report to get total meals and total eggs
-      const { data: reportData, error: reportError } = await supabase.rpc(
-        'get_global_monthly_report_with_dates',
-        {
-          p_start_date: dateRange.startDate,
-          p_end_date: dateRange.endDate,
-        }
-      );
-      if (reportError) throw reportError;
+    // Subscribe to realtime changes
+    subscribeToRateChanges(dateRange.startDate, dateRange.endDate);
 
-      // Calculate totals from global report
-      // Each row has: member_id, member_name, meal_date, morning_count, night_count, egg_count
-      const rows = reportData || [];
-      let totalMeals = 0;
-      let totalEggs = 0;
+    // Also poll as fallback in case realtime is delayed
+    const interval = setInterval(
+      () => fetchLatestRate(dateRange.startDate, dateRange.endDate),
+      60000
+    );
 
-      rows.forEach((row: any) => {
-        totalMeals += (row.morning_count || 0) + (row.night_count || 0);
-        totalEggs += row.egg_count || 0;
-      });
+    return () => {
+      clearInterval(interval);
+      unsubscribeFromRateChanges();
+    };
+  }, [user, dateRange, fetchLatestRate, subscribeToRateChanges, unsubscribeFromRateChanges]);
 
-      if (totalMeals === 0) {
-        setMealRate(0);
-        return;
-      }
-
-      const expenses = totalExpenses || 0;
-      const eggCost = totalEggs * eggPrice;
-      const rate = (expenses - eggCost) / totalMeals;
-
-      setMealRate(Math.max(0, rate));
-    } catch (err) {
-      console.error('Error calculating meal rate:', err);
-    }
-  }, [user, dateRange, eggPrice]);
-
-  useEffect(() => {
-    fetchMealRate();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchMealRate, 60000);
-    return () => clearInterval(interval);
-  }, [fetchMealRate]);
+  const mealRate = currentRate?.meal_rate ?? null;
 
   const handleClick = () => {
     setShowTooltip(true);
-    setTimeout(() => setShowTooltip(false), 2000);
+    setTimeout(() => setShowTooltip(false), 3000);
   };
 
   if (mealRate === null) return null;
+
+  // Format the last-updated time
+  const lastUpdated = currentRate?.created_at
+    ? new Date(currentRate.created_at).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    : null;
 
   return (
     <span className="ml-2 relative inline-flex">
@@ -107,7 +82,7 @@ function MealRateBadge() {
       </button>
       {showTooltip && (
         <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 text-xs font-medium px-2 py-1 rounded shadow-lg z-20 animate-fade-in">
-          Meal Rate
+          Meal Rate{lastUpdated ? ` · ${lastUpdated}` : ''}
         </span>
       )}
     </span>
