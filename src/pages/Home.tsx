@@ -37,7 +37,22 @@ function Home() {
   const [activePeriod, setActivePeriod] = useState<MealPeriod>(getActivePeriod());
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
-  
+  const [showNotice, setShowNotice] = useState(true);
+  const [noticeVisible, setNoticeVisible] = useState(true);
+
+  // Auto-dismiss notice after 8 seconds
+  useEffect(() => {
+    if (!showNotice) return;
+    const fadeTimer = setTimeout(() => setNoticeVisible(false), 7000);
+    const removeTimer = setTimeout(() => setShowNotice(false), 7600);
+    return () => { clearTimeout(fadeTimer); clearTimeout(removeTimer); };
+  }, [showNotice]);
+
+  const handleDismissNotice = useCallback(() => {
+    setNoticeVisible(false);
+    setTimeout(() => setShowNotice(false), 600);
+  }, []);
+
   // Fetch initial data
   useEffect(() => {
     fetchMembers();
@@ -163,9 +178,26 @@ function Home() {
       />
 
       {/* Notice Banner */}
-      <div className="mb-4 bg-red-600 text-white px-4 py-3 rounded-lg text-center font-semibold text-sm shadow-lg">
-        আপনি চাইলে নিজে থেকেও মার্চ ৪ ও ৫ তারিখের মিল সেট করে রাখতে পারেন ! আবার ফেসবুকে বলে থাকলেও হবে !!
-      </div>
+      {showNotice && (
+        <div
+          className={`mb-4 bg-red-600 text-white px-4 py-3 rounded-lg text-center font-semibold text-sm shadow-lg flex items-center justify-between gap-3 transition-all duration-500 ${
+            noticeVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+          }`}
+        >
+          <span className="flex-1">
+            আপনি চাইলে নিজে থেকেও মার্চ ৪ ও ৫ তারিখের মিল সেট করে রাখতে পারেন ! আবার ফেসবুকে বলে থাকলেও হবে !!
+          </span>
+          <button
+            onClick={handleDismissNotice}
+            className="shrink-0 text-white/80 hover:text-white transition-colors"
+            aria-label="Dismiss notice"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Meal Toggle */}
       <MealToggle
