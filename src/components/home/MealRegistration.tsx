@@ -10,6 +10,7 @@ interface MealRegistrationProps {
   isLoading: boolean;
   isCutoffPassed: boolean;
   isFutureDate?: boolean;
+  disabled?: boolean;
   onSaveQuantity: (quantity: number) => Promise<void>;
   onToggleAutoMeal: (enabled: boolean) => Promise<void>;
   onSaveAutoMealQuantity: (quantity: number) => Promise<void>;
@@ -23,6 +24,7 @@ function MealRegistration({
   isLoading,
   isCutoffPassed,
   isFutureDate = false,
+  disabled = false,
   onSaveQuantity,
   onToggleAutoMeal,
   onSaveAutoMealQuantity,
@@ -54,19 +56,21 @@ function MealRegistration({
   const isQuantityAdjustDisabled = autoMealEnabled && isFutureDate;
 
   const handleIncrement = () => {
+    if (disabled) return;
     if (quantity < 10) {
       setQuantity(quantity + 1);
     }
   };
 
   const handleDecrement = () => {
+    if (disabled) return;
     if (quantity > 0) {
       setQuantity(quantity - 1);
     }
   };
 
   const handleSave = async () => {
-    if (!hasChanges || isManualChangeDisabled) return;
+    if (disabled || !hasChanges || isManualChangeDisabled) return;
     
     setIsSaving(true);
     try {
@@ -81,6 +85,7 @@ function MealRegistration({
   };
 
   const handleToggleAutoMeal = async () => {
+    if (disabled) return;
     setIsTogglingAutoMeal(true);
     try {
       await onToggleAutoMeal(!autoMealEnabled);
@@ -93,6 +98,7 @@ function MealRegistration({
   const isAutoMealQuantityDirty = autoMealEnabled && quantity !== autoMealQuantity;
 
   const handleSaveAutoMealQuantity = async () => {
+    if (disabled) return;
     if (!autoMealEnabled) return;
     if (!isAutoMealQuantityDirty) return;
     // You can update Auto Meal even after cutoff; this does not touch today's meal record.
@@ -102,7 +108,14 @@ function MealRegistration({
 
   return (
     <div className="mb-6">
-      <div className="card">
+      <div className={`card relative overflow-hidden transition-opacity duration-300${disabled ? ' opacity-60' : ''}`}>
+        {/* Disabled overlay — blocks all pointer events without unmounting content */}
+        {disabled && (
+          <div
+            className="absolute inset-0 z-10 rounded-xl bg-bg-primary/30 backdrop-blur-[0.5px] cursor-not-allowed"
+            aria-hidden="true"
+          />
+        )}
         <h3 className="text-lg font-semibold text-text-primary mb-4">
           {period === 'morning' ? 'Morning' : 'Night'} Meal Registration
         </h3>

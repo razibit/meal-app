@@ -183,6 +183,7 @@ function Home() {
         isLoading={loading}
         isCutoffPassed={cutoffPassed}
         isFutureDate={isFutureDate}
+        disabled={activePeriod === 'morning'}
         onSaveQuantity={handleSaveQuantity}
         onToggleAutoMeal={handleToggleAutoMeal}
         onSaveAutoMealQuantity={handleSaveAutoMealQuantity}
