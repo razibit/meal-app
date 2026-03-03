@@ -162,6 +162,11 @@ function Home() {
         autoMealEnabled={autoMealEnabled}
       />
 
+      {/* Notice Banner */}
+      <div className="mb-4 bg-red-600 text-white px-4 py-3 rounded-lg text-center font-semibold text-sm shadow-lg">
+        আপনি চাইলে নিজে থেকেও মার্চ ৪ ও ৫ তারিখের মিল সেট করে রাখতে পারেন ! আবার ফেসবুকে বলে থাকলেও হবে !!
+      </div>
+
       {/* Meal Toggle */}
       <MealToggle
         activePeriod={activePeriod}
