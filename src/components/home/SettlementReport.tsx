@@ -453,10 +453,10 @@ function SettlementReport({ user }: SettlementReportProps) {
                   <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">Eggs</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-text-primary">Deposit</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-green-700 dark:text-green-400">
-                    Will Receive
+                    পাবেন
                   </th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-red-700 dark:text-red-400">
-                    Will Give
+                    দিবেন
                   </th>
                 </tr>
               </thead>
