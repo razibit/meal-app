@@ -1,4 +1,8 @@
-import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { useMealRateStore } from '../../stores/mealRateStore';
+
+const REPORT_VISIT_KEY = 'lastReportVisit';
 
 interface NavItem {
   path: string;
@@ -95,6 +99,41 @@ const navItems: NavItem[] = [
 ];
 
 function Navigation() {
+  const location = useLocation();
+  const { currentRate } = useMealRateStore();
+  const [hasReportUpdate, setHasReportUpdate] = useState(false);
+
+  // Clear dot and record visit timestamp when user is on /report
+  useEffect(() => {
+    if (location.pathname === '/report') {
+      localStorage.setItem(REPORT_VISIT_KEY, new Date().toISOString());
+      setHasReportUpdate(false);
+    }
+  }, [location.pathname]);
+
+  // Show dot whenever a new meal rate snapshot is newer than the last /report visit
+  useEffect(() => {
+    if (!currentRate?.created_at) return;
+    if (location.pathname === '/report') return;
+
+    const lastVisit = localStorage.getItem(REPORT_VISIT_KEY);
+    if (!lastVisit || new Date(currentRate.created_at) > new Date(lastVisit)) {
+      setHasReportUpdate(true);
+    }
+  }, [currentRate, location.pathname]);
+
+  const renderIcon = (item: NavItem) => {
+    if (item.path !== '/report') return item.icon;
+    return (
+      <span className="relative">
+        {item.icon}
+        {hasReportUpdate && (
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-bg-primary" />
+        )}
+      </span>
+    );
+  };
+
   return (
     <>
       {/* Bottom Navigation for Mobile */}
@@ -113,7 +152,7 @@ function Navigation() {
                 }`
               }
             >
-              {item.icon}
+              {renderIcon(item)}
               <span className="text-xs mt-1 font-medium">{item.label}</span>
             </NavLink>
           ))}
@@ -136,7 +175,7 @@ function Navigation() {
                 }`
               }
             >
-              {item.icon}
+              {renderIcon(item)}
               <span className="text-xs mt-1 font-medium">{item.label}</span>
             </NavLink>
           ))}
