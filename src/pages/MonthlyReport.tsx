@@ -6,6 +6,7 @@ import { getMealMonthDateRange, formatDateRangeForDisplay } from '../utils/mealM
 import GlobalMonthlyReport from '../components/home/GlobalMonthlyReport';
 import DepositReport from '../components/home/DepositReport';
 import GroceryExpenseReport from '../components/home/GroceryExpenseReport';
+import SettlementReport from '../components/home/SettlementReport';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -178,6 +179,11 @@ function MonthlyReport() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto animate-fade-in">
+      {/* Settlement Report - Who will give / receive */}
+      <div className="mb-8">
+        <SettlementReport user={user} />
+      </div>
+
       {/* My Monthly Report */}
       <div className="card overflow-hidden">
         {/* Header with buttons */}
