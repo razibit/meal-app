@@ -77,7 +77,7 @@ function MealRateBadge() {
           />
         </svg>
         <span className="text-base font-bold text-blue-700 dark:text-blue-400">
-          {Math.round(mealRate)}৳
+          {mealRate.toFixed(2)}৳
         </span>
       </button>
       {showTooltip && (
