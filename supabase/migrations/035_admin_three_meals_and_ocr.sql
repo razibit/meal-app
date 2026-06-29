@@ -62,6 +62,11 @@ AS $$
   );
 $$;
 
+-- Drop functions with old signature before recreating with new return type
+DROP FUNCTION IF EXISTS get_member_monthly_report_with_dates(uuid, date, date);
+DROP FUNCTION IF EXISTS get_global_monthly_report_with_dates(date, date);
+DROP FUNCTION IF EXISTS get_monthly_summary(text);
+
 DROP POLICY IF EXISTS "Members can view all profiles" ON members;
 DROP POLICY IF EXISTS "Members can update own profile" ON members;
 DROP POLICY IF EXISTS "Members can insert own profile" ON members;
