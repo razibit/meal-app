@@ -286,7 +286,6 @@ After completing this setup:
 You're now ready to:
 - Implement the frontend authentication (Task 3)
 - Build the UI components (Tasks 4-9)
-- Set up Edge Functions for cutoff enforcement (Task 8)
 - Configure push notifications (Task 10)
 
 ## Security Checklist

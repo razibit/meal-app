@@ -5,7 +5,7 @@ A progressive web application for managing daily meal planning, tracking, and co
 ## Features
 
 - Real-time meal registration and tracking
-- Morning and night meal periods with cutoff times
+- Breakfast, lunch, and dinner meal management
 - **Reliable time synchronization** with server to prevent manipulation
 - Live chat with @mentions and notifications
 - Monthly meal consumption reports

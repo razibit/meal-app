@@ -6,7 +6,6 @@ This module provides comprehensive error handling utilities for the Mess Meal Ma
 
 ### Custom Error Types
 
-- **CutoffError**: Thrown when meal actions are attempted after cutoff time
 - **NetworkError**: Thrown when network operations fail
 - **AuthenticationError**: Thrown when authentication fails
 - **DatabaseError**: Thrown when database operations fail
@@ -179,7 +178,7 @@ fetchTodayMeals: async () => {
 ## Best Practices
 
 1. **Always wrap database operations** in `retryDatabaseOperation()` for automatic retry
-2. **Use custom error types** (CutoffError, DatabaseError, etc.) for better error handling
+2. **Use custom error types** (DatabaseError, ValidationError, etc.) for better error handling
 3. **Show user feedback** via `showErrorToast()` for all user-facing errors
 4. **Don't retry validation errors** - they won't succeed on retry
 5. **Configure retry options** based on operation criticality
