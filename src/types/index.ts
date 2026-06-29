@@ -89,6 +89,7 @@ export interface Deposit {
   amount: number;
   details?: string;
   deposit_date: string;
+  accounting_date: string;
   created_at: string;
   updated_at?: string;
 }

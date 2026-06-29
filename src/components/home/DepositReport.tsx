@@ -27,6 +27,12 @@ function DepositReport({ user }: DepositReportProps) {
     loadReport();
   }, [loadReport]);
 
+  useEffect(() => {
+    const refresh = () => void loadReport();
+    window.addEventListener('deposit:changed', refresh);
+    return () => window.removeEventListener('deposit:changed', refresh);
+  }, [loadReport]);
+
   // Group deposits by depositor
   const groupedDeposits = useMemo(() => {
     const grouped = new Map<string, {

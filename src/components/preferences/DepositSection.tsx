@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDepositStore } from '../../stores/depositStore';
 import { useMembers } from '../../hooks/useMembers';
 import { playSuccessSound } from '../../utils/soundFeedback';
+import { getTodayDate } from '../../utils/dateHelpers';
 
 export function DepositSection() {
   const { addDeposit, loading } = useDepositStore();
@@ -9,6 +10,7 @@ export function DepositSection() {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const [amount, setAmount] = useState('');
+  const [depositDate, setDepositDate] = useState(getTodayDate());
   const [details, setDetails] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +35,7 @@ export function DepositSection() {
     }
 
     try {
-      await addDeposit(selectedMemberId, amountValue, details || undefined);
+      await addDeposit(selectedMemberId, amountValue, depositDate, details || undefined);
       playSuccessSound();
       handleCancel();
     } catch (err) {
@@ -106,6 +108,11 @@ export function DepositSection() {
               step="0.01"
               className="input w-full px-4 py-2 rounded-lg border-2 border-border bg-bg-primary text-text-primary"
             />
+          </div>
+
+          <div>
+            <label htmlFor="deposit-date" className="block text-sm font-medium text-text-secondary mb-2">Deposit Date <span className="text-red-500">*</span></label>
+            <input id="deposit-date" type="date" value={depositDate} onChange={(event) => setDepositDate(event.target.value)} className="input w-full px-4 py-2 rounded-lg border-2 border-border bg-bg-primary text-text-primary" required />
           </div>
 
           {/* Details Text Box */}

@@ -19,9 +19,11 @@ function BalanceBadge() {
 
   useEffect(() => {
     fetchBalance();
+    const refresh = () => void fetchBalance();
+    window.addEventListener('deposit:changed', refresh);
     // Refresh balance every 60 seconds
     const interval = setInterval(fetchBalance, 60000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); window.removeEventListener('deposit:changed', refresh); };
   }, [fetchBalance]);
 
   const handleClick = () => {

@@ -11,7 +11,7 @@ interface DepositStore {
   // Actions
   fetchDeposits: (startDate: string, endDate: string) => Promise<void>;
   fetchDepositReport: (startDate: string, endDate: string) => Promise<void>;
-  addDeposit: (depositorId: string, amount: number, details?: string) => Promise<void>;
+  addDeposit: (depositorId: string, amount: number, accountingDate: string, details?: string) => Promise<Deposit>;
   getMemberTotalDeposit: (memberId: string, startDate: string, endDate: string) => Promise<number>;
   clearError: () => void;
 }
@@ -59,21 +59,24 @@ export const useDepositStore = create<DepositStore>((set) => ({
     }
   },
 
-  addDeposit: async (depositorId: string, amount: number, details?: string) => {
+  addDeposit: async (depositorId: string, amount: number, accountingDate: string, details?: string) => {
     set({ loading: true, error: null });
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('User not authenticated');
 
-      const { error } = await supabase.from('deposits').insert({
+      const { data, error } = await supabase.from('deposits').insert({
         depositor_id: depositorId,
         added_by: userData.user.id,
         amount,
+        accounting_date: accountingDate,
         details,
-      });
+      }).select().single();
 
       if (error) throw error;
-      set({ loading: false });
+      set((state) => ({ deposits: [data, ...state.deposits.filter((item) => item.id !== data.id)], loading: false }));
+      window.dispatchEvent(new CustomEvent('deposit:changed', { detail: data }));
+      return data;
     } catch (error) {
       console.error('Error adding deposit:', error);
       set({ error: 'Failed to add deposit', loading: false });
