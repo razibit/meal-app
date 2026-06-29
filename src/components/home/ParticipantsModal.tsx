@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 interface ParticipantsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  participants: Array<{ id: string; name: string; rice_preference: string; quantity: number }>;
+  participants: Array<{ id: string; name: string; quantity: number }>;
 }
 
 function ParticipantsModal({
@@ -84,12 +84,9 @@ function ParticipantsModal({
                     {participant.name.charAt(0).toUpperCase()}
                   </div>
 
-                  {/* Name and preference */}
+                  {/* Name */}
                   <div className="flex-1">
                     <div className="font-medium text-text-primary">{participant.name}</div>
-                    <div className="text-sm text-text-secondary">
-                      {participant.rice_preference === 'boiled' ? 'Boiled Rice' : 'Atop Rice'}
-                    </div>
                   </div>
 
                   {/* Meal quantity */}

@@ -18,7 +18,6 @@ interface MemberInput {
   name: string;
   email?: string | null;
   phone?: string | null;
-  rice_preference: 'boiled' | 'atop';
   active?: boolean;
 }
 
@@ -54,8 +53,6 @@ interface MealState {
 }
 
 const emptyMealCount = (): MealCount => ({
-  boiledRice: 0,
-  atopRice: 0,
   total: 0,
   participants: [],
 });
@@ -65,6 +62,8 @@ const emptyCounts = (): PeriodCounts<MealCount> => ({
   lunch: emptyMealCount(),
   dinner: emptyMealCount(),
 });
+
+const mealWriteQueues = new Map<string, Promise<void>>();
 
 export const useMealStore = create<MealState>((set, get) => ({
   meals: [],
@@ -168,7 +167,6 @@ export const useMealStore = create<MealState>((set, get) => ({
           name: input.name.trim(),
           email: input.email?.trim() || null,
           phone: input.phone?.trim() || null,
-          rice_preference: input.rice_preference,
           role: 'member',
           active: input.active ?? true,
         });
@@ -196,7 +194,6 @@ export const useMealStore = create<MealState>((set, get) => ({
             name: input.name.trim(),
             email: input.email?.trim() || null,
             phone: input.phone?.trim() || null,
-            rice_preference: input.rice_preference,
             active: input.active ?? true,
           })
           .eq('id', memberId);
@@ -222,7 +219,6 @@ export const useMealStore = create<MealState>((set, get) => ({
       name: member.name,
       email: member.email,
       phone: member.phone,
-      rice_preference: member.rice_preference,
       active: false,
     });
   },
@@ -232,14 +228,11 @@ export const useMealStore = create<MealState>((set, get) => ({
       set({ loading: true, error: null });
 
       const usage = await retryDatabaseOperation(async () => {
-        const [{ count: mealCount, error: mealsError }, { count: eggCount, error: eggsError }] = await Promise.all([
-          supabase.from('meals').select('id', { count: 'exact', head: true }).eq('member_id', memberId),
-          supabase.from('eggs').select('id', { count: 'exact', head: true }).eq('member_id', memberId),
-        ]);
+        const { count: mealCount, error: mealsError } = await supabase
+          .from('meals').select('id', { count: 'exact', head: true }).eq('member_id', memberId);
 
         if (mealsError) throw new DatabaseError(mealsError.message);
-        if (eggsError) throw new DatabaseError(eggsError.message);
-        return (mealCount || 0) + (eggCount || 0);
+        return mealCount || 0;
       });
 
       if (usage > 0) {
@@ -264,18 +257,28 @@ export const useMealStore = create<MealState>((set, get) => ({
   },
 
   updateMealQuantity: async (memberId: string, date: string, period: MealPeriod, quantity: number) => {
-    try {
-      set({ loading: true, error: null });
+    const nextQuantity = Math.max(0, quantity);
+    const key = `${memberId}:${date}:${period}`;
+    const previousMeals = get().meals;
+    const existing = previousMeals.find((meal) => meal.member_id === memberId && meal.meal_date === date && meal.period === period);
+    const optimistic = previousMeals.filter((meal) => !(meal.member_id === memberId && meal.meal_date === date && meal.period === period));
+    if (nextQuantity > 0) {
+      optimistic.push(existing ? { ...existing, quantity: nextQuantity } : { id: key, member_id: memberId, meal_date: date, period, quantity: nextQuantity, created_at: new Date().toISOString() });
+    }
+    set({ meals: optimistic, error: null });
+    get().updateCounts(date);
 
+    const write = async () => {
+    try {
       if (!navigator.onLine) {
         const error = new NetworkError();
         const errorMessage = handleError(error);
-        set({ error: errorMessage, loading: false });
+        set({ error: errorMessage });
         showErrorToast(errorMessage);
         throw error;
       }
 
-      if (quantity === 0) {
+      if (nextQuantity === 0) {
         await retryDatabaseOperation(async () => {
           const { error } = await supabase
             .from('meals')
@@ -295,7 +298,7 @@ export const useMealStore = create<MealState>((set, get) => ({
                 member_id: memberId,
                 meal_date: date,
                 period,
-                quantity,
+                quantity: nextQuantity,
               },
               { onConflict: 'member_id,meal_date,period' }
             );
@@ -304,14 +307,17 @@ export const useMealStore = create<MealState>((set, get) => ({
         });
       }
 
-      await get().fetchMeals(date);
-      set({ loading: false });
     } catch (error) {
       const errorMessage = handleError(error);
-      set({ error: errorMessage, loading: false });
+      set({ meals: previousMeals, error: errorMessage });
+      get().updateCounts(date);
       showErrorToast(errorMessage);
       throw error;
     }
+    };
+    const queued = (mealWriteQueues.get(key) || Promise.resolve()).catch(() => undefined).then(write);
+    mealWriteQueues.set(key, queued);
+    try { await queued; } finally { if (mealWriteQueues.get(key) === queued) mealWriteQueues.delete(key); }
   },
 
   updateMealDetails: async (date: string, field: MealDetailsField, value: string, updatedBy: string) => {
@@ -368,8 +374,7 @@ export const useMealStore = create<MealState>((set, get) => ({
     });
 
     const participants: MealCount['participants'] = [];
-    let boiledRiceTotal = 0;
-    let atopRiceTotal = 0;
+    let total = 0;
 
     filteredMeals.forEach((meal) => {
       const member = activeMembers.find((item) => item.id === meal.member_id);
@@ -378,21 +383,13 @@ export const useMealStore = create<MealState>((set, get) => ({
       participants.push({
         id: member.id,
         name: member.name,
-        rice_preference: member.rice_preference,
         quantity: meal.quantity,
       });
-
-      if (member.rice_preference === 'boiled') {
-        boiledRiceTotal += meal.quantity;
-      } else {
-        atopRiceTotal += meal.quantity;
-      }
+      total += meal.quantity;
     });
 
     return {
-      boiledRice: boiledRiceTotal,
-      atopRice: atopRiceTotal,
-      total: boiledRiceTotal + atopRiceTotal,
+      total,
       participants,
     };
   },

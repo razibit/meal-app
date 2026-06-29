@@ -6,7 +6,6 @@ type MemberForm = {
   name: string;
   email: string;
   phone: string;
-  rice_preference: 'boiled' | 'atop';
   active: boolean;
 };
 
@@ -14,7 +13,6 @@ const emptyForm: MemberForm = {
   name: '',
   email: '',
   phone: '',
-  rice_preference: 'boiled',
   active: true,
 };
 
@@ -33,7 +31,6 @@ function MemberManagement() {
       name: member.name,
       email: member.email || '',
       phone: member.phone || '',
-      rice_preference: member.rice_preference,
       active: member.active !== false,
     });
   };
@@ -69,7 +66,7 @@ function MemberManagement() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-3 md:grid-cols-[1.4fr_1.2fr_1fr_auto_auto] mb-5">
+      <form onSubmit={handleSubmit} className="grid gap-3 md:grid-cols-[1.4fr_1.2fr_1fr_auto] mb-5">
         <input
           value={form.name}
           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
@@ -89,14 +86,6 @@ function MemberManagement() {
           className="input"
           placeholder="Phone"
         />
-        <select
-          value={form.rice_preference}
-          onChange={(event) => setForm((current) => ({ ...current, rice_preference: event.target.value as 'boiled' | 'atop' }))}
-          className="input"
-        >
-          <option value="boiled">Boiled</option>
-          <option value="atop">Atop</option>
-        </select>
         <button className="btn-primary px-4 py-2" type="submit" disabled={loading || !form.name.trim()}>
           {editingId ? 'Save' : 'Add'}
         </button>
@@ -108,7 +97,6 @@ function MemberManagement() {
             <tr className="border-b border-border bg-bg-tertiary">
               <th className="px-3 py-2 text-left text-sm font-semibold text-text-primary">Name</th>
               <th className="px-3 py-2 text-left text-sm font-semibold text-text-primary">Contact</th>
-              <th className="px-3 py-2 text-left text-sm font-semibold text-text-primary">Rice</th>
               <th className="px-3 py-2 text-left text-sm font-semibold text-text-primary">Status</th>
               <th className="px-3 py-2 text-right text-sm font-semibold text-text-primary">Actions</th>
             </tr>
@@ -121,7 +109,6 @@ function MemberManagement() {
                   <div>{member.phone || '-'}</div>
                   <div>{member.email || '-'}</div>
                 </td>
-                <td className="px-3 py-2 text-sm text-text-secondary capitalize">{member.rice_preference}</td>
                 <td className="px-3 py-2 text-sm">
                   <span className={member.active === false ? 'text-text-tertiary' : 'text-success'}>
                     {member.active === false ? 'Inactive' : 'Active'}

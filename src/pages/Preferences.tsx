@@ -1,7 +1,5 @@
 import { ClearMeals } from '../components/preferences/ClearMeals';
-import { EggInventory } from '../components/preferences/EggInventory';
 import { MealMonthConfig } from '../components/preferences/MealMonthConfig';
-import { DepositSection } from '../components/preferences/DepositSection';
 
 function Preferences() {
   return (
@@ -23,8 +21,6 @@ function Preferences() {
           
           <MealMonthConfig />
           <ClearMeals />
-          <EggInventory />
-          <DepositSection />
         </div>
       </div>
     </div>

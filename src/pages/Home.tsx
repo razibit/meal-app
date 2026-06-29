@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useMealStore } from '../stores/mealStore';
-import { useEggStore } from '../stores/eggStore';
 import { getTodayDate } from '../utils/dateHelpers';
 import { getActivePeriod } from '../utils/cutoffChecker';
 import { MEAL_PERIODS, MEAL_PERIOD_LABELS, type MealPeriod } from '../constants/meals';
@@ -14,6 +13,8 @@ import ParticipantsModal from '../components/home/ParticipantsModal';
 import AdminMealGrid from '../components/home/AdminMealGrid';
 import MemberManagement from '../components/home/MemberManagement';
 import OcrMealImport from '../components/home/OcrMealImport';
+import { DepositSection } from '../components/preferences/DepositSection';
+import AdminNotes from '../components/home/AdminNotes';
 
 function Home() {
   const { user } = useAuthStore();
@@ -32,7 +33,6 @@ function Home() {
     clearError,
   } = useMealStore();
 
-  const { fetchEggs } = useEggStore();
   const [activePeriod, setActivePeriod] = useState<MealPeriod>(getActivePeriod());
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
@@ -44,8 +44,7 @@ function Home() {
   useEffect(() => {
     fetchMeals(selectedDate);
     fetchMealDetails(selectedDate);
-    fetchEggs(selectedDate);
-  }, [selectedDate, fetchMeals, fetchMealDetails, fetchEggs]);
+  }, [selectedDate, fetchMeals, fetchMealDetails]);
 
   const handleSaveMealDetails = useCallback(async (details: string) => {
     if (!user) return;
@@ -62,7 +61,7 @@ function Home() {
       period,
       count: getMealCounts(period, selectedDate),
     }));
-  }, [getMealCounts, selectedDate, meals, members]);
+  }, [getMealCounts, selectedDate]);
 
   const currentDetails = useMemo(() => {
     return mealDetails?.[`${activePeriod}_details`] || '';
@@ -98,9 +97,6 @@ function Home() {
           >
             <div className="text-sm text-text-secondary">{MEAL_PERIOD_LABELS[period]}</div>
             <div className="text-3xl font-bold text-text-primary mt-1">{count.total}</div>
-            <div className="text-xs text-text-tertiary mt-1">
-              Boiled {count.boiledRice} / Atop {count.atopRice}
-            </div>
           </button>
         ))}
       </div>
@@ -137,7 +133,11 @@ function Home() {
 
         <GroceryExpenseCard />
 
+        <DepositSection />
+
         <MemberManagement />
+
+        <AdminNotes />
       </div>
 
       <ParticipantsModal

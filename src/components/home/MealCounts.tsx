@@ -32,30 +32,7 @@ function MealCounts({ counts, onShowParticipants }: MealCountsProps) {
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          {/* Boiled Rice Count */}
-          <div
-            onClick={onShowParticipants}
-            className="bg-bg-tertiary rounded-lg p-4 cursor-pointer hover:bg-bg-secondary transition-colors min-h-touch"
-          >
-            <div className="text-2xl font-bold text-text-primary mb-1">
-              {counts.boiledRice}
-            </div>
-            <div className="text-sm text-text-secondary">Boiled Rice</div>
-          </div>
-
-          {/* Atop Rice Count */}
-          <div
-            onClick={onShowParticipants}
-            className="bg-bg-tertiary rounded-lg p-4 cursor-pointer hover:bg-bg-secondary transition-colors min-h-touch"
-          >
-            <div className="text-2xl font-bold text-text-primary mb-1">
-              {counts.atopRice}
-            </div>
-            <div className="text-sm text-text-secondary">Atop Rice</div>
-          </div>
-
-          {/* Total Count */}
+        <div>
           <div
             onClick={onShowParticipants}
             className="bg-primary rounded-lg p-4 cursor-pointer hover:bg-primary-dark transition-colors min-h-touch"
