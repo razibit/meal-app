@@ -7,7 +7,6 @@ import { isSupabaseConfigured } from './services/supabase';
 
 // Lazy load route components for code splitting
 const Home = lazy(() => import('./pages/Home'));
-const Chat = lazy(() => import('./pages/Chat'));
 const Preferences = lazy(() => import('./pages/Preferences'));
 const MonthlyReport = lazy(() => import('./pages/MonthlyReport'));
 
@@ -71,7 +70,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
-            <Route path="chat" element={<Chat />} />
             <Route path="preferences" element={<Preferences />} />
             <Route path="report" element={<MonthlyReport />} />
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -143,7 +143,7 @@ const meal = await fetchDataWithRetry('meal-id');
 
 ## Integration with Stores
 
-All Zustand stores (`mealStore`, `chatStore`, `authStore`) have been updated to use these utilities:
+The Zustand stores use these utilities:
 
 1. **Error Handling**: All errors are processed through `handleError()` and displayed via `showErrorToast()`
 2. **Retry Logic**: Critical database operations use `retryDatabaseOperation()` for automatic retry

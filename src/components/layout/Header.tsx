@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getCurrentTimeInTimezone, formatDate as formatDateStr } from '../../utils/dateHelpers';
-import EggCounter from '../home/EggCounter';
 import BalanceBadge from '../home/BalanceBadge';
 import MealRateBadge from '../home/MealRateBadge';
 import { ThemeToggle } from '../preferences/ThemeToggle';
@@ -12,7 +11,7 @@ interface HeaderProps {
 
 function Header({ onPeopleClick }: HeaderProps) {
   const [now, setNow] = useState<Date>(() => getCurrentTimeInTimezone());
-  const todayDate = formatDateStr(getCurrentTimeInTimezone());
+  formatDateStr(getCurrentTimeInTimezone());
   const location = useLocation();
   
   // Show egg counter only on home page
@@ -56,11 +55,6 @@ function Header({ onPeopleClick }: HeaderProps) {
             <span className="ml-3 inline-flex items-center rounded-full bg-bg-tertiary/70 px-3 py-1 text-base md:text-lg font-semibold text-text-primary tabular-nums">
               {formatTime12h()}
             </span>
-            {showEggCounter && (
-              <span className="ml-2">
-                <EggCounter date={todayDate} />
-              </span>
-            )}
             {showEggCounter && (
               <span className="ml-1">
                 <BalanceBadge />

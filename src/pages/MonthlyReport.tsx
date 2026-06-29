@@ -58,9 +58,8 @@ function MonthlyReport() {
         breakfast: acc.breakfast + row.breakfast_count,
         lunch: acc.lunch + row.lunch_count,
         dinner: acc.dinner + row.dinner_count,
-        eggs: acc.eggs + row.egg_count,
       }),
-      { breakfast: 0, lunch: 0, dinner: 0, eggs: 0 }
+      { breakfast: 0, lunch: 0, dinner: 0 }
     );
   }, [reportData]);
 
@@ -68,7 +67,7 @@ function MonthlyReport() {
     if (reportData.length === 0) return;
 
     // Create CSV content
-    const headers = ['Date', 'Breakfast', 'Lunch', 'Dinner', 'Eggs'];
+    const headers = ['Date', 'Breakfast', 'Lunch', 'Dinner'];
     const rows = reportData.map(row => {
       const date = new Date(row.meal_date + 'T00:00:00');
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -76,13 +75,12 @@ function MonthlyReport() {
         dateStr,
         row.breakfast_count,
         row.lunch_count,
-        row.dinner_count,
-        row.egg_count
+        row.dinner_count
       ];
     });
 
     // Add totals row
-    rows.push(['Total', totals.breakfast, totals.lunch, totals.dinner, totals.eggs]);
+    rows.push(['Total', totals.breakfast, totals.lunch, totals.dinner]);
 
     const csvContent = [
       headers.join(','),
@@ -129,8 +127,7 @@ function MonthlyReport() {
         dateStr,
         row.breakfast_count.toString(),
         row.lunch_count.toString(),
-        row.dinner_count.toString(),
-        row.egg_count.toString()
+        row.dinner_count.toString().toString()
       ];
     });
     
@@ -139,13 +136,12 @@ function MonthlyReport() {
       'Total',
       totals.breakfast.toString(),
       totals.lunch.toString(),
-      totals.dinner.toString(),
-      totals.eggs.toString()
+      totals.dinner.toString()
     ]);
     
     // Generate table with alternating row colors
     autoTable(doc, {
-      head: [['Date', 'Breakfast', 'Lunch', 'Dinner', 'Eggs']],
+      head: [['Date', 'Breakfast', 'Lunch', 'Dinner']],
       body: tableData,
       startY: 35,
       theme: 'striped',
@@ -202,8 +198,6 @@ function MonthlyReport() {
               {!loading && reportData.length > 0 && (
                 <p className="text-sm text-text-secondary mt-1">
                   Total Meal (B+L+D): <span className="font-medium text-text-primary">{totals.breakfast + totals.lunch + totals.dinner}</span>
-                  {' · '}
-                  Total Eggs 🥚: <span className="font-medium text-text-primary">{totals.eggs}</span>
                 </p>
               )}
             </div>
@@ -305,9 +299,6 @@ function MonthlyReport() {
                       {MEAL_PERIOD_LABELS[period]}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
-                    Eggs
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -318,7 +309,7 @@ function MonthlyReport() {
                     month: 'short',
                     day: 'numeric'
                   });
-                  const hasData = row.breakfast_count > 0 || row.lunch_count > 0 || row.dinner_count > 0 || row.egg_count > 0;
+                  const hasData = row.breakfast_count > 0 || row.lunch_count > 0 || row.dinner_count > 0;
 
                   return (
                     <tr
@@ -335,9 +326,6 @@ function MonthlyReport() {
                           {row[`${period}_count`] > 0 ? row[`${period}_count`] : '-'}
                         </td>
                       ))}
-                      <td className="px-4 py-3 text-center text-text-secondary">
-                        {row.egg_count > 0 ? row.egg_count : '-'}
-                      </td>
                     </tr>
                   );
                 })}
@@ -355,9 +343,6 @@ function MonthlyReport() {
                   </td>
                   <td className="px-4 py-3 text-center text-text-primary">
                     {totals.dinner}
-                  </td>
-                  <td className="px-4 py-3 text-center text-text-primary">
-                    {totals.eggs}
                   </td>
                 </tr>
               </tbody>

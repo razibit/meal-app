@@ -6,7 +6,6 @@ export interface Member {
   name: string;
   email?: string | null;
   phone?: string;
-  rice_preference: 'boiled' | 'atop';
   role: 'member' | 'admin';
   active?: boolean;
   meal_month_start_date?: string; // ISO date string (YYYY-MM-DD)
@@ -36,38 +35,9 @@ export interface MealDetails {
   updated_at?: string;
 }
 
-export interface Egg {
-  id: string;
-  member_id: string;
-  egg_date: string;
-  quantity: number;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface EggInventory {
-  id: string;
-  total_eggs: number;
-  added_by: string;
-  notes?: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  sender_id: string;
-  message: string;
-  mentions: string[];
-  is_violation: boolean;
-  created_at: string;
-}
-
 export interface MealCount {
-  boiledRice: number;
-  atopRice: number;
   total: number;
-  participants: Array<{ id: string; name: string; rice_preference: string; quantity: number }>;
+  participants: Array<{ id: string; name: string; quantity: number }>;
 }
 
 export interface MonthlyReportRow {
@@ -84,7 +54,6 @@ export interface DailyReportRow {
   breakfast_count: number;
   lunch_count: number;
   dinner_count: number;
-  egg_count: number;
 }
 
 export interface MemberMonthlyReport {
@@ -93,7 +62,6 @@ export interface MemberMonthlyReport {
     breakfast: number;
     lunch: number;
     dinner: number;
-    eggs: number;
   };
 }
 
@@ -104,7 +72,6 @@ export interface GlobalReportRow {
   breakfast_count: number;
   lunch_count: number;
   dinner_count: number;
-  egg_count: number;
 }
 
 export interface MemberTotals {
@@ -113,7 +80,6 @@ export interface MemberTotals {
   breakfast: number;
   lunch: number;
   dinner: number;
-  eggs: number;
 }
 
 export interface Deposit {
@@ -165,11 +131,8 @@ export interface MealRateSnapshot {
   id?: string;
   meal_rate: number;
   total_expenses: number;
-  total_egg_cost: number;
   total_meals: number;
-  total_eggs: number;
-  egg_price: number;
-  trigger_source: 'meals' | 'grocery_expenses' | 'eggs' | 'egg_price_config' | 'manual';
+  trigger_source: 'meals' | 'grocery_expenses' | 'manual';
   period_start: string;
   period_end: string;
   created_at: string;

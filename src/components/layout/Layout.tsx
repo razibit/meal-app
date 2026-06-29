@@ -145,9 +145,6 @@ function Layout({ children }: LayoutProps) {
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary capitalize">
-                            {member.rice_preference}
-                          </span>
                           {member.role === 'admin' && (
                             <span className="inline-block px-2 py-1 text-xs rounded-full bg-accent/10 text-accent">
                               Admin
