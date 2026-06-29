@@ -70,7 +70,7 @@ function SettlementReport({ user }: SettlementReportProps) {
           memberMap.set(row.member_id, { name: row.member_name, meals: 0, eggs: 0 });
         }
         const m = memberMap.get(row.member_id)!;
-        m.meals += (row.morning_count || 0) + (row.night_count || 0);
+        m.meals += (row.breakfast_count || 0) + (row.lunch_count || 0) + (row.dinner_count || 0);
         m.eggs += row.egg_count || 0;
       });
 

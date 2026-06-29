@@ -15,7 +15,6 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string, phone?: string) => Promise<void>;
   signOut: () => Promise<void>;
   initialize: () => Promise<void>;
   clearError: () => void;
@@ -42,58 +41,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (user) {
         // Fetch member profile with retry
-        const member = await retryDatabaseOperation(async () => {
-          const { data: member, error: memberError } = await supabase
-            .from('members')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-          if (memberError) throw new DatabaseError(memberError.message);
-          return member;
-        });
-
-        set({
-          user: member,
-          session: data.session,
-          loading: false,
-          error: null,
-        });
-      } else {
-        set({ loading: false });
-      }
-    } catch (error) {
-      const errorMessage = handleError(error);
-      set({ error: errorMessage, loading: false });
-      showErrorToast(errorMessage);
-      throw error;
-    }
-  },
-
-  signUp: async (email: string, password: string, name: string, phone?: string) => {
-    try {
-      set({ loading: true, error: null });
-
-      // Sign up the user with metadata (trigger will create member profile)
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            phone,
-            rice_preference: 'boiled',
-            role: 'member',
-          },
-        },
-      });
-
-      if (error) throw new AuthenticationError(error.message);
-
-      const user = data.user;
-
-      if (user && data.session) {
-        // Fetch the member profile created by the trigger
         const member = await retryDatabaseOperation(async () => {
           const { data: member, error: memberError } = await supabase
             .from('members')

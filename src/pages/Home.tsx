@@ -1,212 +1,149 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useMealStore } from '../stores/mealStore';
 import { useEggStore } from '../stores/eggStore';
 import { getTodayDate } from '../utils/dateHelpers';
-import { MealPeriod, getActivePeriod, isCutoffPassed } from '../utils/cutoffChecker';
+import { getActivePeriod } from '../utils/cutoffChecker';
+import { MEAL_PERIODS, MEAL_PERIOD_LABELS, type MealPeriod } from '../constants/meals';
 import DateSelector from '../components/home/DateSelector';
 import MealToggle from '../components/home/MealToggle';
 import MealCounts from '../components/home/MealCounts';
-import MealRegistration from '../components/home/MealRegistration';
 import MealDetailsEditor from '../components/home/MealDetailsEditor';
 import GroceryExpenseCard from '../components/home/GroceryExpenseCard';
 import ParticipantsModal from '../components/home/ParticipantsModal';
+import AdminMealGrid from '../components/home/AdminMealGrid';
+import MemberManagement from '../components/home/MemberManagement';
+import OcrMealImport from '../components/home/OcrMealImport';
 
 function Home() {
   const { user } = useAuthStore();
   const {
+    meals,
     mealDetails,
+    members,
     loading,
     error,
     fetchMeals,
     fetchMealDetails,
     fetchMembers,
     updateMealQuantity,
-    updateAutoMeal,
     updateMealDetails,
     getMealCounts,
-    getUserMealQuantity,
-    getUserAutoMeal,
-    getUserAutoMealQuantity,
-    updateAutoMealQuantity,
     clearError,
   } = useMealStore();
 
   const { fetchEggs } = useEggStore();
-
   const [activePeriod, setActivePeriod] = useState<MealPeriod>(getActivePeriod());
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
-  // Fetch initial data
+
   useEffect(() => {
     fetchMembers();
-  }, []);
+  }, [fetchMembers]);
 
-  // Fetch meals and meal details when date or period changes
   useEffect(() => {
-    fetchMeals(selectedDate, activePeriod);
+    fetchMeals(selectedDate);
     fetchMealDetails(selectedDate);
     fetchEggs(selectedDate);
-  }, [activePeriod, selectedDate, fetchMeals, fetchMealDetails, fetchEggs]);
-
-  // Memoize event handlers to prevent unnecessary re-renders
-  const handlePeriodChange = useCallback((period: MealPeriod) => {
-    setActivePeriod(period);
-  }, []);
-
-  const handleDateChange = useCallback((date: string) => {
-    setSelectedDate(date);
-  }, []);
-
-  const handleSaveQuantity = useCallback(async (quantity: number) => {
-    if (!user) return;
-    try {
-      await updateMealQuantity(user.id, selectedDate, activePeriod, quantity);
-    } catch (error) {
-      // Error is handled by store
-      console.error('Failed to update meal quantity:', error);
-      throw error;
-    }
-  }, [user, selectedDate, activePeriod, updateMealQuantity]);
-
-  const handleToggleAutoMeal = useCallback(async (enabled: boolean) => {
-    if (!user) return;
-    try {
-      await updateAutoMeal(user.id, activePeriod, enabled);
-    } catch (error) {
-      // Error is handled by store
-      console.error('Failed to toggle auto meal:', error);
-      throw error;
-    }
-  }, [user, activePeriod, updateAutoMeal]);
-
-  const handleSaveAutoMealQuantity = useCallback(async (quantity: number) => {
-    if (!user) return;
-    try {
-      await updateAutoMealQuantity(user.id, activePeriod, quantity);
-    } catch (error) {
-      console.error('Failed to update auto meal quantity:', error);
-      throw error;
-    }
-  }, [user, activePeriod, updateAutoMealQuantity]);
+  }, [selectedDate, fetchMeals, fetchMealDetails, fetchEggs]);
 
   const handleSaveMealDetails = useCallback(async (details: string) => {
     if (!user) return;
-    const field = activePeriod === 'morning' ? 'morning_details' : 'night_details';
-    await updateMealDetails(selectedDate, field, details, user.id);
+    await updateMealDetails(selectedDate, `${activePeriod}_details`, details, user.id);
   }, [user, selectedDate, activePeriod, updateMealDetails]);
 
-  const handleShowParticipants = useCallback(() => {
-    setShowParticipantsModal(true);
-  }, []);
+  const handleQuantityChange = useCallback(async (memberId: string, period: MealPeriod, quantity: number) => {
+    await updateMealQuantity(memberId, selectedDate, period, quantity);
+  }, [selectedDate, updateMealQuantity]);
 
-  const handleCloseParticipants = useCallback(() => {
-    setShowParticipantsModal(false);
-  }, []);
+  const activeCount = getMealCounts(activePeriod, selectedDate);
+  const totalCounts = useMemo(() => {
+    return MEAL_PERIODS.map((period) => ({
+      period,
+      count: getMealCounts(period, selectedDate),
+    }));
+  }, [getMealCounts, selectedDate, meals, members]);
 
-  // Derived values from the store; compute on render so updates reflect immediately
-  // (These functions read current Zustand state internally.)
-  const mealCounts = getMealCounts(activePeriod, selectedDate);
-  const currentQuantity = user ? getUserMealQuantity(user.id, activePeriod, selectedDate) : 0;
-  const autoMealEnabled = user ? getUserAutoMeal(user.id, activePeriod) : true;
-  const autoMealQuantity = user ? getUserAutoMealQuantity(user.id, activePeriod) : 1;
-  const cutoffPassed = useMemo(() => 
-    isCutoffPassed(activePeriod, selectedDate), 
-    [activePeriod, selectedDate]
-  );
-
-  const isFutureDate = useMemo(() => {
-    const today = getTodayDate();
-    return selectedDate > today;
-  }, [selectedDate]);
-
-  const currentDetails = useMemo(() => 
-    activePeriod === 'morning'
-      ? mealDetails?.morning_details || ''
-      : mealDetails?.night_details || '',
-    [activePeriod, mealDetails]
-  );
+  const currentDetails = useMemo(() => {
+    return mealDetails?.[`${activePeriod}_details`] || '';
+  }, [activePeriod, mealDetails]);
 
   return (
-    <div className="p-4 max-w-4xl mx-auto animate-fade-in">
-      {/* Error Toast */}
+    <div className="p-4 max-w-6xl mx-auto animate-fade-in">
       {error && (
         <div className="mb-4 bg-error/10 border border-error text-error px-4 py-3 rounded-lg flex items-center justify-between animate-slide-down">
           <span>{error}</span>
-          <button
-            onClick={clearError}
-            className="text-red-200 hover:text-white"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+          <button onClick={clearError} className="text-error hover:text-text-primary" aria-label="Dismiss error">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
       )}
 
-      {/* Date Selector - Navigate next 7 days */}
-      <DateSelector
-        selectedDate={selectedDate}
-        onDateChange={handleDateChange}
-        autoMealEnabled={autoMealEnabled}
-      />
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-text-primary">Admin Meal Dashboard</h1>
+        <p className="text-sm text-text-secondary">Manage members, log meals, and import kitchen whiteboard photos.</p>
+      </div>
 
-      {/* Meal Toggle */}
-      <MealToggle
-        activePeriod={activePeriod}
-        onPeriodChange={handlePeriodChange}
-        selectedDate={selectedDate}
-      />
+      <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} autoMealEnabled={false} />
 
-      {/* Meal Counts */}
-      <MealCounts
-        counts={mealCounts}
-        onShowParticipants={handleShowParticipants}
-      />
+      <div className="grid gap-4 md:grid-cols-3 mb-6">
+        {totalCounts.map(({ period, count }) => (
+          <button
+            key={period}
+            type="button"
+            onClick={() => setActivePeriod(period)}
+            className={`card text-left transition-all ${activePeriod === period ? 'ring-2 ring-primary' : 'hover:bg-bg-secondary'}`}
+          >
+            <div className="text-sm text-text-secondary">{MEAL_PERIOD_LABELS[period]}</div>
+            <div className="text-3xl font-bold text-text-primary mt-1">{count.total}</div>
+            <div className="text-xs text-text-tertiary mt-1">
+              Boiled {count.boiledRice} / Atop {count.atopRice}
+            </div>
+          </button>
+        ))}
+      </div>
 
-      {/* Meal Registration */}
-      <MealRegistration
-        period={activePeriod}
-        currentQuantity={currentQuantity}
-        autoMealEnabled={autoMealEnabled}
-        autoMealQuantity={autoMealQuantity}
-        isLoading={loading}
-        isCutoffPassed={cutoffPassed}
-        isFutureDate={isFutureDate}
-        disabled={activePeriod === 'morning'}
-        onSaveQuantity={handleSaveQuantity}
-        onToggleAutoMeal={handleToggleAutoMeal}
-        onSaveAutoMealQuantity={handleSaveAutoMealQuantity}
-      />
+      <MealToggle activePeriod={activePeriod} onPeriodChange={setActivePeriod} selectedDate={selectedDate} />
 
-      {/* Meal Details Editor */}
-      <MealDetailsEditor
-        period={activePeriod}
-        details={currentDetails}
-        updatedBy={mealDetails?.updated_by}
-        updatedByName={mealDetails?.updated_by_name}
-        updatedAt={mealDetails?.updated_at}
-        onSave={handleSaveMealDetails}
-      />
+      <MealCounts counts={activeCount} onShowParticipants={() => setShowParticipantsModal(true)} />
 
-      {/* Grocery Expense Card */}
-      <GroceryExpenseCard />
+      <div className="space-y-6">
+        <AdminMealGrid
+          members={members}
+          meals={meals}
+          selectedDate={selectedDate}
+          loading={loading}
+          onQuantityChange={handleQuantityChange}
+        />
 
-      {/* Participants Modal */}
+        <OcrMealImport
+          selectedDate={selectedDate}
+          members={members}
+          onApplied={async () => {
+            await fetchMeals(selectedDate);
+          }}
+        />
+
+        <MealDetailsEditor
+          period={activePeriod}
+          details={currentDetails}
+          updatedBy={mealDetails?.updated_by}
+          updatedByName={mealDetails?.updated_by_name}
+          updatedAt={mealDetails?.updated_at}
+          onSave={handleSaveMealDetails}
+        />
+
+        <GroceryExpenseCard />
+
+        <MemberManagement />
+      </div>
+
       <ParticipantsModal
         isOpen={showParticipantsModal}
-        onClose={handleCloseParticipants}
-        participants={mealCounts.participants}
+        onClose={() => setShowParticipantsModal(false)}
+        participants={activeCount.participants}
       />
     </div>
   );

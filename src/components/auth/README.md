@@ -5,20 +5,12 @@ This directory contains the authentication components for the Mess Meal Manageme
 ## Components
 
 ### AuthPage
-The main authentication page that toggles between login and signup modes.
+The admin-only authentication page.
 
 ### LoginForm
 - Email and password authentication
 - Form validation with error messages
 - Loading states during authentication
-- Toggle to switch to signup mode
-
-### SignUpForm
-- User registration with name, email, phone (optional), and password
-- Password confirmation validation
-- Form validation with inline error messages
-- Automatic member profile creation
-- Toggle to switch to login mode
 
 ## Features
 
@@ -30,7 +22,7 @@ The main authentication page that toggles between login and signup modes.
 
 ## Usage
 
-The authentication system is automatically integrated into the main App component. Users will see the AuthPage when not authenticated and the main app when logged in.
+The authentication system is automatically integrated into the main App component. Admins see the AuthPage when not authenticated and the main app when logged in. Regular members do not create accounts.
 
 ## Store Integration
 
@@ -40,6 +32,5 @@ Authentication state is managed by the `authStore` (Zustand) which provides:
 - `loading`: Loading state
 - `error`: Error messages
 - `signIn()`: Login method
-- `signUp()`: Registration method
 - `signOut()`: Logout method
 - `initialize()`: Initialize auth state on app load

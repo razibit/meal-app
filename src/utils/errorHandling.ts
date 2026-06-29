@@ -1,3 +1,5 @@
+import type { MealPeriod } from '../constants/meals';
+
 /**
  * Custom error types for the Mess Meal Management System
  */
@@ -6,8 +8,8 @@
  * Error thrown when a meal action is attempted after the cutoff time
  */
 export class CutoffError extends Error {
-  constructor(period: 'morning' | 'night') {
-    const cutoffTime = period === 'morning' ? '8:00 AM' : '4:00 PM';
+  constructor(period: MealPeriod) {
+    const cutoffTime = period === 'breakfast' ? '8:00 AM' : period === 'lunch' ? '12:00 PM' : '6:00 PM';
     super(`Cannot modify ${period} meal after ${cutoffTime} cutoff`);
     this.name = 'CutoffError';
   }

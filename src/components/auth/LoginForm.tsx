@@ -1,11 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 
-interface LoginFormProps {
-  onToggleMode: () => void;
-}
-
-export default function LoginForm({ onToggleMode }: LoginFormProps) {
+export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [validationErrors, setValidationErrors] = useState<{
@@ -56,7 +52,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-bg-secondary rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-primary mb-6 text-center">
-        Sign In
+        Admin Sign In
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,20 +129,9 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
         </button>
       </form>
 
-      {/* Toggle to Sign Up */}
-      <div className="mt-4 text-center">
-        <p className="text-sm text-text-secondary">
-          Don't have an account?{' '}
-          <button
-            type="button"
-            onClick={onToggleMode}
-            className="text-primary hover:text-primary-dark font-medium"
-            disabled={loading}
-          >
-            Sign Up
-          </button>
-        </p>
-      </div>
+      <p className="mt-4 text-center text-sm text-text-secondary">
+        Member accounts are disabled. Use the Super Admin account.
+      </p>
     </div>
   );
 }

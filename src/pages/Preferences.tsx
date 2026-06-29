@@ -1,4 +1,3 @@
-import { ProfileSection } from '../components/preferences/ProfileSection';
 import { ClearMeals } from '../components/preferences/ClearMeals';
 import { EggInventory } from '../components/preferences/EggInventory';
 import { MealMonthConfig } from '../components/preferences/MealMonthConfig';
@@ -10,8 +9,6 @@ function Preferences() {
       <h2 className="text-2xl font-bold mb-6 text-text-primary">Preferences</h2>
       
       <div className="space-y-6">
-        <ProfileSection />
-
         {/* Danger Zone - Grouped sensitive/destructive actions */}
         <div className="relative border-2 border-red-400 border-dashed rounded-xl p-4 pt-6 space-y-6">
           {/* Legend-style header that sits on the border */}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MealPeriod } from '../../utils/cutoffChecker';
 import { playSuccessSound } from '../../utils/soundFeedback';
+import { MEAL_PERIOD_LABELS } from '../../constants/meals';
 
 interface MealRegistrationProps {
   period: MealPeriod;
@@ -117,7 +118,7 @@ function MealRegistration({
           />
         )}
         <h3 className="text-lg font-semibold text-text-primary mb-4">
-          {period === 'morning' ? 'Morning' : 'Night'} Meal Registration
+          {MEAL_PERIOD_LABELS[period]} Meal Registration
         </h3>
 
         {/* Quantity Selector */}

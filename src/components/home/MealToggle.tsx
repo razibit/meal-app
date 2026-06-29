@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { MealPeriod, isCutoffPassed, formatTimeUntilCutoff, getActivePeriod } from '../../utils/cutoffChecker';
+import { MEAL_PERIOD_LABELS, MEAL_PERIODS, type MealPeriod } from '../../constants/meals';
+import { formatTimeUntilCutoff, isCutoffPassed, getActivePeriod } from '../../utils/cutoffChecker';
 import { getTodayDate } from '../../utils/dateHelpers';
 
 interface MealToggleProps {
@@ -11,39 +12,29 @@ interface MealToggleProps {
 function MealToggle({ activePeriod, onPeriodChange, selectedDate }: MealToggleProps) {
   const todayDate = getTodayDate();
   const isFutureDate = selectedDate > todayDate;
-  
-  const [cutoffStatus, setCutoffStatus] = useState({
-    morning: isCutoffPassed('morning', selectedDate),
-    night: isCutoffPassed('night', selectedDate),
-  });
-  const [countdown, setCountdown] = useState({
-    morning: formatTimeUntilCutoff('morning'),
-    night: formatTimeUntilCutoff('night'),
-  });
 
-  // Update cutoff status and countdown every minute
+  const [cutoffStatus, setCutoffStatus] = useState(
+    Object.fromEntries(MEAL_PERIODS.map((period) => [period, isCutoffPassed(period, selectedDate)])) as Record<MealPeriod, boolean>
+  );
+  const [countdown, setCountdown] = useState(
+    Object.fromEntries(MEAL_PERIODS.map((period) => [period, formatTimeUntilCutoff(period)])) as Record<MealPeriod, string>
+  );
+
   useEffect(() => {
     const updateStatus = () => {
-      setCutoffStatus({
-        morning: isCutoffPassed('morning', selectedDate),
-        night: isCutoffPassed('night', selectedDate),
-      });
-      setCountdown({
-        morning: formatTimeUntilCutoff('morning'),
-        night: formatTimeUntilCutoff('night'),
-      });
+      setCutoffStatus(
+        Object.fromEntries(MEAL_PERIODS.map((period) => [period, isCutoffPassed(period, selectedDate)])) as Record<MealPeriod, boolean>
+      );
+      setCountdown(
+        Object.fromEntries(MEAL_PERIODS.map((period) => [period, formatTimeUntilCutoff(period)])) as Record<MealPeriod, string>
+      );
     };
 
-    // Update immediately
     updateStatus();
-
-    // Then update every minute
     const interval = setInterval(updateStatus, 60000);
-
     return () => clearInterval(interval);
   }, [selectedDate]);
 
-  // Auto-switch to active period on mount (only for today)
   useEffect(() => {
     if (!isFutureDate) {
       const currentPeriod = getActivePeriod();
@@ -51,76 +42,35 @@ function MealToggle({ activePeriod, onPeriodChange, selectedDate }: MealTogglePr
         onPeriodChange(currentPeriod);
       }
     }
-  }, [selectedDate]);
+  }, [activePeriod, isFutureDate, onPeriodChange]);
 
   return (
     <div className="mb-6">
-      <div className="flex gap-2 bg-bg-tertiary p-1 rounded-full">
-        <button
-          onClick={() => onPeriodChange('morning')}
-          className={`
-            flex-1 py-3 px-4 rounded-full font-medium transition-all min-h-touch cursor-pointer
-            ${activePeriod === 'morning'
-              ? 'bg-primary text-white shadow-lg'
-              : 'text-text-secondary hover:text-text-primary animate-soft-glow'
-            }
-          `}
-        >
-          <div className="flex flex-col items-center">
-            <span className="text-lg">Morning</span>
-            {isFutureDate ? (
-              <span className="text-xs mt-1 opacity-75">
-                Available
-              </span>
-            ) : (
-              <>
-                {!cutoffStatus.morning && (
-                  <span className="text-xs mt-1 opacity-75">
-                    {countdown.morning}
-                  </span>
-                )}
-                {cutoffStatus.morning && (
-                  <span className="text-xs mt-1 opacity-75">
-                    Cutoff passed
-                  </span>
-                )}
-              </>
-            )}
-          </div>
-        </button>
-
-        <button
-          onClick={() => onPeriodChange('night')}
-          className={`
-            flex-1 py-3 px-4 rounded-full font-medium transition-all min-h-touch cursor-pointer
-            ${activePeriod === 'night'
-              ? 'bg-primary text-white shadow-lg'
-              : 'text-text-secondary hover:text-text-primary animate-soft-glow'
-            }
-          `}
-        >
-          <div className="flex flex-col items-center">
-            <span className="text-lg">Night</span>
-            {isFutureDate ? (
-              <span className="text-xs mt-1 opacity-75">
-                Available
-              </span>
-            ) : (
-              <>
-                {!cutoffStatus.night && (
-                  <span className="text-xs mt-1 opacity-75">
-                    {countdown.night}
-                  </span>
-                )}
-                {cutoffStatus.night && (
-                  <span className="text-xs mt-1 opacity-75">
-                    Cutoff passed
-                  </span>
-                )}
-              </>
-            )}
-          </div>
-        </button>
+      <div className="grid grid-cols-3 gap-2 bg-bg-tertiary p-1 rounded-full">
+        {MEAL_PERIODS.map((period) => (
+          <button
+            key={period}
+            onClick={() => onPeriodChange(period)}
+            className={`
+              py-3 px-3 rounded-full font-medium transition-all min-h-touch cursor-pointer
+              ${activePeriod === period
+                ? 'bg-primary text-white shadow-lg'
+                : 'text-text-secondary hover:text-text-primary animate-soft-glow'
+              }
+            `}
+          >
+            <div className="flex flex-col items-center">
+              <span className="text-base sm:text-lg">{MEAL_PERIOD_LABELS[period]}</span>
+              {isFutureDate ? (
+                <span className="text-xs mt-1 opacity-75">Available</span>
+              ) : (
+                <span className="text-xs mt-1 opacity-75">
+                  {cutoffStatus[period] ? 'Cutoff passed' : countdown[period]}
+                </span>
+              )}
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );

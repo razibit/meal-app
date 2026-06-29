@@ -2,11 +2,12 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Cutoff times in UTC+6 (configurable via environment variables)
-const MORNING_CUTOFF_HOUR = parseInt(Deno.env.get('MORNING_CUTOFF_HOUR') || '8', 10);
-const NIGHT_CUTOFF_HOUR = parseInt(Deno.env.get('NIGHT_CUTOFF_HOUR') || '16', 10);
+const BREAKFAST_CUTOFF_HOUR = parseInt(Deno.env.get('BREAKFAST_CUTOFF_HOUR') || '8', 10);
+const LUNCH_CUTOFF_HOUR = parseInt(Deno.env.get('LUNCH_CUTOFF_HOUR') || '12', 10);
+const DINNER_CUTOFF_HOUR = parseInt(Deno.env.get('DINNER_CUTOFF_HOUR') || '18', 10);
 const TIMEZONE_OFFSET = 6 * 60; // UTC+6 in minutes
 
-type MealPeriod = 'morning' | 'night';
+type MealPeriod = 'breakfast' | 'lunch' | 'dinner';
 
 interface RequestBody {
   action: 'add' | 'remove';
@@ -54,9 +55,18 @@ function isCutoffPassed(period: MealPeriod, mealDate: string): boolean {
   if (mealDate < todayStr) return true;
 
   const currentHour = now.getHours();
-  return period === 'morning'
-    ? currentHour >= MORNING_CUTOFF_HOUR
-    : currentHour >= NIGHT_CUTOFF_HOUR;
+  const cutoffHour = period === 'breakfast'
+    ? BREAKFAST_CUTOFF_HOUR
+    : period === 'lunch'
+      ? LUNCH_CUTOFF_HOUR
+      : DINNER_CUTOFF_HOUR;
+  return currentHour >= cutoffHour;
+}
+
+function getCutoffLabel(period: MealPeriod): string {
+  if (period === 'breakfast') return '8:00 AM';
+  if (period === 'lunch') return '12:00 PM';
+  return '6:00 PM';
 }
 
 serve(async (req) => {
@@ -92,7 +102,7 @@ serve(async (req) => {
     const cutoffPassed = isCutoffPassed(period, mealDate);
     
     if (cutoffPassed) {
-      const cutoffTime = period === 'morning' ? '8:00 AM' : '4:00 PM';
+      const cutoffTime = getCutoffLabel(period);
 
       // Only post a violation when the user attempts to change *today's* meal.
       // Future dates are allowed and should not generate violations.

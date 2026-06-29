@@ -9,6 +9,7 @@ import GroceryExpenseReport from '../components/home/GroceryExpenseReport';
 import SettlementReport from '../components/home/SettlementReport';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { MEAL_PERIOD_LABELS, MEAL_PERIODS } from '../constants/meals';
 
 function MonthlyReport() {
   const { user } = useAuthStore();
@@ -54,11 +55,12 @@ function MonthlyReport() {
   const totals = useMemo(() => {
     return reportData.reduce(
       (acc, row) => ({
-        morning: acc.morning + row.morning_count,
-        night: acc.night + row.night_count,
+        breakfast: acc.breakfast + row.breakfast_count,
+        lunch: acc.lunch + row.lunch_count,
+        dinner: acc.dinner + row.dinner_count,
         eggs: acc.eggs + row.egg_count,
       }),
-      { morning: 0, night: 0, eggs: 0 }
+      { breakfast: 0, lunch: 0, dinner: 0, eggs: 0 }
     );
   }, [reportData]);
 
@@ -66,20 +68,21 @@ function MonthlyReport() {
     if (reportData.length === 0) return;
 
     // Create CSV content
-    const headers = ['Date', 'Morning', 'Night', 'Eggs'];
+    const headers = ['Date', 'Breakfast', 'Lunch', 'Dinner', 'Eggs'];
     const rows = reportData.map(row => {
       const date = new Date(row.meal_date + 'T00:00:00');
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return [
         dateStr,
-        row.morning_count,
-        row.night_count,
+        row.breakfast_count,
+        row.lunch_count,
+        row.dinner_count,
         row.egg_count
       ];
     });
 
     // Add totals row
-    rows.push(['Total', totals.morning, totals.night, totals.eggs]);
+    rows.push(['Total', totals.breakfast, totals.lunch, totals.dinner, totals.eggs]);
 
     const csvContent = [
       headers.join(','),
@@ -124,8 +127,9 @@ function MonthlyReport() {
       });
       return [
         dateStr,
-        row.morning_count.toString(),
-        row.night_count.toString(),
+        row.breakfast_count.toString(),
+        row.lunch_count.toString(),
+        row.dinner_count.toString(),
         row.egg_count.toString()
       ];
     });
@@ -133,14 +137,15 @@ function MonthlyReport() {
     // Add totals row
     tableData.push([
       'Total',
-      totals.morning.toString(),
-      totals.night.toString(),
+      totals.breakfast.toString(),
+      totals.lunch.toString(),
+      totals.dinner.toString(),
       totals.eggs.toString()
     ]);
     
     // Generate table with alternating row colors
     autoTable(doc, {
-      head: [['Date', 'Morning', 'Night', 'Eggs']],
+      head: [['Date', 'Breakfast', 'Lunch', 'Dinner', 'Eggs']],
       body: tableData,
       startY: 35,
       theme: 'striped',
@@ -196,7 +201,7 @@ function MonthlyReport() {
               </p>
               {!loading && reportData.length > 0 && (
                 <p className="text-sm text-text-secondary mt-1">
-                  Total Meal (M+N): <span className="font-medium text-text-primary">{totals.morning + totals.night}</span>
+                  Total Meal (B+L+D): <span className="font-medium text-text-primary">{totals.breakfast + totals.lunch + totals.dinner}</span>
                   {' · '}
                   Total Eggs 🥚: <span className="font-medium text-text-primary">{totals.eggs}</span>
                 </p>
@@ -295,12 +300,11 @@ function MonthlyReport() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-text-primary">
                     Date
                   </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
-                    Morning
-                  </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
-                    Night
-                  </th>
+                  {MEAL_PERIODS.map((period) => (
+                    <th key={period} className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
+                      {MEAL_PERIOD_LABELS[period]}
+                    </th>
+                  ))}
                   <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">
                     Eggs
                   </th>
@@ -314,7 +318,7 @@ function MonthlyReport() {
                     month: 'short',
                     day: 'numeric'
                   });
-                  const hasData = row.morning_count > 0 || row.night_count > 0 || row.egg_count > 0;
+                  const hasData = row.breakfast_count > 0 || row.lunch_count > 0 || row.dinner_count > 0 || row.egg_count > 0;
 
                   return (
                     <tr
@@ -326,12 +330,11 @@ function MonthlyReport() {
                       <td className="px-4 py-3 text-text-primary font-medium">
                         {dateStr}
                       </td>
-                      <td className="px-4 py-3 text-center text-text-secondary">
-                        {row.morning_count > 0 ? row.morning_count : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-center text-text-secondary">
-                        {row.night_count > 0 ? row.night_count : '-'}
-                      </td>
+                      {MEAL_PERIODS.map((period) => (
+                        <td key={period} className="px-4 py-3 text-center text-text-secondary">
+                          {row[`${period}_count`] > 0 ? row[`${period}_count`] : '-'}
+                        </td>
+                      ))}
                       <td className="px-4 py-3 text-center text-text-secondary">
                         {row.egg_count > 0 ? row.egg_count : '-'}
                       </td>
@@ -345,10 +348,13 @@ function MonthlyReport() {
                     Total
                   </td>
                   <td className="px-4 py-3 text-center text-text-primary">
-                    {totals.morning}
+                    {totals.breakfast}
                   </td>
                   <td className="px-4 py-3 text-center text-text-primary">
-                    {totals.night}
+                    {totals.lunch}
+                  </td>
+                  <td className="px-4 py-3 text-center text-text-primary">
+                    {totals.dinner}
                   </td>
                   <td className="px-4 py-3 text-center text-text-primary">
                     {totals.eggs}

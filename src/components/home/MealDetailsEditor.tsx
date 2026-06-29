@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { MealPeriod } from '../../utils/cutoffChecker';
+import type { MealPeriod } from '../../constants/meals';
+import { MEAL_PERIOD_LABELS } from '../../constants/meals';
 import { formatRelativeTime } from '../../utils/dateHelpers';
 
 interface MealDetailsEditorProps {
@@ -84,7 +85,7 @@ function MealDetailsEditor({
       <div className="card">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-text-primary">
-            {period === 'morning' ? 'Morning' : 'Night'} Menu
+            {MEAL_PERIOD_LABELS[period]} Menu
           </h3>
           {isSaving && (
             <span className="text-sm text-primary flex items-center gap-1">

@@ -4,12 +4,11 @@ import { getTodayDate } from '../../utils/dateHelpers';
 import { showErrorToast, handleError } from '../../utils/errorHandling';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
-
-type Period = 'morning' | 'night';
+import { MEAL_PERIOD_LABELS, MEAL_PERIODS, type MealPeriod } from '../../constants/meals';
 
 export function ClearMeals() {
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
-  const [selectedPeriod, setSelectedPeriod] = useState<Period>('morning');
+  const [selectedPeriod, setSelectedPeriod] = useState<MealPeriod>('breakfast');
   const [confirmText, setConfirmText] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showFinalConfirm, setShowFinalConfirm] = useState(false);
@@ -48,7 +47,7 @@ export function ClearMeals() {
       if (user?.name) {
         try {
           await sendMessage(
-            `${user.name} has cleared everyone's meals for ${selectedPeriod}.`,
+            `${user.name} has cleared everyone's meals for ${MEAL_PERIOD_LABELS[selectedPeriod]}.`,
             []
           );
         } catch (chatError) {
@@ -57,7 +56,7 @@ export function ClearMeals() {
       }
 
       // Success feedback
-      alert(`All ${selectedPeriod} meals for ${selectedDate} have been cleared.`);
+      alert(`All ${MEAL_PERIOD_LABELS[selectedPeriod]} meals for ${selectedDate} have been cleared.`);
       
       // Reset state
       setShowConfirmDialog(false);
@@ -107,28 +106,19 @@ export function ClearMeals() {
             Select Period
           </label>
           <div className="flex gap-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="morning"
-                checked={selectedPeriod === 'morning'}
-                onChange={(e) => setSelectedPeriod(e.target.value as Period)}
-                className="w-4 h-4 text-primary focus:ring-primary"
-                disabled={showConfirmDialog}
-              />
-              <span className="text-text-primary">Morning</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="night"
-                checked={selectedPeriod === 'night'}
-                onChange={(e) => setSelectedPeriod(e.target.value as Period)}
-                className="w-4 h-4 text-primary focus:ring-primary"
-                disabled={showConfirmDialog}
-              />
-              <span className="text-text-primary">Night</span>
-            </label>
+            {MEAL_PERIODS.map((period) => (
+              <label key={period} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value={period}
+                  checked={selectedPeriod === period}
+                  onChange={(e) => setSelectedPeriod(e.target.value as MealPeriod)}
+                  className="w-4 h-4 text-primary focus:ring-primary"
+                  disabled={showConfirmDialog}
+                />
+                <span className="text-text-primary">{MEAL_PERIOD_LABELS[period]}</span>
+              </label>
+            ))}
           </div>
         </div>
 
