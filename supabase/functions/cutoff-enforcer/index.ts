@@ -109,31 +109,6 @@ serve(async (req) => {
       const todayStr = formatDate(getCurrentTimeInTimezone());
       const shouldPostViolation = mealDate === todayStr;
       
-      // Post violation message to chat
-      if (shouldPostViolation) {
-        const supabase = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        // Get member name
-        const { data: member } = await supabase
-          .from('members')
-          .select('name')
-          .eq('id', memberId)
-          .single();
-
-        if (member) {
-          const violationMessage = `${member.name} has ${action === 'add' ? 'added' : 'removed'} their ${period} meal after ${cutoffTime}`;
-          
-          await supabase.from('chats').insert({
-            sender_id: memberId,
-            message: violationMessage,
-            is_violation: true,
-          });
-        }
-      }
-
       return new Response(
         JSON.stringify({
           success: false,
