@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Cutoff times in UTC+6 (configurable via environment variables)
 const BREAKFAST_CUTOFF_HOUR = parseInt(Deno.env.get('BREAKFAST_CUTOFF_HOUR') || '8', 10);
@@ -104,11 +103,6 @@ serve(async (req) => {
     if (cutoffPassed) {
       const cutoffTime = getCutoffLabel(period);
 
-      // Only post a violation when the user attempts to change *today's* meal.
-      // Future dates are allowed and should not generate violations.
-      const todayStr = formatDate(getCurrentTimeInTimezone());
-      const shouldPostViolation = mealDate === todayStr;
-      
       return new Response(
         JSON.stringify({
           success: false,
