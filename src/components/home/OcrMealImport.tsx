@@ -17,6 +17,7 @@ function OcrMealImport({ selectedDate, members, onApplied }: OcrMealImportProps)
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validation, setValidation] = useState<{ valid: boolean; errors: string[]; warnings: string[]; totals: Record<string, number> } | null>(null);
 
   const fileToBase64 = (input: File) => new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -47,6 +48,7 @@ function OcrMealImport({ selectedDate, members, onApplied }: OcrMealImportProps)
       if (invokeError) throw invokeError;
       setImportId(data.import_id);
       setRows(data.rows || []);
+      setValidation(data.validation_report || null);
     } catch (err) {
       console.error('OCR import failed:', err);
       setError(err instanceof Error ? err.message : 'OCR import failed');
@@ -69,6 +71,10 @@ function OcrMealImport({ selectedDate, members, onApplied }: OcrMealImportProps)
     setError(null);
 
     try {
+      const editableRows = rows.filter((row) => row.id).map((row) => supabase.from('ocr_import_rows').update({ matched_member_id: row.matched_member_id, breakfast: row.breakfast, lunch: row.lunch, dinner: row.dinner, needs_review: !row.matched_member_id }).eq('id', row.id!));
+      const updates = await Promise.all(editableRows);
+      const updateError = updates.find((result) => result.error)?.error;
+      if (updateError) throw updateError;
       const payload = rows
         .filter((row) => row.matched_member_id)
         .map((row) => ({
@@ -86,6 +92,7 @@ function OcrMealImport({ selectedDate, members, onApplied }: OcrMealImportProps)
 
       if (rpcError) throw rpcError;
       await onApplied();
+      window.dispatchEvent(new CustomEvent('ocr:changed'));
     } catch (err) {
       console.error('Apply OCR import failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to apply OCR import');
@@ -121,6 +128,7 @@ function OcrMealImport({ selectedDate, members, onApplied }: OcrMealImportProps)
 
       {file && <div className="text-sm text-text-secondary mb-3">{file.name}</div>}
       {error && <div className="mb-3 p-3 rounded-lg border border-error bg-error/10 text-error text-sm">{error}</div>}
+      {validation && <div className={`mb-3 p-3 rounded-lg border text-sm ${validation.valid ? 'border-success bg-success/10 text-success' : 'border-warning bg-warning/10 text-text-primary'}`}><div className="font-semibold">Validation {validation.valid ? 'passed' : 'requires review'} · B {validation.totals.breakfast || 0} / L {validation.totals.lunch || 0} / D {validation.totals.dinner || 0}</div>{validation.errors.map((item) => <div key={item}>{item}</div>)}{validation.warnings.map((item) => <div key={item}>{item}</div>)}</div>}
 
       {rows.length > 0 && (
         <div className="overflow-x-auto">
@@ -180,7 +188,7 @@ function OcrMealImport({ selectedDate, members, onApplied }: OcrMealImportProps)
           </table>
 
           <div className="mt-4 flex justify-end">
-            <button type="button" className="btn-primary px-4 py-2" disabled={applying || rows.every((row) => !row.matched_member_id)} onClick={applyRows}>
+            <button type="button" className="btn-primary px-4 py-2" disabled={applying || rows.some((row) => !row.matched_member_id)} onClick={applyRows}>
               {applying ? 'Applying...' : 'Apply Meals'}
             </button>
           </div>

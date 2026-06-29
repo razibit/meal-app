@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useMealStore } from '../stores/mealStore';
 import { getTodayDate } from '../utils/dateHelpers';
-import { getActivePeriod } from '../utils/cutoffChecker';
 import { MEAL_PERIODS, MEAL_PERIOD_LABELS, type MealPeriod } from '../constants/meals';
 import DateSelector from '../components/home/DateSelector';
 import MealToggle from '../components/home/MealToggle';
@@ -15,6 +14,7 @@ import MemberManagement from '../components/home/MemberManagement';
 import OcrMealImport from '../components/home/OcrMealImport';
 import { DepositSection } from '../components/preferences/DepositSection';
 import AdminNotes from '../components/home/AdminNotes';
+import OcrHistory from '../components/home/OcrHistory';
 
 function Home() {
   const { user } = useAuthStore();
@@ -33,7 +33,7 @@ function Home() {
     clearError,
   } = useMealStore();
 
-  const [activePeriod, setActivePeriod] = useState<MealPeriod>(getActivePeriod());
+  const [activePeriod, setActivePeriod] = useState<MealPeriod>('breakfast');
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
 
@@ -121,6 +121,8 @@ function Home() {
             await fetchMeals(selectedDate);
           }}
         />
+
+        <OcrHistory />
 
         <MealDetailsEditor
           period={activePeriod}
