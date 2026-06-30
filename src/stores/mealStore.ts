@@ -267,6 +267,7 @@ export const useMealStore = create<MealState>((set, get) => ({
     }
     set({ meals: optimistic, error: null });
     get().updateCounts(date);
+    window.dispatchEvent(new CustomEvent('meal:changed'));
 
     const write = async () => {
     try {
