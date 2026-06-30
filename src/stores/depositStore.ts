@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import { Deposit, DepositReportRow } from '../types';
+import { queryClient } from '../query/client';
+import { invalidateDeposits } from '../query/invalidation';
 
 interface DepositStore {
   deposits: Deposit[];
@@ -12,6 +14,8 @@ interface DepositStore {
   fetchDeposits: (startDate: string, endDate: string) => Promise<void>;
   fetchDepositReport: (startDate: string, endDate: string) => Promise<void>;
   addDeposit: (depositorId: string, amount: number, accountingDate: string, details?: string) => Promise<Deposit>;
+  updateDeposit: (id: string, input: { depositorId: string; amount: number; accountingDate: string; details?: string }) => Promise<Deposit>;
+  deleteDeposit: (id: string) => Promise<string>;
   getMemberTotalDeposit: (memberId: string, startDate: string, endDate: string) => Promise<number>;
   clearError: () => void;
 }
@@ -76,10 +80,44 @@ export const useDepositStore = create<DepositStore>((set) => ({
       if (error) throw error;
       set((state) => ({ deposits: [data, ...state.deposits.filter((item) => item.id !== data.id)], loading: false }));
       window.dispatchEvent(new CustomEvent('deposit:changed', { detail: data }));
+      await invalidateDeposits(queryClient);
       return data;
     } catch (error) {
       console.error('Error adding deposit:', error);
       set({ error: 'Failed to add deposit', loading: false });
+      throw error;
+    }
+  },
+
+  updateDeposit: async (id, input) => {
+    set({ loading: true, error: null });
+    try {
+      const { data, error } = await supabase.from('deposits').update({
+        depositor_id: input.depositorId, amount: input.amount,
+        accounting_date: input.accountingDate, details: input.details || null,
+      }).eq('id', id).select().single();
+      if (error) throw error;
+      set((state) => ({ deposits: state.deposits.map((item) => item.id === id ? data : item), loading: false }));
+      await invalidateDeposits(queryClient);
+      window.dispatchEvent(new CustomEvent('deposit:changed'));
+      return data;
+    } catch (error) {
+      set({ error: 'Failed to update deposit', loading: false });
+      throw error;
+    }
+  },
+
+  deleteDeposit: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const { error } = await supabase.from('deposits').delete().eq('id', id);
+      if (error) throw error;
+      set((state) => ({ deposits: state.deposits.filter((item) => item.id !== id), loading: false }));
+      await invalidateDeposits(queryClient);
+      window.dispatchEvent(new CustomEvent('deposit:changed'));
+      return id;
+    } catch (error) {
+      set({ error: 'Failed to delete deposit', loading: false });
       throw error;
     }
   },

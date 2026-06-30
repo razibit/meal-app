@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/authStore';
 import AuthPage from './components/auth/AuthPage';
 import Layout from './components/layout/Layout';
 import { isSupabaseConfigured } from './services/supabase';
+import { RealtimeSync } from './query/RealtimeSync';
 
 // Lazy load route components for code splitting
 const Home = lazy(() => import('./pages/Home'));
@@ -66,6 +67,7 @@ function App() {
   // Show main app with routing if authenticated
   return (
     <BrowserRouter>
+      <RealtimeSync />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route path="/" element={<Layout />}>

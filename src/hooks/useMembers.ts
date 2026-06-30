@@ -1,36 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
 import type { Member } from '../types';
+import { queryKeys } from '../query/keys';
 
 export function useMembers() {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  const fetchMembers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
+  const query = useQuery({
+    queryKey: queryKeys.members,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('members')
         .select('*')
         .order('name', { ascending: true });
-
       if (error) throw error;
-
-      setMembers(data || []);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch members';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { members, loading, error, refetch: fetchMembers };
+      return (data || []) as Member[];
+    },
+  });
+  return { members: query.data || [], loading: query.isPending, error: query.error?.message || null, refetch: query.refetch };
 }

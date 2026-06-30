@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react';
 import { supabase } from '../../services/supabase';
 import { MEAL_PERIOD_LABELS, MEAL_PERIODS, type MealPeriod } from '../../constants/meals';
 import type { Member, OcrImportRow } from '../../types';
+import { useQueryClient } from '@tanstack/react-query';
+import { invalidateMeals } from '../../query/invalidation';
+import { queryKeys } from '../../query/keys';
 
 interface OcrMealImportProps {
   selectedDate: string;
@@ -10,6 +13,7 @@ interface OcrMealImportProps {
 }
 
 function OcrMealImport({ selectedDate, members, onApplied }: OcrMealImportProps) {
+  const queryClient = useQueryClient();
   const activeMembers = useMemo(() => members.filter((member) => member.active !== false), [members]);
   const [file, setFile] = useState<File | null>(null);
   const [importId, setImportId] = useState<string | null>(null);
@@ -92,6 +96,8 @@ function OcrMealImport({ selectedDate, members, onApplied }: OcrMealImportProps)
 
       if (rpcError) throw rpcError;
       await onApplied();
+      await invalidateMeals(queryClient);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.ocrHistory });
       window.dispatchEvent(new CustomEvent('ocr:changed'));
     } catch (err) {
       console.error('Apply OCR import failed:', err);

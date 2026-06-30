@@ -4,6 +4,8 @@ import { injectSpeedInsights } from '@vercel/speed-insights';
 import App from './App.tsx';
 import './index.css';
 import { timeService } from './services/timeService';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './query/client';
 
 console.log('Main starting...');
 
@@ -53,7 +55,7 @@ if (!rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <ErrorBoundary>
-        <App />
+        <QueryClientProvider client={queryClient}><App /></QueryClientProvider>
       </ErrorBoundary>
     </React.StrictMode>,
   );

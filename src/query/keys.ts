@@ -1,0 +1,15 @@
+export const queryKeys = {
+  members: ['members'] as const,
+  meals: (date?: string) => date ? ['meals', date] as const : ['meals'] as const,
+  mealDetails: (date?: string) => date ? ['meal-details', date] as const : ['meal-details'] as const,
+  deposits: (start?: string, end?: string) => start && end ? ['deposits', start, end] as const : ['deposits'] as const,
+  depositReport: (start?: string, end?: string) => start && end ? ['deposit-report', start, end] as const : ['deposit-report'] as const,
+  memberDeposit: (id?: string, start?: string, end?: string) => id ? ['member-deposit', id, start, end] as const : ['member-deposit'] as const,
+  expenseReport: (start?: string, end?: string) => start && end ? ['expense-report', start, end] as const : ['expense-report'] as const,
+  mealRate: (start?: string, end?: string) => start && end ? ['meal-rate', start, end] as const : ['meal-rate'] as const,
+  memberReport: (id?: string, start?: string, end?: string) => id ? ['member-report', id, start, end] as const : ['member-report'] as const,
+  globalReport: (start?: string, end?: string) => start && end ? ['global-report', start, end] as const : ['global-report'] as const,
+  settlement: (start?: string, end?: string) => start && end ? ['settlement', start, end] as const : ['settlement'] as const,
+  notes: ['admin-notes'] as const,
+  ocrHistory: ['ocr-history'] as const,
+};

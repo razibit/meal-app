@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import { GroceryExpense, GroceryExpenseReportRow } from '../types';
+import { queryClient } from '../query/client';
+import { invalidateExpenses } from '../query/invalidation';
 
 interface GroceryExpenseStore {
   expenses: GroceryExpense[];
@@ -76,6 +78,7 @@ export const useGroceryExpenseStore = create<GroceryExpenseStore>((set) => ({
       });
 
       if (error) throw error;
+      await invalidateExpenses(queryClient);
       set({ loading: false });
     } catch (error) {
       console.error('Error adding grocery expense:', error);

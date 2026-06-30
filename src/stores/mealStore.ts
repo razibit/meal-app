@@ -11,6 +11,8 @@ import {
   showErrorToast,
 } from '../utils/errorHandling';
 import { retryDatabaseOperation } from '../utils/retryLogic';
+import { queryClient } from '../query/client';
+import { invalidateMeals, invalidateMembers } from '../query/invalidation';
 
 type MealDetailsField = `${MealPeriod}_details`;
 
@@ -175,6 +177,7 @@ export const useMealStore = create<MealState>((set, get) => ({
       });
 
       await get().fetchMembers();
+      await invalidateMembers(queryClient);
       set({ loading: false });
     } catch (error) {
       const errorMessage = handleError(error);
@@ -202,6 +205,7 @@ export const useMealStore = create<MealState>((set, get) => ({
       });
 
       await get().fetchMembers();
+      await invalidateMembers(queryClient);
       get().updateCounts();
       set({ loading: false });
     } catch (error) {
@@ -247,6 +251,7 @@ export const useMealStore = create<MealState>((set, get) => ({
       });
 
       await get().fetchMembers();
+      await invalidateMembers(queryClient);
       set({ loading: false });
     } catch (error) {
       const errorMessage = handleError(error);
@@ -308,6 +313,8 @@ export const useMealStore = create<MealState>((set, get) => ({
         });
       }
 
+      await invalidateMeals(queryClient);
+
     } catch (error) {
       const errorMessage = handleError(error);
       set({ meals: previousMeals, error: errorMessage });
@@ -357,6 +364,7 @@ export const useMealStore = create<MealState>((set, get) => ({
       });
 
       await get().fetchMealDetails(date);
+      await queryClient.invalidateQueries({ queryKey: ['meal-details', date] });
     } catch (error) {
       const errorMessage = handleError(error);
       set({ error: errorMessage });

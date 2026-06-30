@@ -3,9 +3,13 @@ import { useDepositStore } from '../../stores/depositStore';
 import { useMembers } from '../../hooks/useMembers';
 import { playSuccessSound } from '../../utils/soundFeedback';
 import { getTodayDate } from '../../utils/dateHelpers';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '../../query/keys';
+import { supabase } from '../../services/supabase';
+import type { Deposit } from '../../types';
 
 export function DepositSection() {
-  const { addDeposit, loading } = useDepositStore();
+  const { addDeposit, updateDeposit, deleteDeposit, loading } = useDepositStore();
   const { members, loading: membersLoading } = useMembers();
   const [isAdding, setIsAdding] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState('');
@@ -13,6 +17,29 @@ export function DepositSection() {
   const [depositDate, setDepositDate] = useState(getTodayDate());
   const [details, setDetails] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const depositsQuery = useQuery({
+    queryKey: queryKeys.deposits(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('deposits').select('*').order('accounting_date', { ascending: false }).limit(50);
+      if (error) throw error;
+      return (data || []) as Deposit[];
+    },
+  });
+
+  const editDeposit = async (deposit: Deposit) => {
+    const nextAmount = window.prompt('Deposit amount', String(deposit.amount));
+    if (nextAmount === null) return;
+    const parsed = Number(nextAmount);
+    if (!Number.isFinite(parsed) || parsed <= 0) { setError('Please enter a valid amount'); return; }
+    const nextDetails = window.prompt('Details', deposit.details || '');
+    if (nextDetails === null) return;
+    await updateDeposit(deposit.id, { depositorId: deposit.depositor_id, amount: parsed, accountingDate: deposit.accounting_date, details: nextDetails });
+  };
+
+  const removeDeposit = async (deposit: Deposit) => {
+    if (!window.confirm('Delete this deposit?')) return;
+    await deleteDeposit(deposit.id);
+  };
 
   const handleCancel = () => {
     setIsAdding(false);
@@ -154,6 +181,17 @@ export function DepositSection() {
               Cancel
             </button>
           </div>
+        </div>
+      )}
+      {!isAdding && depositsQuery.data && depositsQuery.data.length > 0 && (
+        <div className="mt-4 divide-y divide-border border-t border-border">
+          {depositsQuery.data.map((deposit) => {
+            const member = members.find((item) => item.id === deposit.depositor_id);
+            return <div key={deposit.id} className="py-3 flex items-center justify-between gap-3">
+              <div><div className="font-medium text-text-primary">{member?.name || 'Member'} · ৳{Number(deposit.amount).toFixed(2)}</div><div className="text-xs text-text-secondary">{deposit.accounting_date}{deposit.details ? ` · ${deposit.details}` : ''}</div></div>
+              <div className="flex gap-2"><button className="btn-secondary px-3 py-1 text-sm" disabled={loading} onClick={() => void editDeposit(deposit)}>Edit</button><button className="px-3 py-1 text-sm rounded border border-error text-error" disabled={loading} onClick={() => void removeDeposit(deposit)}>Delete</button></div>
+            </div>;
+          })}
         </div>
       )}
     </div>

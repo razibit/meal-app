@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../services/supabase';
+import { queryClient } from '../../query/client';
+import { invalidateMeals } from '../../query/invalidation';
 import { getTodayDate } from '../../utils/dateHelpers';
 import { showErrorToast, handleError } from '../../utils/errorHandling';
 import { MEAL_PERIOD_LABELS, MEAL_PERIODS, type MealPeriod } from '../../constants/meals';
@@ -38,6 +40,7 @@ export function ClearMeals() {
         .eq('period', selectedPeriod);
 
       if (error) throw error;
+      await invalidateMeals(queryClient);
 
       // Success feedback
       alert(`All ${MEAL_PERIOD_LABELS[selectedPeriod]} meals for ${selectedDate} have been cleared.`);
