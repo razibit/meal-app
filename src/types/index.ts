@@ -128,6 +128,18 @@ export interface GroceryExpenseReportRow {
   amount: number;
 }
 
+export interface GroceryDutyAssignment {
+  id: string;
+  billing_start_date: string;
+  billing_end_date: string;
+  duty_date: string;
+  member_id: string;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MealRateSnapshot {
   id?: string;
   meal_rate: number;

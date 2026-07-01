@@ -16,6 +16,7 @@ export function RealtimeSync() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'meal_rate_history' }, () => void client.invalidateQueries({ queryKey: queryKeys.mealRate() }))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_notes' }, () => void client.invalidateQueries({ queryKey: queryKeys.notes }))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ocr_imports' }, () => void client.invalidateQueries({ queryKey: queryKeys.ocrHistory }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'grocery_duty_assignments' }, () => void client.invalidateQueries({ queryKey: queryKeys.groceryDuties() }))
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
   }, [client]);

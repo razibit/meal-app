@@ -86,7 +86,7 @@ export function MealMonthConfig() {
       setError(null);
       setSuccess(false);
 
-      // Clear custom dates (set to null) to use default 6th-5th logic
+      // Clear custom dates (set to null) to use the calendar-month default.
       const { error: updateError } = await supabase
         .from('members')
         .update({
@@ -157,7 +157,7 @@ export function MealMonthConfig() {
               <p className="text-sm font-medium text-text-secondary mb-1">Current Period</p>
               <p className="text-text-primary font-medium">{displayRange}</p>
               <p className="text-xs text-text-tertiary mt-1">
-                {isCustom ? 'Custom configuration' : 'Default (6th to 5th)'}
+                {isCustom ? 'Custom configuration' : 'Default (calendar month)'}
               </p>
             </div>
             {!isEditing && (
@@ -211,7 +211,7 @@ export function MealMonthConfig() {
 
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                💡 Your monthly report will show data for this date range. By default, the meal management month runs from the 6th of one month to the 5th of the next month.
+                💡 Your monthly report will show data for this date range. By default, the meal management month runs from the first through the last day of the current month.
               </p>
             </div>
           </>
@@ -265,7 +265,7 @@ export function MealMonthConfig() {
                   onClick={handleReset}
                   disabled={loading}
                   className="btn-secondary"
-                  title="Reset to default (6th to 5th)"
+                  title="Reset to the current calendar month"
                 >
                   Reset to Default
                 </button>

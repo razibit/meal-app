@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useMealRateStore } from '../../stores/mealRateStore';
+import { useAuthStore } from '../../stores/authStore';
 
 const REPORT_VISIT_KEY = 'lastReportVisit';
 
@@ -11,6 +12,16 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  {
+    path: '/grocery-duty',
+    label: 'Duty',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3.75 9h16.5m-15 12h13.5A1.5 1.5 0 0020.25 19.5V6.75a1.5 1.5 0 00-1.5-1.5H5.25a1.5 1.5 0 00-1.5 1.5V19.5a1.5 1.5 0 001.5 1.5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 13h3m-3 4h7" />
+      </svg>
+    ),
+  },
   {
     path: '/',
     label: 'Home',
@@ -82,6 +93,8 @@ function Navigation() {
   const location = useLocation();
   const { currentRate } = useMealRateStore();
   const [hasReportUpdate, setHasReportUpdate] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const visibleNavItems = user?.role === 'admin' ? navItems : navItems.filter((item) => item.path !== '/grocery-duty');
 
   // Clear dot and record visit timestamp when user is on /report
   useEffect(() => {
@@ -119,7 +132,7 @@ function Navigation() {
       {/* Bottom Navigation for Mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-bg-primary border-t border-border z-20">
         <div className="flex justify-around items-center h-16">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -142,7 +155,7 @@ function Navigation() {
       {/* Side Navigation for Desktop */}
       <nav className="hidden md:block fixed left-0 top-0 bottom-0 w-20 bg-bg-primary border-r border-border z-20">
         <div className="flex flex-col items-center py-6 space-y-8">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}

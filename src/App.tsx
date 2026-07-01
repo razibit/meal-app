@@ -10,6 +10,7 @@ import { RealtimeSync } from './query/RealtimeSync';
 const Home = lazy(() => import('./pages/Home'));
 const Preferences = lazy(() => import('./pages/Preferences'));
 const MonthlyReport = lazy(() => import('./pages/MonthlyReport'));
+const GroceryDuty = lazy(() => import('./pages/GroceryDuty'));
 
 // Loading spinner component for Suspense fallback
 const LoadingSpinner = () => (
@@ -74,6 +75,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="preferences" element={<Preferences />} />
             <Route path="report" element={<MonthlyReport />} />
+            <Route path="grocery-duty" element={user.role === 'admin' ? <GroceryDuty /> : <Navigate to="/" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

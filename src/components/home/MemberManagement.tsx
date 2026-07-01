@@ -20,6 +20,7 @@ function MemberManagement() {
   const { members, loading, fetchMembers, createMember, updateMember, deleteMemberIfUnused } = useMealStore();
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -91,7 +92,11 @@ function MemberManagement() {
         </button>
       </form>
 
-      <div className="overflow-x-auto">
+      <button type="button" className="w-full py-2 flex items-center justify-between text-sm font-medium text-text-secondary hover:text-text-primary border-t border-border" onClick={() => setShowMembers((value) => !value)} aria-expanded={showMembers}>
+        <span>Added members ({members.length})</span><span aria-hidden="true">{showMembers ? '▲' : '▼'}</span>
+      </button>
+
+      {showMembers && <div className="overflow-x-auto mt-3">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-bg-tertiary">
@@ -132,7 +137,7 @@ function MemberManagement() {
             ))}
           </tbody>
         </table>
-      </div>
+      </div>}
     </div>
   );
 }

@@ -12,4 +12,7 @@ export const queryKeys = {
   settlement: (start?: string, end?: string) => start && end ? ['settlement', start, end] as const : ['settlement'] as const,
   notes: ['admin-notes'] as const,
   ocrHistory: ['ocr-history'] as const,
+  groceryDuties: (start?: string, end?: string) => start && end
+    ? ['grocery-duties', start, end] as const
+    : ['grocery-duties'] as const,
 };

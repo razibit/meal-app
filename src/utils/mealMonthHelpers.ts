@@ -2,10 +2,9 @@ import { Member } from '../types';
 
 /**
  * Default meal management month configuration
- * Runs from 6th of one month to 5th of next month
+ * Runs from the first through the last day of the calendar month.
  */
-export const DEFAULT_START_DAY = 6;
-export const DEFAULT_END_DAY = 5;
+export const DEFAULT_START_DAY = 1;
 
 /**
  * Calculate the current meal management month date range for a member
@@ -13,7 +12,7 @@ export const DEFAULT_END_DAY = 5;
  * 
  * Logic:
  * - If member has custom dates set, use those
- * - Otherwise, use default (6th to 5th) logic based on current date
+ * - Otherwise, use the current calendar month
  */
 export function getMealMonthDateRange(member: Member | null, referenceDate?: Date): { startDate: string; endDate: string } {
   // If member has custom dates configured, use them
@@ -24,24 +23,12 @@ export function getMealMonthDateRange(member: Member | null, referenceDate?: Dat
     };
   }
 
-  // Otherwise, calculate default (6th to 5th) based on reference date
+  // Otherwise, calculate the current calendar month.
   const now = referenceDate || new Date();
-  const currentDay = now.getDate();
   const currentMonth = now.getMonth(); // 0-indexed
   const currentYear = now.getFullYear();
-
-  let startDate: Date;
-  let endDate: Date;
-
-  // If we're before the 6th, the meal month is from previous month's 6th to current month's 5th
-  if (currentDay < DEFAULT_START_DAY) {
-    startDate = new Date(currentYear, currentMonth - 1, DEFAULT_START_DAY);
-    endDate = new Date(currentYear, currentMonth, DEFAULT_END_DAY);
-  } else {
-    // If we're on or after the 6th, meal month is from current month's 6th to next month's 5th
-    startDate = new Date(currentYear, currentMonth, DEFAULT_START_DAY);
-    endDate = new Date(currentYear, currentMonth + 1, DEFAULT_END_DAY);
-  }
+  const startDate = new Date(currentYear, currentMonth, DEFAULT_START_DAY);
+  const endDate = new Date(currentYear, currentMonth + 1, 0);
 
   return {
     startDate: formatDateForDB(startDate),
@@ -61,7 +48,7 @@ export function formatDateForDB(date: Date): string {
 
 /**
  * Format date range for display
- * Example: "Feb 6, 2026 - Mar 5, 2026"
+ * Example: "Feb 1, 2026 - Feb 28, 2026"
  */
 export function formatDateRangeForDisplay(startDate: string, endDate: string): string {
   const start = new Date(startDate + 'T00:00:00');
@@ -95,20 +82,10 @@ export function isValidDateRange(startDate: string, endDate: string): boolean {
  */
 export function getDefaultMealMonthDates(): { startDate: string; endDate: string } {
   const now = new Date();
-  const currentDay = now.getDate();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
-
-  let startDate: Date;
-  let endDate: Date;
-
-  if (currentDay < DEFAULT_START_DAY) {
-    startDate = new Date(currentYear, currentMonth - 1, DEFAULT_START_DAY);
-    endDate = new Date(currentYear, currentMonth, DEFAULT_END_DAY);
-  } else {
-    startDate = new Date(currentYear, currentMonth, DEFAULT_START_DAY);
-    endDate = new Date(currentYear, currentMonth + 1, DEFAULT_END_DAY);
-  }
+  const startDate = new Date(currentYear, currentMonth, DEFAULT_START_DAY);
+  const endDate = new Date(currentYear, currentMonth + 1, 0);
 
   return {
     startDate: formatDateForDB(startDate),

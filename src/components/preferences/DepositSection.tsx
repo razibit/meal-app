@@ -17,6 +17,7 @@ export function DepositSection() {
   const [depositDate, setDepositDate] = useState(getTodayDate());
   const [details, setDetails] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showDeposits, setShowDeposits] = useState(false);
   const depositsQuery = useQuery({
     queryKey: queryKeys.deposits(),
     queryFn: async () => {
@@ -184,6 +185,11 @@ export function DepositSection() {
         </div>
       )}
       {!isAdding && depositsQuery.data && depositsQuery.data.length > 0 && (
+        <button type="button" className="w-full mt-4 py-2 flex items-center justify-between text-sm font-medium text-text-secondary hover:text-text-primary border-t border-border" onClick={() => setShowDeposits((value) => !value)} aria-expanded={showDeposits}>
+          <span>Added deposits ({depositsQuery.data.length})</span><span aria-hidden="true">{showDeposits ? '▲' : '▼'}</span>
+        </button>
+      )}
+      {!isAdding && showDeposits && depositsQuery.data && depositsQuery.data.length > 0 && (
         <div className="mt-4 divide-y divide-border border-t border-border">
           {depositsQuery.data.map((deposit) => {
             const member = members.find((item) => item.id === deposit.depositor_id);
