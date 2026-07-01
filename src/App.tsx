@@ -11,6 +11,7 @@ const Home = lazy(() => import('./pages/Home'));
 const Preferences = lazy(() => import('./pages/Preferences'));
 const MonthlyReport = lazy(() => import('./pages/MonthlyReport'));
 const GroceryDuty = lazy(() => import('./pages/GroceryDuty'));
+const PublicMealReport = lazy(() => import('./pages/PublicMealReport'));
 
 // Loading spinner component for Suspense fallback
 const LoadingSpinner = () => (
@@ -24,6 +25,7 @@ const LoadingSpinner = () => (
 
 function App() {
   const { user, loading, initialize } = useAuthStore();
+  const isPublicMealReport = window.location.pathname === '/public/meal-report';
 
   const showConfigError = !isSupabaseConfigured;
 
@@ -33,10 +35,10 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
 
     // Initialize authentication
-    if (!showConfigError) {
+    if (!showConfigError && !isPublicMealReport) {
       initialize();
     }
-  }, [initialize, showConfigError]);
+  }, [initialize, isPublicMealReport, showConfigError]);
 
   if (showConfigError) {
     return (
@@ -52,6 +54,19 @@ function App() {
           </p>
         </div>
       </div>
+    );
+  }
+
+  if (isPublicMealReport) {
+    return (
+      <BrowserRouter>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            <Route path="/public/meal-report" element={<PublicMealReport />} />
+            <Route path="*" element={<Navigate to="/public/meal-report" replace />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
     );
   }
 

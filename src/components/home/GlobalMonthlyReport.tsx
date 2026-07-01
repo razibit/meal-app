@@ -7,30 +7,36 @@ import { MEAL_PERIODS, MEAL_PERIOD_SHORT_LABELS } from '../../constants/meals';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-function GlobalMonthlyReport({ user }: { user: Member | null }) {
+function GlobalMonthlyReport({ user, publicView = false }: { user: Member | null; publicView?: boolean }) {
   const [reportData, setReportData] = useState<GlobalReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showReport, setShowReport] = useState(false);
+  const [showReport, setShowReport] = useState(publicView);
   const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
   const report = useMemo(() => buildGlobalMealReport(reportData), [reportData]);
 
   const fetchReport = useCallback(async () => {
-    if (!user) return;
+    if (!user && !publicView) return;
     setLoading(true); setError(null);
-    const { data, error: rpcError } = await supabase.rpc('get_global_monthly_report_with_dates', { p_start_date: dateRange.startDate, p_end_date: dateRange.endDate });
+    const { data, error: rpcError } = await supabase.rpc(publicView ? 'get_public_global_meal_report' : 'get_global_monthly_report_with_dates', { p_start_date: dateRange.startDate, p_end_date: dateRange.endDate });
     if (rpcError) { console.error(rpcError); setError('Failed to load global monthly report. Please try again.'); }
-    else setReportData(data || []);
+    else setReportData(publicView
+      ? ((data || []) as Array<Omit<GlobalReportRow, 'member_id'> & { member_key: string }>).map((row) => ({ ...row, member_id: row.member_key }))
+      : (data || []));
     setLoading(false);
-  }, [dateRange, user]);
+  }, [dateRange, publicView, user]);
 
   useEffect(() => { void fetchReport(); }, [fetchReport]);
   useEffect(() => {
+    if (publicView) {
+      const timer = window.setInterval(() => void fetchReport(), 60_000);
+      return () => window.clearInterval(timer);
+    }
     const refresh = () => void fetchReport();
     window.addEventListener('meal:changed', refresh); window.addEventListener('ocr:changed', refresh);
     const channel = supabase.channel('global-meal-report').on('postgres_changes', { event: '*', schema: 'public', table: 'meals' }, refresh).subscribe();
     return () => { window.removeEventListener('meal:changed', refresh); window.removeEventListener('ocr:changed', refresh); void supabase.removeChannel(channel); };
-  }, [fetchReport]);
+  }, [fetchReport, publicView]);
 
   const formatDate = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const display = (value: number) => value > 0 ? value : '-';
