@@ -10,6 +10,7 @@ import SettlementReport from '../components/home/SettlementReport';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { MEAL_PERIOD_LABELS, MEAL_PERIODS, getWeightedMealQuantity } from '../constants/meals';
+import { exportReportsPdf } from '../utils/exportReportsPdf';
 
 function MonthlyReport() {
   const { user } = useAuthStore();
@@ -17,6 +18,8 @@ function MonthlyReport() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showMyReport, setShowMyReport] = useState(false);
+  const [exportingReports, setExportingReports] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // Get the current meal month date range for the user
   const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
@@ -178,8 +181,38 @@ function MonthlyReport() {
     doc.save(`my-meal-report-${dateRange.startDate}-to-${dateRange.endDate}.pdf`);
   }, [reportData, totals, dateRange]);
 
+  const handleExportAllReportsPDF = useCallback(async () => {
+    setExportingReports(true);
+    setExportError(null);
+    try {
+      await exportReportsPdf(dateRange.startDate, dateRange.endDate);
+    } catch (reason) {
+      console.error('Combined report PDF export failed:', reason);
+      setExportError('Failed to generate the reports PDF. Please try again.');
+    } finally {
+      setExportingReports(false);
+    }
+  }, [dateRange]);
+
   return (
     <div className="p-4 max-w-4xl mx-auto animate-fade-in">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-text-primary">Reports</h2>
+          <p className="text-sm text-text-secondary">{formatDateRangeForDisplay(dateRange.startDate, dateRange.endDate)}</p>
+        </div>
+        <button
+          onClick={() => void handleExportAllReportsPDF()}
+          disabled={!user || exportingReports}
+          className="btn-primary px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2zM9 15h6m-6-4h3" />
+          </svg>
+          {exportingReports ? 'Generating PDF...' : 'Export PDF'}
+        </button>
+      </div>
+      {exportError && <div className="mb-6 bg-error/10 border border-error text-error px-4 py-3 rounded-lg">{exportError}</div>}
       {/* Settlement Report - Who will give / receive */}
       <div className="mb-8">
         <SettlementReport user={user} />
