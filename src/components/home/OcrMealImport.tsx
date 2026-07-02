@@ -49,7 +49,15 @@ function OcrMealImport({ selectedDate, members, onApplied }: OcrMealImportProps)
         },
       });
 
-      if (invokeError) throw invokeError;
+      if (invokeError) {
+        let message = invokeError.message;
+        const response = (invokeError as { context?: Response }).context;
+        if (response) {
+          const payload = await response.clone().json().catch(() => null) as { error?: string; stage?: string } | null;
+          if (payload?.error) message = `${payload.error}${payload.stage ? ` (${payload.stage})` : ''}`;
+        }
+        throw new Error(message);
+      }
       setImportId(data.import_id);
       setRows(data.rows || []);
       setValidation(data.validation_report || null);

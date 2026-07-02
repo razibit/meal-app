@@ -19,11 +19,6 @@ CREATE INDEX idx_grocery_duty_billing_period
   ON public.grocery_duty_assignments (billing_start_date, billing_end_date, duty_date);
 CREATE INDEX idx_grocery_duty_member
   ON public.grocery_duty_assignments (member_id, billing_start_date, billing_end_date);
-CREATE INDEX idx_grocery_duty_created_by
-  ON public.grocery_duty_assignments (created_by);
-CREATE INDEX idx_grocery_duty_updated_by
-  ON public.grocery_duty_assignments (updated_by);
-
 CREATE TRIGGER update_grocery_duty_assignments_updated_at
   BEFORE UPDATE ON public.grocery_duty_assignments
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

@@ -38,7 +38,10 @@ export const useMealRateStore = create<MealRateState>((set, get) => {
         if (error) throw error;
 
         const rows = data as MealRateSnapshot[] | null;
-        set({ currentRate: rows && rows.length > 0 ? rows[0] : null });
+        set({
+          currentRate: rows && rows.length > 0 ? rows[0] : null,
+          error: rows && rows.length > 0 ? null : 'No meal rate is available for this period',
+        });
       } catch (err) {
         console.error('Error fetching latest meal rate:', err);
         set({ error: 'Failed to fetch latest meal rate' });

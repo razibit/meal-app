@@ -35,7 +35,9 @@ function SettlementReport({ user }: { user: Member | null }) {
         current.meals += getWeightedMealTotal({ breakfast: item.breakfast_count, lunch: item.lunch_count, dinner: item.dinner_count });
         members.set(item.member_id, current);
       }
-      const rate = useMealRateStore.getState().currentRate?.meal_rate || 0;
+      const snapshot = useMealRateStore.getState().currentRate;
+      if (!snapshot) throw new Error('Meal rate is unavailable for the selected period');
+      const rate = snapshot.meal_rate;
       const next = await Promise.all([...members].map(async ([memberId, item]) => calculateSettlement({ memberId, memberName: item.name, meals: item.meals, deposit: await getMemberTotalDeposit(memberId, range.startDate, range.endDate) }, rate)));
       setRows(next.sort((a, b) => a.memberName.localeCompare(b.memberName)));
       setLastUpdated(new Date());

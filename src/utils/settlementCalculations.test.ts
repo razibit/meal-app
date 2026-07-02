@@ -21,4 +21,13 @@ describe('settlement calculations', () => {
     const totals=aggregateSettlement(rows);
     expect(totals.meals).toBe(999); expect(totals.deposits).toBe(1500); expect(totals.payable).toBe(rows[0].balance); expect(totals.receivable).toBe(500);
   });
+  it('reconciles weighted meal costs to the period expenses', () => {
+    const rate = 4622 / 27.5;
+    const rows = [
+      calculateSettlement({memberId:'1',memberName:'Breakfast',meals:0.5,deposit:0},rate),
+      calculateSettlement({memberId:'2',memberName:'Other meals',meals:27,deposit:0},rate),
+    ];
+    expect(roundCurrency(rows.reduce((sum, row) => sum + row.mealCost, 0))).toBe(4622);
+    expect(aggregateSettlement(rows).meals).toBe(27.5);
+  });
 });
