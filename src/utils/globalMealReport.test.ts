@@ -11,7 +11,7 @@ const rows: GlobalReportRow[] = [
 
 describe('global meal report', () => {
   it('builds sorted date rows and member columns', () => { const report=buildGlobalMealReport(rows); expect(report.members.map((m)=>m.name)).toEqual(['A','B']); expect(report.dates).toEqual(['2026-07-01','2026-07-02']); });
-  it('calculates daily period and grand totals', () => { expect(buildGlobalMealReport(rows).dailyTotals.get('2026-07-01')).toEqual({breakfast:1,lunch:3,dinner:1,total:5}); });
-  it('calculates member monthly totals including quantities above one', () => { expect(buildGlobalMealReport(rows).memberTotals.get('a')).toEqual({breakfast:4,lunch:1,dinner:2,total:7}); });
-  it('calculates dormitory totals and preserves zero dates', () => { const report=buildGlobalMealReport(rows); expect(report.globalTotals).toEqual({breakfast:4,lunch:3,dinner:3,total:10}); expect(report.dailyTotals.get('2026-07-02')).toEqual({breakfast:3,lunch:0,dinner:2,total:5}); });
+  it('calculates weighted daily period and grand totals', () => { expect(buildGlobalMealReport(rows).dailyTotals.get('2026-07-01')).toEqual({breakfast:0.5,lunch:3,dinner:1,total:4.5}); });
+  it('calculates weighted member monthly totals including quantities above one', () => { expect(buildGlobalMealReport(rows).memberTotals.get('a')).toEqual({breakfast:2,lunch:1,dinner:2,total:5}); });
+  it('calculates weighted dormitory totals and preserves zero dates', () => { const report=buildGlobalMealReport(rows); expect(report.globalTotals).toEqual({breakfast:2,lunch:3,dinner:3,total:8}); expect(report.dailyTotals.get('2026-07-02')).toEqual({breakfast:1.5,lunch:0,dinner:2,total:3.5}); });
 });

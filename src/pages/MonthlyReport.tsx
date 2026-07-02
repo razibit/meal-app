@@ -9,7 +9,7 @@ import GroceryExpenseReport from '../components/home/GroceryExpenseReport';
 import SettlementReport from '../components/home/SettlementReport';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { MEAL_PERIOD_LABELS, MEAL_PERIODS } from '../constants/meals';
+import { MEAL_PERIOD_LABELS, MEAL_PERIODS, getWeightedMealQuantity } from '../constants/meals';
 
 function MonthlyReport() {
   const { user } = useAuthStore();
@@ -55,9 +55,9 @@ function MonthlyReport() {
   const totals = useMemo(() => {
     return reportData.reduce(
       (acc, row) => ({
-        breakfast: acc.breakfast + row.breakfast_count,
-        lunch: acc.lunch + row.lunch_count,
-        dinner: acc.dinner + row.dinner_count,
+        breakfast: acc.breakfast + getWeightedMealQuantity('breakfast', row.breakfast_count),
+        lunch: acc.lunch + getWeightedMealQuantity('lunch', row.lunch_count),
+        dinner: acc.dinner + getWeightedMealQuantity('dinner', row.dinner_count),
       }),
       { breakfast: 0, lunch: 0, dinner: 0 }
     );
@@ -73,9 +73,9 @@ function MonthlyReport() {
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return [
         dateStr,
-        row.breakfast_count,
-        row.lunch_count,
-        row.dinner_count
+        getWeightedMealQuantity('breakfast', row.breakfast_count),
+        getWeightedMealQuantity('lunch', row.lunch_count),
+        getWeightedMealQuantity('dinner', row.dinner_count)
       ];
     });
 
@@ -125,9 +125,9 @@ function MonthlyReport() {
       });
       return [
         dateStr,
-        row.breakfast_count.toString(),
-        row.lunch_count.toString(),
-        row.dinner_count.toString().toString()
+        getWeightedMealQuantity('breakfast', row.breakfast_count).toString(),
+        getWeightedMealQuantity('lunch', row.lunch_count).toString(),
+        getWeightedMealQuantity('dinner', row.dinner_count).toString()
       ];
     });
     
@@ -197,7 +197,7 @@ function MonthlyReport() {
               </p>
               {!loading && reportData.length > 0 && (
                 <p className="text-sm text-text-secondary mt-1">
-                  Total Meal (B+L+D): <span className="font-medium text-text-primary">{totals.breakfast + totals.lunch + totals.dinner}</span>
+                  Total Meal (weighted): <span className="font-medium text-text-primary">{totals.breakfast + totals.lunch + totals.dinner}</span>
                 </p>
               )}
             </div>
@@ -323,7 +323,7 @@ function MonthlyReport() {
                       </td>
                       {MEAL_PERIODS.map((period) => (
                         <td key={period} className="px-4 py-3 text-center text-text-secondary">
-                          {row[`${period}_count`] > 0 ? row[`${period}_count`] : '-'}
+                          {row[`${period}_count`] > 0 ? getWeightedMealQuantity(period, row[`${period}_count`]) : '-'}
                         </td>
                       ))}
                     </tr>

@@ -15,3 +15,18 @@ export const MEAL_PERIOD_SHORT_LABELS: Record<MealPeriod, string> = {
 };
 
 export type PeriodCounts<T = number> = Record<MealPeriod, T>;
+
+export const MEAL_PERIOD_WEIGHTS: Record<MealPeriod, number> = {
+  breakfast: 0.5,
+  lunch: 1,
+  dinner: 1,
+};
+
+export const getWeightedMealQuantity = (period: MealPeriod, quantity: number): number =>
+  quantity * MEAL_PERIOD_WEIGHTS[period];
+
+export const getWeightedMealTotal = (counts: PeriodCounts<number>): number =>
+  MEAL_PERIODS.reduce(
+    (total, period) => total + getWeightedMealQuantity(period, counts[period]),
+    0,
+  );

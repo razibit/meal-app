@@ -5,6 +5,7 @@ import { useDepositStore } from '../../stores/depositStore';
 import { useMealRateStore } from '../../stores/mealRateStore';
 import { getMealMonthDateRange, formatDateRangeForDisplay } from '../../utils/mealMonthHelpers';
 import { aggregateSettlement, calculateSettlement, roundCurrency, type SettlementResult } from '../../utils/settlementCalculations';
+import { getWeightedMealTotal } from '../../constants/meals';
 
 const formatCurrency = (amount: number) => `৳${roundCurrency(Math.abs(amount)).toFixed(2)}`;
 
@@ -31,7 +32,7 @@ function SettlementReport({ user }: { user: Member | null }) {
       const members = new Map<string, { name: string; meals: number }>();
       for (const item of report.data || []) {
         const current = members.get(item.member_id) || { name: item.member_name, meals: 0 };
-        current.meals += item.breakfast_count + item.lunch_count + item.dinner_count;
+        current.meals += getWeightedMealTotal({ breakfast: item.breakfast_count, lunch: item.lunch_count, dinner: item.dinner_count });
         members.set(item.member_id, current);
       }
       const rate = useMealRateStore.getState().currentRate?.meal_rate || 0;

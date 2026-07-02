@@ -1,26 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { getCurrentTimeInTimezone, formatDate, formatDateForDisplay } from '../../utils/dateHelpers';
+import { getBillingCycleDates } from '../../utils/billingCycleHelpers';
 
 interface DateSelectorProps {
   selectedDate: string;
   onDateChange: (date: string) => void;
-  autoMealEnabled?: boolean;
-}
-
-/**
- * Get array of next 7 days (including today)
- */
-function getNext7Days(): Date[] {
-  const today = getCurrentTimeInTimezone();
-  const days: Date[] = [];
-  
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    days.push(date);
-  }
-  
-  return days;
+  billingRange: { startDate: string; endDate: string };
 }
 
 /**
@@ -30,29 +15,23 @@ function getTodayDateStr(): string {
   return formatDate(getCurrentTimeInTimezone());
 }
 
-function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: DateSelectorProps) {
+function DateSelector({ selectedDate, onDateChange, billingRange }: DateSelectorProps) {
   const [showCalendar, setShowCalendar] = useState(false);
   // Ref should include BOTH the toggle button and the dropdown.
   // Otherwise a click on the button counts as "outside" (mousedown closes, then click re-opens).
   const calendarContainerRef = useRef<HTMLDivElement>(null);
-  const availableDays = getNext7Days();
+  const availableDays = getBillingCycleDates(billingRange).map((date) => new Date(`${date}T00:00:00`));
   const todayStr = getTodayDateStr();
   
-  // Find current index in the 7-day range
+  // Find current index in the configured billing range
   const currentIndex = availableDays.findIndex(
     (day) => formatDate(day) === selectedDate
   );
   
-  // Check if next day would be in the future
-  const nextDayIsFuture = currentIndex >= 0 && 
-    currentIndex < availableDays.length - 1 && 
-    formatDate(availableDays[currentIndex + 1]) > todayStr;
-  
   // Determine if navigation arrows should be active
   const canGoBack = currentIndex > 0;
   const canGoForward = currentIndex < availableDays.length - 1 && 
-                       currentIndex !== -1 && 
-                       !(autoMealEnabled && nextDayIsFuture);
+                       currentIndex !== -1;
   
   // Parse selected date for display
   const selectedDateObj = new Date(selectedDate + 'T00:00:00');
@@ -76,10 +55,6 @@ function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: D
   // Handle calendar day click
   const handleDayClick = (date: Date) => {
     const dateStr = formatDate(date);
-    // Prevent selecting future dates when auto meal is enabled
-    if (autoMealEnabled && dateStr > todayStr) {
-      return;
-    }
     onDateChange(dateStr);
     setShowCalendar(false);
   };
@@ -178,7 +153,7 @@ function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: D
               />
             </svg>
           </div>
-          {selectedDate !== todayStr && (
+          {selectedDate > todayStr && (
             <span className="text-xs text-primary font-medium">
               (Future meal)
             </span>
@@ -220,15 +195,14 @@ function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: D
           >
             <div className="p-2">
               <div className="text-xs font-medium text-text-secondary px-2 py-1 mb-1">
-                Select a day (next 7 days)
+                Select a day in this billing month
               </div>
               <div className="space-y-1">
-                {availableDays.map((day, index) => {
+                {availableDays.map((day) => {
                   const dateStr = formatDate(day);
                   const isSelected = dateStr === selectedDate;
                   const isToday = dateStr === todayStr;
-                  const isFuture = dateStr > todayStr;
-                  const isDisabled = autoMealEnabled && isFuture;
+                  const isDisabled = false;
                   const dayName = day.toLocaleDateString('en-US', { weekday: 'short' });
                   const dayNum = day.getDate();
                   const monthName = day.toLocaleDateString('en-US', { month: 'short' });
@@ -268,12 +242,6 @@ function DateSelector({ selectedDate, onDateChange, autoMealEnabled = false }: D
                         {isToday && (
                           <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-primary'}`}>
                             Today
-                          </div>
-                        )}
-                        {index > 0 && !isToday && (
-                          <div className={`text-xs ${isDisabled ? 'text-text-tertiary' : isSelected ? 'text-white/80' : 'text-text-secondary'}`}>
-                            {index === 1 ? 'Tomorrow' : `In ${index} days`}
-                            {isDisabled && ' (Auto Meal)'}
                           </div>
                         )}
                       </div>

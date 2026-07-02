@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
 import type { Meal, MealDetails, Member, MealCount } from '../types';
-import { MEAL_PERIODS, type MealPeriod, type PeriodCounts } from '../constants/meals';
+import { MEAL_PERIODS, getWeightedMealQuantity, type MealPeriod, type PeriodCounts } from '../constants/meals';
 import { getTodayDate } from '../utils/dateHelpers';
 import {
   DatabaseError,
@@ -394,7 +394,7 @@ export const useMealStore = create<MealState>((set, get) => ({
         name: member.name,
         quantity: meal.quantity,
       });
-      total += meal.quantity;
+      total += getWeightedMealQuantity(meal.period, meal.quantity);
     });
 
     return {

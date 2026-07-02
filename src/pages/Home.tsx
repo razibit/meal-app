@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useMealStore } from '../stores/mealStore';
 import { getTodayDate } from '../utils/dateHelpers';
+import { getMealMonthDateRange } from '../utils/mealMonthHelpers';
 import { MEAL_PERIODS, MEAL_PERIOD_LABELS, type MealPeriod } from '../constants/meals';
 import DateSelector from '../components/home/DateSelector';
 import MealToggle from '../components/home/MealToggle';
@@ -36,6 +37,7 @@ function Home() {
   const [activePeriod, setActivePeriod] = useState<MealPeriod>('breakfast');
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
+  const billingRange = useMemo(() => getMealMonthDateRange(user), [user]);
 
   useEffect(() => {
     fetchMembers();
@@ -85,7 +87,7 @@ function Home() {
         <p className="text-sm text-text-secondary">Manage members, log meals, and import kitchen whiteboard photos.</p>
       </div>
 
-      <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} autoMealEnabled={false} />
+      <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} billingRange={billingRange} />
 
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         {totalCounts.map(({ period, count }) => (
