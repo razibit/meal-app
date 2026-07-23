@@ -24,8 +24,58 @@ function GlobalMonthlyReport({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(publicView);
+  const [publicSummaryVisible, setPublicSummaryVisible] = useState(false);
+  const [visibilityLoading, setVisibilityLoading] = useState(false);
   const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
   const report = useMemo(() => buildGlobalMealReport(reportData), [reportData]);
+  const isAdmin = user?.role === "admin";
+  const canShowAggregates = isAdmin || (publicView && publicSummaryVisible);
+
+  const fetchPublicSummaryVisibility = useCallback(async () => {
+    if (!publicView && !isAdmin) return;
+
+    if (publicView) {
+      const { data, error: visibilityError } = await supabase.rpc(
+        "get_public_report_visibility",
+      );
+      if (visibilityError) {
+        console.error(visibilityError);
+        setPublicSummaryVisible(false);
+        return;
+      }
+      setPublicSummaryVisible(
+        Boolean(data?.[0]?.show_monthly_totals_and_member_summary),
+      );
+      return;
+    }
+
+    const { data, error: visibilityError } = await supabase
+      .from("public_report_settings")
+      .select("show_monthly_totals_and_member_summary")
+      .eq("id", true)
+      .single();
+    if (visibilityError) {
+      console.error(visibilityError);
+      return;
+    }
+    setPublicSummaryVisible(data.show_monthly_totals_and_member_summary);
+  }, [isAdmin, publicView]);
+
+  const updatePublicSummaryVisibility = async (visible: boolean) => {
+    if (!isAdmin) return;
+    setVisibilityLoading(true);
+    const { error: visibilityError } = await supabase
+      .from("public_report_settings")
+      .update({ show_monthly_totals_and_member_summary: visible })
+      .eq("id", true);
+    setVisibilityLoading(false);
+    if (visibilityError) {
+      console.error(visibilityError);
+      setError("Failed to update public report visibility. Please try again.");
+      return;
+    }
+    setPublicSummaryVisible(visible);
+  };
 
   const fetchReport = useCallback(async () => {
     if (!user && !publicView) return;
@@ -56,6 +106,9 @@ function GlobalMonthlyReport({
   useEffect(() => {
     void fetchReport();
   }, [fetchReport]);
+  useEffect(() => {
+    void fetchPublicSummaryVisibility();
+  }, [fetchPublicSummaryVisibility]);
   useEffect(() => {
     if (publicView) {
       const timer = window.setInterval(() => void fetchReport(), 60_000);
@@ -227,6 +280,22 @@ function GlobalMonthlyReport({
             </button>
           </div>
         </div>
+        {isAdmin && (
+          <label className="mt-4 flex items-center gap-3 text-sm text-text-secondary">
+            <input
+              type="checkbox"
+              checked={publicSummaryVisible}
+              disabled={visibilityLoading}
+              onChange={(event) =>
+                void updatePublicSummaryVisibility(event.target.checked)
+              }
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary disabled:cursor-not-allowed"
+            />
+            <span>
+              Show monthly totals and member monthly summary on the public link
+            </span>
+          </label>
+        )}
       </div>
       {loading && (
         <div className="flex justify-center items-center py-12">
@@ -339,6 +408,7 @@ function GlobalMonthlyReport({
                     </tr>
                   );
                 })}
+                {canShowAggregates && (
                 <tr className="bg-bg-secondary border-t-2 border-border font-semibold">
                   <td className="px-4 py-3 text-text-primary sticky left-0 bg-bg-secondary z-10">
                     Monthly Totals
@@ -370,9 +440,11 @@ function GlobalMonthlyReport({
                     {report.globalTotals.total}
                   </td>
                 </tr>
+                )}
               </tbody>
             </table>
           </div>
+          {canShowAggregates && (
           <div className="border-t border-border bg-bg-secondary p-4">
             <h4 className="text-sm font-semibold text-text-primary mb-3">
               Member Monthly Summary
@@ -426,6 +498,7 @@ function GlobalMonthlyReport({
               </table>
             </div>
           </div>
+          )}
         </>
       )}
     </div>
