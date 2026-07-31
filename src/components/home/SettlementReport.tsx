@@ -5,7 +5,6 @@ import { useDepositStore } from '../../stores/depositStore';
 import { useMealRateStore } from '../../stores/mealRateStore';
 import {
   getMealMonthDateRange,
-  getPublicCarryOverMealMonthDateRange,
   formatDateRangeForDisplay,
 } from '../../utils/mealMonthHelpers';
 import { aggregateSettlement, calculateSettlement, roundCurrency, type SettlementResult } from '../../utils/settlementCalculations';
@@ -22,8 +21,8 @@ function SettlementReport({
 }) {
   const tableRef = useRef<HTMLDivElement>(null);
   const range = useMemo(
-    () => (publicView ? getPublicCarryOverMealMonthDateRange() : getMealMonthDateRange(user)),
-    [publicView, user],
+    () => getMealMonthDateRange(user),
+    [user],
   );
   const { currentRate, fetchLatestRate, subscribeToRateChanges, unsubscribeFromRateChanges } = useMealRateStore();
   const { getMemberTotalDeposit } = useDepositStore();

@@ -3,7 +3,6 @@ import { useDepositStore } from '../../stores/depositStore';
 import { Member } from '../../types';
 import {
   getMealMonthDateRange,
-  getPublicCarryOverMealMonthDateRange,
   formatDateRangeForDisplay,
 } from '../../utils/mealMonthHelpers';
 
@@ -19,7 +18,7 @@ function DepositReport({ user, publicView = false }: DepositReportProps) {
 
   // Get the current meal month date range for the user
   const dateRange = useMemo(
-    () => (publicView ? getPublicCarryOverMealMonthDateRange() : getMealMonthDateRange(user)),
+    () => getMealMonthDateRange(user),
     [publicView, user],
   );
 

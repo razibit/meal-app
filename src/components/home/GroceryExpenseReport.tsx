@@ -3,7 +3,6 @@ import { useGroceryExpenseStore } from '../../stores/groceryExpenseStore';
 import { GroceryExpenseReportRow, Member } from '../../types';
 import {
   getMealMonthDateRange,
-  getPublicCarryOverMealMonthDateRange,
   formatDateRangeForDisplay,
 } from '../../utils/mealMonthHelpers';
 
@@ -20,8 +19,8 @@ function GroceryExpenseReport({ user, publicView = false }: GroceryExpenseReport
 
   // Get the current meal month date range for the user
   const dateRange = useMemo(
-    () => (publicView ? getPublicCarryOverMealMonthDateRange() : getMealMonthDateRange(user)),
-    [publicView, user],
+    () => getMealMonthDateRange(user),
+    [user],
   );
 
   const loadReport = useCallback(async () => {

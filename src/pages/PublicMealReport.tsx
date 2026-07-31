@@ -4,7 +4,6 @@ import SettlementReport from '../components/home/SettlementReport';
 import DepositReport from '../components/home/DepositReport';
 import GroceryExpenseReport from '../components/home/GroceryExpenseReport';
 import { supabase } from '../services/supabase';
-import { isPublicReportCarryOverWindowOpen } from '../utils/mealMonthHelpers';
 
 export default function PublicMealReport() {
   const [publicReportSettings, setPublicReportSettings] = useState({
@@ -31,23 +30,21 @@ export default function PublicMealReport() {
     void loadPublicReportSettings();
   }, [loadPublicReportSettings]);
 
-  const publicWindowOpen = isPublicReportCarryOverWindowOpen();
-
   return (
     <main className="min-h-screen bg-bg-primary p-4">
       <div className="max-w-7xl mx-auto">
         <GlobalMonthlyReport user={null} publicView />
-        {publicWindowOpen && publicReportSettings.showSettlementReport && (
+        {publicReportSettings.showSettlementReport && (
           <div className="mt-8">
             <SettlementReport user={null} publicView />
           </div>
         )}
-        {publicWindowOpen && publicReportSettings.showDepositReport && (
+        {publicReportSettings.showDepositReport && (
           <div className="mt-8">
             <DepositReport user={null} publicView />
           </div>
         )}
-        {publicWindowOpen && publicReportSettings.showGroceryExpenseReport && (
+        {publicReportSettings.showGroceryExpenseReport && (
           <div className="mt-8">
             <GroceryExpenseReport user={null} publicView />
           </div>
