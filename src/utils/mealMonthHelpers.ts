@@ -92,3 +92,34 @@ export function getDefaultMealMonthDates(): { startDate: string; endDate: string
     endDate: formatDateForDB(endDate),
   };
 }
+
+/**
+ * Check whether the public carry-over window for the previous month's reports is open.
+ * The public window stays open for the first 10 calendar days of each month.
+ */
+export function isPublicReportCarryOverWindowOpen(referenceDate?: Date): boolean {
+  const now = referenceDate || new Date();
+  const dhakaDate = new Date(
+    now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }),
+  );
+  return dhakaDate.getDate() >= 1 && dhakaDate.getDate() <= 10;
+}
+
+/**
+ * During the first 10 days of a month, public carry-over reports continue to show
+ * the previous billing month.
+ */
+export function getPublicCarryOverMealMonthDateRange(
+  referenceDate?: Date,
+): { startDate: string; endDate: string } {
+  const now = referenceDate || new Date();
+  const dhakaDate = new Date(
+    now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }),
+  );
+  if (!isPublicReportCarryOverWindowOpen(dhakaDate)) {
+    return getMealMonthDateRange(null, dhakaDate);
+  }
+
+  const previousMonth = new Date(dhakaDate.getFullYear(), dhakaDate.getMonth() - 1, 1);
+  return getMealMonthDateRange(null, previousMonth);
+}

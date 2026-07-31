@@ -12,7 +12,7 @@ interface GroceryExpenseStore {
 
   // Actions
   fetchExpenses: (startDate: string, endDate: string) => Promise<void>;
-  fetchExpenseReport: (startDate: string, endDate: string) => Promise<void>;
+  fetchExpenseReport: (startDate: string, endDate: string, publicView?: boolean) => Promise<void>;
   addExpense: (shopperId: string, transactionType: 'cash' | 'credit', amount: number, details?: string) => Promise<void>;
   getTotalCashExpenses: (startDate: string, endDate: string) => Promise<number>;
   getTotalDeposits: (startDate: string, endDate: string) => Promise<number>;
@@ -44,11 +44,11 @@ export const useGroceryExpenseStore = create<GroceryExpenseStore>((set) => ({
     }
   },
 
-  fetchExpenseReport: async (startDate: string, endDate: string) => {
+  fetchExpenseReport: async (startDate: string, endDate: string, publicView = false) => {
     set({ loading: true, error: null });
     try {
       const { data, error } = await supabase.rpc(
-        'get_grocery_expense_report_with_dates',
+        publicView ? 'get_public_grocery_expense_report_with_dates' : 'get_grocery_expense_report_with_dates',
         {
           p_start_date: startDate,
           p_end_date: endDate,

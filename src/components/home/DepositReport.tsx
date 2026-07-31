@@ -1,25 +1,33 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDepositStore } from '../../stores/depositStore';
 import { Member } from '../../types';
-import { getMealMonthDateRange, formatDateRangeForDisplay } from '../../utils/mealMonthHelpers';
+import {
+  getMealMonthDateRange,
+  getPublicCarryOverMealMonthDateRange,
+  formatDateRangeForDisplay,
+} from '../../utils/mealMonthHelpers';
 
 interface DepositReportProps {
   user: Member | null;
+  publicView?: boolean;
 }
 
-function DepositReport({ user }: DepositReportProps) {
+function DepositReport({ user, publicView = false }: DepositReportProps) {
   const { depositReport, loading, error, fetchDepositReport } = useDepositStore();
   const [showReport, setShowReport] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
 
   // Get the current meal month date range for the user
-  const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
+  const dateRange = useMemo(
+    () => (publicView ? getPublicCarryOverMealMonthDateRange() : getMealMonthDateRange(user)),
+    [publicView, user],
+  );
 
   const loadReport = useCallback(async () => {
-    if (!user) return;
-    await fetchDepositReport(dateRange.startDate, dateRange.endDate);
+    if (!user && !publicView) return;
+    await fetchDepositReport(dateRange.startDate, dateRange.endDate, publicView);
     setHasLoaded(true);
-  }, [user, dateRange, fetchDepositReport]);
+  }, [user, publicView, dateRange, fetchDepositReport]);
 
   useEffect(() => {
     // Preload so we can show Grand Total even when collapsed.

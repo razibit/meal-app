@@ -12,7 +12,7 @@ interface DepositStore {
   
   // Actions
   fetchDeposits: (startDate: string, endDate: string) => Promise<void>;
-  fetchDepositReport: (startDate: string, endDate: string) => Promise<void>;
+  fetchDepositReport: (startDate: string, endDate: string, publicView?: boolean) => Promise<void>;
   addDeposit: (depositorId: string, amount: number, accountingDate: string, details?: string) => Promise<Deposit>;
   updateDeposit: (id: string, input: { depositorId: string; amount: number; accountingDate: string; details?: string }) => Promise<Deposit>;
   deleteDeposit: (id: string) => Promise<string>;
@@ -44,11 +44,11 @@ export const useDepositStore = create<DepositStore>((set) => ({
     }
   },
 
-  fetchDepositReport: async (startDate: string, endDate: string) => {
+  fetchDepositReport: async (startDate: string, endDate: string, publicView = false) => {
     set({ loading: true, error: null });
     try {
       const { data, error } = await supabase.rpc(
-        'get_monthly_deposit_report_with_dates',
+        publicView ? 'get_public_monthly_deposit_report_with_dates' : 'get_monthly_deposit_report_with_dates',
         {
           p_start_date: startDate,
           p_end_date: endDate,

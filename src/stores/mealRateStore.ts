@@ -11,8 +11,8 @@ interface MealRateState {
   error: string | null;
 
   // Actions
-  fetchLatestRate: (startDate: string, endDate: string) => Promise<void>;
-  fetchHistory: (startDate: string, endDate: string, limit?: number) => Promise<void>;
+  fetchLatestRate: (startDate: string, endDate: string, publicView?: boolean) => Promise<void>;
+  fetchHistory: (startDate: string, endDate: string, limit?: number, publicView?: boolean) => Promise<void>;
   /** Subscribe to realtime inserts on the history table */
   subscribeToRateChanges: (startDate: string, endDate: string) => void;
   unsubscribeFromRateChanges: () => void;
@@ -28,9 +28,9 @@ export const useMealRateStore = create<MealRateState>((set, get) => {
     loading: false,
     error: null,
 
-    fetchLatestRate: async (startDate: string, endDate: string) => {
+    fetchLatestRate: async (startDate: string, endDate: string, publicView = false) => {
       try {
-        const { data, error } = await supabase.rpc('get_latest_meal_rate', {
+        const { data, error } = await supabase.rpc(publicView ? 'get_public_latest_meal_rate' : 'get_latest_meal_rate', {
           p_start_date: startDate,
           p_end_date: endDate,
         });
@@ -48,10 +48,10 @@ export const useMealRateStore = create<MealRateState>((set, get) => {
       }
     },
 
-    fetchHistory: async (startDate: string, endDate: string, limit = 50) => {
+    fetchHistory: async (startDate: string, endDate: string, limit = 50, publicView = false) => {
       set({ loading: true, error: null });
       try {
-        const { data, error } = await supabase.rpc('get_meal_rate_history', {
+        const { data, error } = await supabase.rpc(publicView ? 'get_public_meal_rate_history' : 'get_meal_rate_history', {
           p_start_date: startDate,
           p_end_date: endDate,
           p_limit: limit,

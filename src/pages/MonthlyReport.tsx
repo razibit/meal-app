@@ -20,6 +20,12 @@ function MonthlyReport() {
   const [showMyReport, setShowMyReport] = useState(false);
   const [exportingReports, setExportingReports] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [publicReportSettings, setPublicReportSettings] = useState({
+    showSettlementReport: false,
+    showDepositReport: false,
+    showGroceryExpenseReport: false,
+  });
+  const [publicReportSettingsLoading, setPublicReportSettingsLoading] = useState(false);
 
   // Get the current meal month date range for the user
   const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
@@ -194,6 +200,55 @@ function MonthlyReport() {
     }
   }, [dateRange]);
 
+  const loadPublicReportSettings = useCallback(async () => {
+    if (!user?.role || user.role !== 'admin') return;
+    const { data, error } = await supabase
+      .from('public_report_settings')
+      .select('show_settlement_report, show_deposit_report, show_grocery_expense_report')
+      .eq('id', true)
+      .single();
+    if (error) {
+      console.error('Failed to load public report settings:', error);
+      return;
+    }
+    setPublicReportSettings({
+      showSettlementReport: data.show_settlement_report,
+      showDepositReport: data.show_deposit_report,
+      showGroceryExpenseReport: data.show_grocery_expense_report,
+    });
+  }, [user?.role]);
+
+  useEffect(() => {
+    void loadPublicReportSettings();
+  }, [loadPublicReportSettings]);
+
+  const updatePublicReportSetting = useCallback(
+    async (
+      key: 'showSettlementReport' | 'showDepositReport' | 'showGroceryExpenseReport',
+      visible: boolean,
+    ) => {
+      if (user?.role !== 'admin') return;
+      setPublicReportSettingsLoading(true);
+      const columnMap = {
+        showSettlementReport: 'show_settlement_report',
+        showDepositReport: 'show_deposit_report',
+        showGroceryExpenseReport: 'show_grocery_expense_report',
+      } as const;
+      const { error } = await supabase
+        .from('public_report_settings')
+        .update({ [columnMap[key]]: visible })
+        .eq('id', true);
+      setPublicReportSettingsLoading(false);
+      if (error) {
+        console.error('Failed to update public report setting:', error);
+        setExportError('Failed to update public report visibility. Please try again.');
+        return;
+      }
+      setPublicReportSettings((current) => ({ ...current, [key]: visible }));
+    },
+    [user?.role],
+  );
+
   return (
     <div className="p-4 max-w-4xl mx-auto animate-fade-in">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -213,6 +268,45 @@ function MonthlyReport() {
         </button>
       </div>
       {exportError && <div className="mb-6 bg-error/10 border border-error text-error px-4 py-3 rounded-lg">{exportError}</div>}
+      {user?.role === 'admin' && (
+        <div className="mb-8 card p-4">
+          <h3 className="text-lg font-semibold text-text-primary mb-3">
+            Public carry-over visibility
+          </h3>
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              {
+                key: 'showSettlementReport' as const,
+                label: 'Settlement report',
+              },
+              {
+                key: 'showDepositReport' as const,
+                label: 'Deposit report',
+              },
+              {
+                key: 'showGroceryExpenseReport' as const,
+                label: 'Grocery expense report',
+              },
+            ].map(({ key, label }) => (
+              <label
+                key={key}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm"
+              >
+                <span className="text-text-primary">{label}</span>
+                <input
+                  type="checkbox"
+                  checked={publicReportSettings[key]}
+                  disabled={publicReportSettingsLoading}
+                  onChange={(event) =>
+                    void updatePublicReportSetting(key, event.target.checked)
+                  }
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary disabled:cursor-not-allowed"
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Settlement Report - Who will give / receive */}
       <div className="mb-8">
         <SettlementReport user={user} />

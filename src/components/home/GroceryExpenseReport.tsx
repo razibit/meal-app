@@ -1,26 +1,34 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useGroceryExpenseStore } from '../../stores/groceryExpenseStore';
 import { GroceryExpenseReportRow, Member } from '../../types';
-import { getMealMonthDateRange, formatDateRangeForDisplay } from '../../utils/mealMonthHelpers';
+import {
+  getMealMonthDateRange,
+  getPublicCarryOverMealMonthDateRange,
+  formatDateRangeForDisplay,
+} from '../../utils/mealMonthHelpers';
 
 interface GroceryExpenseReportProps {
   user: Member | null;
+  publicView?: boolean;
 }
 
-function GroceryExpenseReport({ user }: GroceryExpenseReportProps) {
+function GroceryExpenseReport({ user, publicView = false }: GroceryExpenseReportProps) {
   const { expenseReport, loading, error, fetchExpenseReport } = useGroceryExpenseStore();
   const [showReport, setShowReport] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [activeType, setActiveType] = useState<'cash' | 'credit'>('cash');
 
   // Get the current meal month date range for the user
-  const dateRange = useMemo(() => getMealMonthDateRange(user), [user]);
+  const dateRange = useMemo(
+    () => (publicView ? getPublicCarryOverMealMonthDateRange() : getMealMonthDateRange(user)),
+    [publicView, user],
+  );
 
   const loadReport = useCallback(async () => {
-    if (!user) return;
-    await fetchExpenseReport(dateRange.startDate, dateRange.endDate);
+    if (!user && !publicView) return;
+    await fetchExpenseReport(dateRange.startDate, dateRange.endDate, publicView);
     setHasLoaded(true);
-  }, [user, dateRange, fetchExpenseReport]);
+  }, [user, publicView, dateRange, fetchExpenseReport]);
 
   useEffect(() => {
     setHasLoaded(false);
