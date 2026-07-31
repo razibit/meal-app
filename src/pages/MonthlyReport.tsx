@@ -21,7 +21,6 @@ function MonthlyReport() {
   const [exportingReports, setExportingReports] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [publicReportSettings, setPublicReportSettings] = useState({
-    showSettlementReport: false,
     showDepositReport: false,
     showGroceryExpenseReport: false,
   });
@@ -204,7 +203,7 @@ function MonthlyReport() {
     if (!user?.role || user.role !== 'admin') return;
     const { data, error } = await supabase
       .from('public_report_settings')
-      .select('show_settlement_report, show_deposit_report, show_grocery_expense_report')
+      .select('show_deposit_report, show_grocery_expense_report')
       .eq('id', true)
       .single();
     if (error) {
@@ -212,7 +211,6 @@ function MonthlyReport() {
       return;
     }
     setPublicReportSettings({
-      showSettlementReport: data.show_settlement_report,
       showDepositReport: data.show_deposit_report,
       showGroceryExpenseReport: data.show_grocery_expense_report,
     });
@@ -224,13 +222,12 @@ function MonthlyReport() {
 
   const updatePublicReportSetting = useCallback(
     async (
-      key: 'showSettlementReport' | 'showDepositReport' | 'showGroceryExpenseReport',
+      key: 'showDepositReport' | 'showGroceryExpenseReport',
       visible: boolean,
     ) => {
       if (user?.role !== 'admin') return;
       setPublicReportSettingsLoading(true);
       const columnMap = {
-        showSettlementReport: 'show_settlement_report',
         showDepositReport: 'show_deposit_report',
         showGroceryExpenseReport: 'show_grocery_expense_report',
       } as const;
@@ -275,10 +272,6 @@ function MonthlyReport() {
           </h3>
           <div className="grid gap-3 md:grid-cols-3">
             {[
-              {
-                key: 'showSettlementReport' as const,
-                label: 'Settlement report',
-              },
               {
                 key: 'showDepositReport' as const,
                 label: 'Deposit report',

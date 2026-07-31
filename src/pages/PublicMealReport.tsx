@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import GlobalMonthlyReport from '../components/home/GlobalMonthlyReport';
-import SettlementReport from '../components/home/SettlementReport';
 import DepositReport from '../components/home/DepositReport';
 import GroceryExpenseReport from '../components/home/GroceryExpenseReport';
 import { supabase } from '../services/supabase';
 
 export default function PublicMealReport() {
   const [publicReportSettings, setPublicReportSettings] = useState({
-    showSettlementReport: false,
     showDepositReport: false,
     showGroceryExpenseReport: false,
   });
@@ -20,7 +18,6 @@ export default function PublicMealReport() {
     }
     const row = Array.isArray(data) ? data[0] : data;
     setPublicReportSettings({
-      showSettlementReport: Boolean(row?.show_settlement_report),
       showDepositReport: Boolean(row?.show_deposit_report),
       showGroceryExpenseReport: Boolean(row?.show_grocery_expense_report),
     });
@@ -34,11 +31,6 @@ export default function PublicMealReport() {
     <main className="min-h-screen bg-bg-primary p-4">
       <div className="max-w-7xl mx-auto">
         <GlobalMonthlyReport user={null} publicView />
-        {publicReportSettings.showSettlementReport && (
-          <div className="mt-8">
-            <SettlementReport user={null} publicView />
-          </div>
-        )}
         {publicReportSettings.showDepositReport && (
           <div className="mt-8">
             <DepositReport user={null} publicView />

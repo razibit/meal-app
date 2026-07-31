@@ -1,25 +1,4 @@
--- Store the public settlement report as a monthly snapshot and refresh it on source changes.
-
-CREATE TABLE IF NOT EXISTS public.settlement_snapshots (
-  period_start date PRIMARY KEY,
-  period_end date NOT NULL,
-  meal_rate numeric NOT NULL DEFAULT 0,
-  settlement_rows jsonb NOT NULL DEFAULT '[]'::jsonb,
-  total_meals numeric NOT NULL DEFAULT 0,
-  total_deposits numeric NOT NULL DEFAULT 0,
-  total_payable numeric NOT NULL DEFAULT 0,
-  total_receivable numeric NOT NULL DEFAULT 0,
-  last_refreshed_at timestamptz NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.settlement_snapshots ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can manage settlement snapshots"
-  ON public.settlement_snapshots
-  FOR ALL
-  TO authenticated
-  USING (public.is_admin())
-  WITH CHECK (public.is_admin());
+-- Correct the public settlement snapshot to follow the calendar month.
 
 CREATE OR REPLACE FUNCTION public.refresh_current_month_settlement_snapshot()
 RETURNS void
@@ -149,43 +128,6 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.trigger_refresh_current_month_settlement_snapshot()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-BEGIN
-  PERFORM public.refresh_current_month_settlement_snapshot();
-  RETURN NULL;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS refresh_settlement_snapshot_on_meals ON public.meals;
-DROP TRIGGER IF EXISTS refresh_settlement_snapshot_on_deposits ON public.deposits;
-DROP TRIGGER IF EXISTS refresh_settlement_snapshot_on_grocery_expenses ON public.grocery_expenses;
-DROP TRIGGER IF EXISTS refresh_settlement_snapshot_on_meal_rates ON public.meal_rate_history;
-
-CREATE TRIGGER refresh_settlement_snapshot_on_meals
-AFTER INSERT OR UPDATE OR DELETE ON public.meals
-FOR EACH STATEMENT
-EXECUTE FUNCTION public.trigger_refresh_current_month_settlement_snapshot();
-
-CREATE TRIGGER refresh_settlement_snapshot_on_deposits
-AFTER INSERT OR UPDATE OR DELETE ON public.deposits
-FOR EACH STATEMENT
-EXECUTE FUNCTION public.trigger_refresh_current_month_settlement_snapshot();
-
-CREATE TRIGGER refresh_settlement_snapshot_on_grocery_expenses
-AFTER INSERT OR UPDATE OR DELETE ON public.grocery_expenses
-FOR EACH STATEMENT
-EXECUTE FUNCTION public.trigger_refresh_current_month_settlement_snapshot();
-
-CREATE TRIGGER refresh_settlement_snapshot_on_meal_rates
-AFTER INSERT OR UPDATE OR DELETE ON public.meal_rate_history
-FOR EACH STATEMENT
-EXECUTE FUNCTION public.trigger_refresh_current_month_settlement_snapshot();
-
 CREATE OR REPLACE FUNCTION public.get_public_settlement_snapshot(
   p_start_date date DEFAULT NULL,
   p_end_date date DEFAULT NULL
@@ -221,9 +163,5 @@ AS $$
     AND s.period_end = COALESCE(p_end_date, (date_trunc('month', current_date) + interval '1 month - 1 day')::date)
   LIMIT 1;
 $$;
-
-REVOKE ALL ON FUNCTION public.get_public_settlement_snapshot(date, date) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.get_public_settlement_snapshot(date, date) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.refresh_current_month_settlement_snapshot() TO authenticated;
 
 SELECT public.refresh_current_month_settlement_snapshot();
