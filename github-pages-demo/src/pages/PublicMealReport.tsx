@@ -1,0 +1,47 @@
+import { useCallback, useEffect, useState } from 'react';
+import GlobalMonthlyReport from '../components/home/GlobalMonthlyReport';
+import DepositReport from '../components/home/DepositReport';
+import GroceryExpenseReport from '../components/home/GroceryExpenseReport';
+import { supabase } from '../services/supabase';
+
+export default function PublicMealReport() {
+  const [publicReportSettings, setPublicReportSettings] = useState({
+    showDepositReport: false,
+    showGroceryExpenseReport: false,
+  });
+
+  const loadPublicReportSettings = useCallback(async () => {
+    const { data, error } = await supabase.rpc('get_public_report_carry_over_visibility');
+    if (error) {
+      console.error('Failed to load public report settings:', error);
+      return;
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    setPublicReportSettings({
+      showDepositReport: Boolean(row?.show_deposit_report),
+      showGroceryExpenseReport: Boolean(row?.show_grocery_expense_report),
+    });
+  }, []);
+
+  useEffect(() => {
+    void loadPublicReportSettings();
+  }, [loadPublicReportSettings]);
+
+  return (
+    <main className="min-h-screen bg-bg-primary p-4">
+      <div className="max-w-7xl mx-auto">
+        <GlobalMonthlyReport user={null} publicView />
+        {publicReportSettings.showDepositReport && (
+          <div className="mt-8">
+            <DepositReport user={null} publicView />
+          </div>
+        )}
+        {publicReportSettings.showGroceryExpenseReport && (
+          <div className="mt-8">
+            <GroceryExpenseReport user={null} publicView />
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
