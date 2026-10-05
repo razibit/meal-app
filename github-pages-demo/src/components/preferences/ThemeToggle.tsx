@@ -1,18 +1,19 @@
 import { useEffect, useId, useState } from 'react';
 
 type Theme = 'eggplant' | 'dark';
+const THEME_STORAGE_KEY = 'meal-app-pages-demo-theme-v1';
 
 export function ThemeToggle() {
   const labelId = useId();
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('theme');
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
     return (saved === 'dark' ? 'dark' : 'eggplant') as Theme;
   });
 
   useEffect(() => {
     // Apply theme to document root
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
   const handleThemeChange = (newTheme: Theme) => {

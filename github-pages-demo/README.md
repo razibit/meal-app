@@ -1,6 +1,14 @@
 # Mess Meal Management System
 
-A progressive web application for managing daily meal planning, tracking, and communication for a 16-member boarding mess.
+A progressive web application for managing daily meal planning, tracking, and communication for a 17-member boarding mess.
+
+## GitHub Pages demo
+
+This folder is the static, browser-local demo published at `https://razibit.github.io/meal-app/`. It does not connect to Supabase. Edits made in the demo stay in this browser's local storage and can be cleared by resetting this demo's site data.
+
+The initial snapshot reflects the live app's visible July 2026 billing period: 719.5 total meals, ৳33,579 in deposits, and ৳33,566 in cash grocery expenses. The **Current Available Balance** is the boarding's shared balance, calculated from those totals (৳13); it is not an individual member's pocket balance. The October 2026 grocery-duty assignments are also included. The demo starts in the light theme and remembers a theme choice separately from the production app.
+
+Build for Pages with `npm run build:pages`. The generated site is in `dist/` and is deployed by the repository's Pages workflow. Whiteboard image selection and meal editing work locally; OCR recognition itself requires the production service and is not available in this offline demo.
 
 ## Features
 

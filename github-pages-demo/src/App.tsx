@@ -31,7 +31,8 @@ function App() {
 
   useEffect(() => {
     // Set default theme
-    const theme = localStorage.getItem('theme') || 'light';
+    const savedDemoTheme = localStorage.getItem('meal-app-pages-demo-theme-v1');
+    const theme = savedDemoTheme === 'dark' ? 'dark' : 'eggplant';
     document.documentElement.setAttribute('data-theme', theme);
 
     // Initialize authentication

@@ -1,13 +1,9 @@
 type Row = Record<string, any>;
-type DemoDatabase = { tables: Record<string, Row[]>; settings: Row };
+type DemoDatabase = { tables: Record<string, Row[]>; settings: Row; seedVersion: number };
+
+import { depositSeed, expenseSeed, julyMealGrid, memberNames } from './demoSeedData';
 
 const STORAGE_KEY = 'mess-meal-pages-demo-v1';
-const memberNames = [
-  'Abdullah Vai', 'Abid Vai', 'Ashique Vai', 'Ashraf Vai', 'Dalton Vai',
-  'Hasan Vai', 'Mahdi Vai', 'Mijan Vai', 'Muhit Vai', 'Rajib Vai',
-  'Reza Vai', 'Ribat Vai', 'Roni Vai', 'Sajid Vai', 'Shahjahan (Vaitja)',
-  'Sourav Vai', 'Ujjal Vai',
-];
 const memberId = (name: string) => `demo-${memberNames.indexOf(name) + 1}`;
 
 function createSeed(): DemoDatabase {
@@ -22,24 +18,45 @@ function createSeed(): DemoDatabase {
   }));
 
   const meals: Row[] = [];
-  const july3 = {
-    'Abdullah Vai': [0, 1, 1], 'Abid Vai': [0, 0, 0], 'Ashique Vai': [0, 1, 1],
-    'Ashraf Vai': [0, 0, 0], 'Dalton Vai': [0, 1, 1], 'Hasan Vai': [0, 1, 1],
-    'Mahdi Vai': [0, 0, 0], 'Mijan Vai': [0, 0, 0], 'Muhit Vai': [0, 1, 1],
-    'Rajib Vai': [0, 1, 0], 'Reza Vai': [0, 0, 0], 'Ribat Vai': [0, 1, 1],
-    'Roni Vai': [0, 1, 1], 'Sajid Vai': [0, 1, 1], 'Shahjahan (Vaitja)': [0, 0, 0],
-    'Sourav Vai': [1, 1, 1], 'Ujjal Vai': [0, 1, 1],
-  } as Record<string, number[]>;
-  for (const [name, quantities] of Object.entries(july3)) {
-    (['breakfast', 'lunch', 'dinner'] as const).forEach((period, periodIndex) => {
-      const quantity = quantities[periodIndex];
-      if (quantity) meals.push({
-        id: `demo-meal-${memberId(name)}-${period}`,
-        member_id: memberId(name), meal_date: '2026-07-03', period, quantity,
-        created_at: '2026-07-03T08:00:00+06:00',
+  const mealPeriods = ['breakfast', 'lunch', 'dinner'] as const;
+  for (const encodedDay of julyMealGrid) {
+    const [dayNumber, encodedValues] = encodedDay.split(':');
+    const mealDate = `2026-07-${dayNumber}`;
+    const quantities = encodedValues.split(',').map(Number);
+    memberNames.forEach((name, memberIndex) => {
+      mealPeriods.forEach((period, periodIndex) => {
+        const visibleQuantity = quantities[memberIndex * 3 + periodIndex];
+        // The live monthly table displays breakfast in meal-equivalent units,
+        // while the stored meal rows and settlement calculation use entries.
+        const quantity = period === 'breakfast' ? visibleQuantity * 2 : visibleQuantity;
+        if (quantity) meals.push({
+          id: `demo-meal-${mealDate}-${memberIndex}-${period}`,
+          member_id: memberId(name), meal_date: mealDate, period, quantity,
+          created_at: `${mealDate}T08:00:00+06:00`,
+        });
       });
     });
   }
+
+  const deposits = depositSeed.map(([memberIndex, day, time, amount, details], index) => {
+    const date = `2026-07-${String(day).padStart(2, '0')}`;
+    return {
+      id: `demo-deposit-${String(index + 1).padStart(3, '0')}`,
+      depositor_id: memberId(memberNames[memberIndex]), added_by: memberId('Rajib Vai'),
+      amount, details: details || null, deposit_date: date, accounting_date: date,
+      created_at: `${date}T${time}:00+06:00`,
+    };
+  });
+
+  const groceryExpenses = expenseSeed.map(([day, time, shopperIndex, amount, details], index) => {
+    const date = `2026-07-${String(day).padStart(2, '0')}`;
+    return {
+      id: `demo-expense-${String(index + 1).padStart(3, '0')}`,
+      shopper_id: memberId(memberNames[shopperIndex]), added_by: memberId('Rajib Vai'),
+      transaction_type: 'cash', amount, details, expense_date: date,
+      created_at: `${date}T${time}:00+06:00`,
+    };
+  });
 
   const dutyRows: Array<[string, string]> = [
     ['2026-10-01', 'Abdullah Vai'], ['2026-10-02', 'Abdullah Vai'],
@@ -76,31 +93,38 @@ function createSeed(): DemoDatabase {
   ] as const;
   const ocrImports = ocrSummaries.map(([meal_date, breakfast, lunch, dinner, status, created_at], index) => ({
     id: `demo-ocr-${index + 1}`, meal_date, breakfast_total: breakfast, lunch_total: lunch,
-    dinner_total: dinner, status: status === 'ready' ? 'validation_failed' : status,
-    validation_status: status === 'ready' ? 'validation_failed' : 'valid', created_at,
+    dinner_total: dinner, status, validation_status: 'valid', created_at,
     processed_at: created_at,
     validation_report: { valid: true, errors: [], warnings: [], totals: { breakfast, lunch, dinner } },
   }));
+  const july13Quantities = julyMealGrid.find((day) => day.startsWith('13:'))!
+    .slice(3).split(',').map(Number);
   const firstHistoryRows = [
     'Sajid Vai', 'Ashique Vai', 'Ujjal Vai', 'Mijan Vai', 'Reza Vai', 'Dalton Vai',
     'Sourav Vai', 'Roni Vai', 'Mahdi Vai', 'Abid Vai', 'Shahjahan (Vaitja)',
     'Hasan Vai', 'Rajib Vai', 'Ribat Vai', 'Abdullah Vai', 'Muhit Vai',
-  ].map((name, index) => ({
+  ].map((name, index) => {
+    const memberIndex = memberNames.indexOf(name);
+    return {
     id: `demo-ocr-row-${index + 1}`, import_id: 'demo-ocr-1', detected_name: name,
-    matched_member_id: memberId(name), breakfast: false,
-    lunch: index !== 6 && index !== 8, dinner: index < 6,
+    matched_member_id: memberId(name),
+    breakfast: july13Quantities[memberIndex * 3] > 0,
+    lunch: july13Quantities[memberIndex * 3 + 1] > 0,
+    dinner: july13Quantities[memberIndex * 3 + 2] > 0,
     confidence: index === 1 || index === 2 ? 0.9 : 0.95,
     needs_review: false,
-  }));
+  };
+  });
 
   return {
+    seedVersion: 4,
     settings: { public_report_settings: { id: true, show_monthly_totals_and_member_summary: false, show_deposit_report: false, show_grocery_expense_report: false } },
     tables: {
       members,
       meals,
       meal_details: [],
-      deposits: [{ id: 'demo-deposit-1', depositor_id: memberId('Rajib Vai'), added_by: memberId('Rajib Vai'), amount: 13, details: 'Opening demo balance', deposit_date: '2026-07-01', accounting_date: '2026-07-01', created_at: '2026-07-01T00:00:00+06:00' }],
-      grocery_expenses: [],
+      deposits,
+      grocery_expenses: groceryExpenses,
       grocery_duty_assignments: groceryDuty,
       admin_notes: [{ id: true, content: '' }],
       meal_rate_history: [{ id: 'demo-rate-1', meal_rate: 46.65, total_expenses: 0, total_meals: 0, trigger_source: 'manual', period_start: '2026-07-01', period_end: '2026-07-31', created_at: '2026-07-13T21:06:15+06:00' }],
@@ -115,7 +139,38 @@ function createSeed(): DemoDatabase {
 function readDb(): DemoDatabase {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as DemoDatabase;
+    if (raw) {
+      const saved = JSON.parse(raw) as DemoDatabase;
+      if (saved.seedVersion === 4) return saved;
+
+      // Refresh the original demo snapshot without dropping locally added rows or settings.
+      const upgraded = createSeed();
+      for (const [table, seedRows] of Object.entries(upgraded.tables)) {
+        const savedRows = saved.tables?.[table] || [];
+        const localRows = savedRows.filter((row) => !String(row.id ?? '').startsWith('demo-'));
+        upgraded.tables[table] = [...seedRows, ...localRows];
+      }
+      const oldMembers = new Map((saved.tables?.members || []).map((row) => [row.id, row]));
+      upgraded.tables.members = upgraded.tables.members.map((member) => {
+        const old = oldMembers.get(member.id);
+        return old ? {
+          ...member,
+          meal_month_start_date: old.meal_month_start_date || member.meal_month_start_date,
+          meal_month_end_date: old.meal_month_end_date || member.meal_month_end_date,
+        } : member;
+      });
+      const oldDuty = new Map((saved.tables?.grocery_duty_assignments || []).map((row) => [row.id, row]));
+      upgraded.tables.grocery_duty_assignments = upgraded.tables.grocery_duty_assignments.map((row) => ({ ...row, ...(oldDuty.get(row.id) || {}) }));
+      if (saved.tables?.admin_notes) upgraded.tables.admin_notes = saved.tables.admin_notes;
+      if (saved.tables?.public_report_settings) upgraded.tables.public_report_settings = saved.tables.public_report_settings;
+      upgraded.settings = { ...upgraded.settings, ...saved.settings };
+      if (saved.seedVersion === undefined) {
+        // The first snapshot stored the shared balance as a fake personal deposit. Remove it.
+        upgraded.tables.deposits = upgraded.tables.deposits.filter((row) => row.id !== 'demo-deposit-1');
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(upgraded));
+      return upgraded;
+    }
   } catch { /* start with a fresh browser-local demo */ }
   const seed = createSeed();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
@@ -178,7 +233,8 @@ class LocalQuery implements PromiseLike<{ data: any; error: null; count?: number
         return { id: row.id ?? crypto.randomUUID(), created_at: row.created_at ?? new Date().toISOString(), ...defaults, ...row };
       });
       for (const value of values) {
-        const index = rows.findIndex(row => row[this.conflictKey] === value[this.conflictKey]);
+        const conflictFields = this.conflictKey.split(',').map(field => field.trim());
+        const index = rows.findIndex(row => conflictFields.every(field => row[field] != null && row[field] === value[field]));
         if (this.mode === 'upsert' && index >= 0) rows[index] = { ...rows[index], ...value };
         else rows.push(value);
       }
@@ -259,11 +315,27 @@ function rpc(name: string, args: Row = {}, db = readDb()): { data: any; error: n
       own.forEach(row => { const item = byDay.get(row.meal_date) || { meal_date: row.meal_date, breakfast_count: 0, lunch_count: 0, dinner_count: 0 }; item.breakfast_count += row.breakfast_count; item.lunch_count += row.lunch_count; item.dinner_count += row.dinner_count; byDay.set(row.meal_date, item); });
       return scalar([...byDay.values()].sort((a, b) => a.meal_date.localeCompare(b.meal_date)));
     }
-    case 'get_global_monthly_report_with_dates': case 'get_public_global_meal_report': return scalar(name.includes('public') ? rows.map(row => ({ ...row, member_key: row.member_id })) : rows);
+    case 'get_global_monthly_report_with_dates': case 'get_public_global_meal_report': {
+      const allRows = [...rows];
+      const reportMembers = members.filter(member => member.active || rows.some(row => row.member_id === member.id));
+      for (let day = Number(start.slice(-2)); day <= Number(end.slice(-2)); day++) {
+        const date = `${start.slice(0, 8)}${String(day).padStart(2, '0')}`;
+        for (const member of reportMembers) {
+          const existingRow = allRows.find(row => row.meal_date === date && row.member_id === member.id);
+          if (!existingRow) allRows.push({ meal_date: date, member_id: member.id, member_name: member.name, breakfast_count: 0, lunch_count: 0, dinner_count: 0 });
+          else if (existingRow.breakfast_count % 1 !== 0) existingRow.breakfast_count *= 2;
+        }
+      }
+      allRows.sort((a, b) => a.meal_date.localeCompare(b.meal_date) || a.member_name.localeCompare(b.member_name));
+      return scalar(name.includes('public') ? allRows.map(row => ({ ...row, member_key: row.member_id })) : allRows);
+    }
     case 'get_public_report_visibility': return scalar([{ show_monthly_totals_and_member_summary: Boolean(db.settings.public_report_settings?.show_monthly_totals_and_member_summary) }]);
     case 'get_public_report_carry_over_visibility': return scalar([{ show_deposit_report: Boolean(db.settings.public_report_settings?.show_deposit_report), show_grocery_expense_report: Boolean(db.settings.public_report_settings?.show_grocery_expense_report) }]);
-    case 'get_monthly_deposit_report_with_dates': case 'get_public_monthly_deposit_report_with_dates':
-      return scalar(deposits.map(row => ({ ...row, depositor_name: members.find(member => member.id === row.depositor_id)?.name || 'Member', added_by_name: members.find(member => member.id === row.added_by)?.name || 'Admin', total_amount: deposits.reduce((sum, item) => sum + Number(item.amount || 0), 0) })));
+    case 'get_monthly_deposit_report_with_dates': case 'get_public_monthly_deposit_report_with_dates': {
+      const totalsByMember = new Map<string, number>();
+      deposits.forEach(row => totalsByMember.set(row.depositor_id, (totalsByMember.get(row.depositor_id) || 0) + Number(row.amount || 0)));
+      return scalar(deposits.map(row => ({ ...row, depositor_name: members.find(member => member.id === row.depositor_id)?.name || 'Member', added_by_name: members.find(member => member.id === row.added_by)?.name || 'Admin', total_amount: totalsByMember.get(row.depositor_id) || 0 })));
+    }
     case 'get_grocery_expense_report_with_dates': case 'get_public_grocery_expense_report_with_dates':
       return scalar(db.tables.grocery_expenses.filter(row => byDate(row, 'expense_date', start, end)).map(row => ({ ...row, shopper_name: members.find(member => member.id === row.shopper_id)?.name || 'Member', added_by_name: members.find(member => member.id === row.added_by)?.name || 'Admin' })));
     case 'get_total_deposits': return scalar(deposits.reduce((sum, row) => sum + Number(row.amount || 0), 0));
